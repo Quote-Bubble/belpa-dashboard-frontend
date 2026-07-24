@@ -70,6 +70,8 @@ export type LeadPayload = {
   conditionAnswer?: ConditionAnswer | null;
   conditionFlagged?: boolean;
   material?: string | null;
+  propertyType?: string | null;
+  storeys?: number | null;
   /** Totals only — which edges the customer marked as gutters is not stored. */
   roofline?: {
     perimeterM?: number | null;

@@ -133,6 +133,36 @@ export function materialLabel(material: string | null | undefined): string {
   return MATERIAL_LABELS[material] ?? humanise(material);
 }
 
+/* Both of these mirror the wording the customer actually picked in the widget
+   (PROPERTY_TYPE_OPTIONS / STOREY_OPTIONS in quoter-widget-frontend). Falling
+   back to humanise() here loses the hyphen in "Semi-detached", and printing
+   the storey band as a digit doesn't match what they were shown. */
+const PROPERTY_TYPE_LABELS: Record<string, string> = {
+  detached: "Detached",
+  semi_detached: "Semi-detached",
+  end_of_terrace: "End of terrace",
+  terraced: "Terraced",
+  bungalow: "Bungalow",
+  flat: "Flat",
+};
+
+export function propertyTypeLabel(value: string | null | undefined): string {
+  if (!value) return EMPTY;
+  return PROPERTY_TYPE_LABELS[value] ?? humanise(value);
+}
+
+const STOREY_LABELS: Record<number, string> = {
+  1: "One",
+  2: "Two",
+  3: "Three",
+  4: "Four or more",
+};
+
+export function storeysLabel(value: number | null | undefined): string {
+  if (!value) return EMPTY;
+  return STOREY_LABELS[value] ?? String(value);
+}
+
 const CONDITION_LABELS: Record<ConditionAnswer, string> = {
   yes: "Reported damage or leaks",
   no: "No damage reported",

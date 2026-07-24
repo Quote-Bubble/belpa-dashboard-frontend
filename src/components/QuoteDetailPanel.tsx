@@ -16,8 +16,10 @@ import {
   jobTypeLabel,
   materialLabel,
   payloadLabel,
+  propertyTypeLabel,
   rooflineScopeLabel,
   roofTypeLabel,
+  storeysLabel,
   whatsappLink,
 } from "@/lib/format";
 import RoofPlan from "@/components/RoofPlan";
@@ -323,6 +325,14 @@ export default function QuoteDetailPanel({
                 <Figure
                   label="Rooflights"
                   value={formatCount(obstructions?.rooflights)}
+                />
+                <Figure
+                  label="Property type"
+                  value={propertyTypeLabel(payload?.propertyType)}
+                />
+                <Figure
+                  label="Storeys"
+                  value={storeysLabel(payload?.storeys)}
                 />
               </div>
 
