@@ -4,7 +4,7 @@ Roofer lead dashboard for Quoter. Next.js 16 + Tailwind, reading leads out of
 Supabase under Row Level Security.
 
 Related repos: `quoter-landing`, `quoter-widget-frontend`, `quoter-api-backend`.
-Database: Supabase project `https://xluasplhfbuxgridtsmd.supabase.co`.
+Database: Supabase project `https://<YOUR_PROJECT_REF>.supabase.co`.
 
 ---
 
@@ -26,8 +26,8 @@ they're a member of, and Postgres enforces that, not the app code.
 ```bash
 npm install
 cp .env.example .env.local
-# NEXT_PUBLIC_SUPABASE_URL=https://xluasplhfbuxgridtsmd.supabase.co
-# NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key from Rafil or Supabase>
+# NEXT_PUBLIC_SUPABASE_URL=https://<YOUR_PROJECT_REF>.supabase.co
+# NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key from Supabase>
 npm run dev
 ```
 
@@ -52,7 +52,15 @@ Apply in order in the Supabase SQL Editor:
 - `supabase/migrations/0001_init.sql` — roofers, roofer_members, leads, RLS.
   Already applied to the live project.
 - `supabase/migrations/0002_roofer_pricing.sql` — per-roofer pricing + RLS.
-  **Needs applying** before the Account page can save.
+  Already applied.
+- `supabase/migrations/0003_leads_archived.sql` — `archived` column on leads.
+  Already applied.
+- `supabase/migrations/0004_column_grants.sql` — column-scoped UPDATE grants +
+  audit triggers on leads / roofer_pricing. **Needs applying.**
+- `supabase/migrations/0005_constraints.sql` — CHECK constraints on pricing
+  numerics and leads.job_type / lead_type. **Needs applying.**
+- `supabase/migrations/0006_analytics_events.sql` — analytics_events + RLS
+  (no anon/authenticated policies). **Needs applying.**
 
 ## What's built
 
@@ -79,8 +87,6 @@ These are deliberate and surfaced in the UI rather than faked:
   (`quoter-widget-frontend/lib/quote-flow.ts:532`). So the plan view draws one
   outline, and gutter length / chimney counts appear as figures beside it.
   Replaying the full drawing needs a widget payload change.
-- **Archive is session-only.** There's no `archived` column on `leads`, so
-  archiving resets on reload (`QuotesClient.tsx`).
 - **No distance or access rating.** Neither is stored anywhere; both were
   removed rather than shown as plausible-looking defaults.
 
