@@ -19,9 +19,27 @@ function InfoTile({ label, value }: { label: string; value: string }) {
 export const dynamic = "force-dynamic";
 
 export default async function AccountPage() {
-  const [user, roofer] = await Promise.all([getUser(), getRoofer()]);
+  const user = await getUser();
+  const lookup = await getRoofer();
 
-  if (!roofer) {
+  if (lookup.status === "error") {
+    return (
+      <>
+        <PageHeader title="Account" />
+        <div className="surface rounded-2xl p-6">
+          <h2 className="font-display text-lg font-semibold text-ink">
+            Couldn’t load your account
+          </h2>
+          <p className="mt-2 text-sm text-ink-soft">
+            Please refresh the page and try again. If this keeps happening,
+            contact support.
+          </p>
+        </div>
+      </>
+    );
+  }
+
+  if (lookup.status === "not_linked") {
     return (
       <>
         <PageHeader title="Account" />
@@ -30,6 +48,7 @@ export default async function AccountPage() {
     );
   }
 
+  const roofer = lookup.roofer;
   const pricing = await getPricing(roofer.id);
 
   return (

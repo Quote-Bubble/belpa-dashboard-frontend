@@ -18,10 +18,33 @@ type LeadRow = {
 // isn't a candidate for static caching.
 export const dynamic = "force-dynamic";
 
-export default async function AnalyticsPage() {
-  const [user, roofer] = await Promise.all([getUser(), getRoofer()]);
+/** Charts only cover ≤90 days — don't pull unbounded historical rows (or PII). */
+const ANALYTICS_WINDOW_DAYS = 90;
+/** Hard cap so PostgREST truncation can't silently skew aggregates forever. */
+const ANALYTICS_ROW_CAP = 5_000;
 
-  if (!roofer) {
+export default async function AnalyticsPage() {
+  const user = await getUser();
+  const lookup = await getRoofer();
+
+  if (lookup.status === "error") {
+    return (
+      <>
+        <PageHeader title="Analytics" />
+        <div className="surface rounded-2xl p-6">
+          <h2 className="font-display text-lg font-semibold text-ink">
+            Couldn’t load your analytics
+          </h2>
+          <p className="mt-2 text-sm text-ink-soft">
+            Please refresh the page and try again. If this keeps happening,
+            contact support.
+          </p>
+        </div>
+      </>
+    );
+  }
+
+  if (lookup.status === "not_linked") {
     return (
       <>
         <PageHeader title="Analytics" />
@@ -30,11 +53,18 @@ export default async function AnalyticsPage() {
     );
   }
 
+  const since = new Date();
+  since.setUTCDate(since.getUTCDate() - ANALYTICS_WINDOW_DAYS);
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("leads")
+    // Non-PII columns only — never ship name/phone/email/address into analytics.
     .select("status,job_type,quote_min_ex_vat,quote_max_ex_vat,received_at")
-    .eq("archived", false);
+    .eq("archived", false)
+    .gte("received_at", since.toISOString())
+    .order("received_at", { ascending: false })
+    .limit(ANALYTICS_ROW_CAP);
 
   if (error) {
     return (
@@ -44,7 +74,10 @@ export default async function AnalyticsPage() {
           <h2 className="font-display text-lg font-semibold text-ink">
             Couldn’t load your analytics
           </h2>
-          <p className="mt-2 text-sm text-ink-soft">{error.message}</p>
+          <p className="mt-2 text-sm text-ink-soft">
+            Please refresh the page and try again. If this keeps happening,
+            contact support.
+          </p>
         </div>
       </>
     );

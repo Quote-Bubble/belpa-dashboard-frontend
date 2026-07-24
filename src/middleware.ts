@@ -5,9 +5,13 @@ import { NextResponse, type NextRequest } from "next/server";
  * Refreshes the Supabase session on every request and gates access:
  * unauthenticated users are sent to /login; logged-in users can't sit on the
  * auth pages.
+ *
+ * Session cookies written during refresh must be copied onto redirect
+ * responses — otherwise the browser never receives the refreshed tokens and
+ * the next request loops (or drops the session).
  */
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,34 +25,48 @@ export async function middleware(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value),
           );
-          response = NextResponse.next({ request });
+          supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options),
+            supabaseResponse.cookies.set(name, value, options),
           );
         },
       },
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser();
+    user = authUser;
+  } catch {
+    // Transient Auth failures must not 500 every matched path (including /login).
+    user = null;
+  }
 
   const path = request.nextUrl.pathname;
   const isAuthPage = path === "/login" || path === "/signup";
 
+  const copySessionCookies = (target: NextResponse) => {
+    supabaseResponse.cookies.getAll().forEach((c) => {
+      target.cookies.set(c);
+    });
+    return target;
+  };
+
   if (!user && !isAuthPage) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    return NextResponse.redirect(url);
+    return copySessionCookies(NextResponse.redirect(url));
   }
   if (user && isAuthPage) {
     const url = request.nextUrl.clone();
     url.pathname = "/quotes";
-    return NextResponse.redirect(url);
+    return copySessionCookies(NextResponse.redirect(url));
   }
 
-  return response;
+  return supabaseResponse;
 }
 
 export const config = {

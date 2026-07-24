@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 import type {
   DashboardLead,
@@ -37,8 +37,15 @@ function compare(a: DashboardLead, b: DashboardLead, key: SortKey): number {
       return a.contactName.localeCompare(b.contactName);
     case "jobType":
       return jobTypeLabel(a.jobType).localeCompare(jobTypeLabel(b.jobType));
-    case "quote":
-      return (a.quoteMaxExVat ?? 0) - (b.quoteMaxExVat ?? 0);
+    case "quote": {
+      const aq = a.quoteMaxExVat;
+      const bq = b.quoteMaxExVat;
+      // Null quotes always sort last, regardless of direction.
+      if (aq == null && bq == null) return 0;
+      if (aq == null) return 1;
+      if (bq == null) return -1;
+      return aq - bq;
+    }
     case "status":
       return STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status);
     case "receivedAt":
@@ -51,9 +58,15 @@ function compare(a: DashboardLead, b: DashboardLead, key: SortKey): number {
 export default function QuotesClient({
   initialLeads,
   rooferSlug,
+  page,
+  pageSize,
+  totalCount,
 }: {
   initialLeads: DashboardLead[];
   rooferSlug: string;
+  page: number;
+  pageSize: number;
+  totalCount: number;
 }) {
   const [leads, setLeads] = useState<DashboardLead[]>(initialLeads);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -62,10 +75,21 @@ export default function QuotesClient({
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [flashWonId, setFlashWonId] = useState<string | null>(null);
+  const [mutationError, setMutationError] = useState<string | null>(null);
   const flashTimer = useRef<number | null>(null);
-  const [pageSize, setPageSize] = useState(25);
-  const [page, setPage] = useState(0);
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Sync when the server re-renders a new page of leads.
+  useEffect(() => {
+    setLeads(initialLeads);
+  }, [initialLeads]);
+
+  useEffect(() => {
+    return () => {
+      if (flashTimer.current) window.clearTimeout(flashTimer.current);
+    };
+  }, []);
 
   // Quotes writes go straight to Supabase for instant optimistic UI, which
   // bypasses Next's cache — so Analytics silently kept stale numbers until a
@@ -73,6 +97,13 @@ export default function QuotesClient({
   // the background so it's already warm by the time you actually click over.
   const syncAnalytics = () => {
     void revalidateAnalytics().then(() => router.prefetch("/analytics"));
+  };
+
+  const navigatePage = (nextPage: number, nextSize = pageSize) => {
+    const params = new URLSearchParams();
+    params.set("page", String(Math.max(0, nextPage)));
+    params.set("pageSize", String(nextSize));
+    router.push(`${pathname}?${params.toString()}`);
   };
 
   // `payload` is a fat jsonb column (roof segments, per-segment contributions),
@@ -113,28 +144,15 @@ export default function QuotesClient({
         l.addressFormatted.toLowerCase().includes(q)
       );
     });
-    const sorted = [...filtered].sort((a, b) => compare(a, b, sortKey));
-    if (sortDir === "desc") sorted.reverse();
-    return sorted;
+    // Multiply by direction instead of reverse() so ties keep stable order.
+    return [...filtered].sort((a, b) => {
+      const cmp = compare(a, b, sortKey);
+      return sortDir === "asc" ? cmp : -cmp;
+    });
   }, [leads, statusFilter, search, sortKey, sortDir]);
 
-  // Changing what's being viewed invalidates whatever page you were on.
-  useEffect(() => {
-    setPage(0);
-  }, [statusFilter, search, sortKey, sortDir, pageSize]);
-
-  const pageCount = Math.max(1, Math.ceil(visible.length / pageSize));
-  // Clamp so archiving/deleting rows off the last page doesn't strand you on
-  // a now-empty one.
+  const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
   const safePage = Math.min(page, pageCount - 1);
-  useEffect(() => {
-    if (safePage !== page) setPage(safePage);
-  }, [safePage, page]);
-
-  const pageLeads = useMemo(
-    () => visible.slice(safePage * pageSize, safePage * pageSize + pageSize),
-    [visible, safePage, pageSize],
-  );
 
   const handleSort = (key: SortKey) => {
     if (key === sortKey) {
@@ -147,6 +165,7 @@ export default function QuotesClient({
 
   const handleStatusChange = (id: string, status: LeadStatus) => {
     const prevStatus = leads.find((l) => l.id === id)?.status;
+    setMutationError(null);
     setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)));
     if (status === "won") {
       setFlashWonId(id);
@@ -154,16 +173,23 @@ export default function QuotesClient({
       flashTimer.current = window.setTimeout(() => setFlashWonId(null), 650);
     }
     // Persist (RLS allows authenticated members to update lead status).
+    // Guard lost-update: only roll back if the UI still shows the optimistic value.
     void createClient()
       .from("leads")
       .update({ status })
       .eq("id", id)
       .then(({ error }) => {
-        if (error && prevStatus) {
-          // Roll back on failure.
-          setLeads((prev) =>
-            prev.map((l) => (l.id === id ? { ...l, status: prevStatus } : l)),
-          );
+        if (error) {
+          setMutationError("Couldn’t update status. Please try again.");
+          if (prevStatus !== undefined) {
+            setLeads((prev) =>
+              prev.map((l) =>
+                l.id === id && l.status === status
+                  ? { ...l, status: prevStatus }
+                  : l,
+              ),
+            );
+          }
         } else {
           syncAnalytics();
         }
@@ -173,26 +199,30 @@ export default function QuotesClient({
   const handleArchive = (id: string) => {
     const prevArchived = leads.find((l) => l.id === id)?.archived ?? false;
     const nextArchived = !prevArchived;
+    setMutationError(null);
     setLeads((prev) =>
       prev.map((l) => (l.id === id ? { ...l, archived: nextArchived } : l)),
     );
     setExpandedId((cur) => (cur === id ? null : cur));
 
-    // Persist (RLS allows authenticated members to update their own leads).
     void createClient()
       .from("leads")
       .update({ archived: nextArchived })
       .eq("id", id)
       .then(({ error }) => {
         if (error) {
-          // Roll back on failure.
+          setMutationError("Couldn’t update archive state. Please try again.");
           setLeads((prev) =>
             prev.map((l) =>
-              l.id === id ? { ...l, archived: prevArchived } : l,
+              l.id === id && l.archived === nextArchived
+                ? { ...l, archived: prevArchived }
+                : l,
             ),
           );
         } else {
           syncAnalytics();
+          // Row left this page's filter — refresh so counts/pages stay honest.
+          router.refresh();
         }
       });
   };
@@ -257,6 +287,22 @@ export default function QuotesClient({
     <>
       <PageHeader title="Quotes" />
 
+      {mutationError && (
+        <div
+          role="alert"
+          className="mb-4 flex items-center justify-between gap-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800"
+        >
+          <span>{mutationError}</span>
+          <button
+            type="button"
+            onClick={() => setMutationError(null)}
+            className="shrink-0 font-medium underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       <div className="toolbar mb-5 flex flex-col gap-3 rounded-2xl p-2 sm:flex-row sm:items-center sm:justify-between">
         <FilterBar
           filters={filterItems}
@@ -281,7 +327,7 @@ export default function QuotesClient({
 
       <QuotesTable
         key={`${statusFilter}-${safePage}-${pageSize}`}
-        leads={pageLeads}
+        leads={visible}
         sortKey={sortKey}
         sortDir={sortDir}
         onSort={handleSort}
@@ -291,16 +337,16 @@ export default function QuotesClient({
         onStatusChange={handleStatusChange}
         onArchive={handleArchive}
         archivedView={statusFilter === "archived"}
-        noLeadsAtAll={leads.length === 0}
+        noLeadsAtAll={totalCount === 0}
         rooferSlug={rooferSlug}
         flashWonId={flashWonId}
         newId={null}
         page={safePage}
         pageSize={pageSize}
         pageCount={pageCount}
-        totalCount={visible.length}
-        onPageChange={setPage}
-        onPageSizeChange={setPageSize}
+        totalCount={totalCount}
+        onPageChange={(p) => navigatePage(p)}
+        onPageSizeChange={(size) => navigatePage(0, size)}
       />
     </>
   );

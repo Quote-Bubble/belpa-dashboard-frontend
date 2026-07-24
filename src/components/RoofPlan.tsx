@@ -1,4 +1,8 @@
-import type { LatLng, LeadPayload } from "@/lib/types";
+import type { LeadPayload } from "@/lib/types";
+import { project, sanitizePolygonCoords } from "@/lib/roof-plan";
+
+// Re-export for fuzz tests and any callers that imported from the component.
+export { project, sanitizePolygonCoords } from "@/lib/roof-plan";
 
 /**
  * Plan view of the roof face the customer drew in the widget.
@@ -9,53 +13,7 @@ import type { LatLng, LeadPayload } from "@/lib/types";
  * counts are shown as figures by the caller, not as markers on the shape.
  */
 
-const VIEW = 100; // square viewBox; the polygon is fitted inside with padding
-const PAD = 10;
-const METRES_PER_DEG_LAT = 111_320;
-
-type Projected = { points: string; widthM: number | null };
-
-/** Equirectangular projection, good enough at building scale. Longitude is
- *  scaled by cos(lat) so the shape keeps its real proportions, then the whole
- *  outline is fitted into the viewBox. North stays up. */
-function project(coords: LatLng[]): Projected | null {
-  const pts = coords.filter(
-    (c) => Number.isFinite(c?.lat) && Number.isFinite(c?.lng),
-  );
-  if (pts.length < 3) return null;
-
-  const lat0 = pts.reduce((s, p) => s + p.lat, 0) / pts.length;
-  const kx = Math.cos((lat0 * Math.PI) / 180);
-
-  const xs = pts.map((p) => p.lng * kx);
-  const ys = pts.map((p) => -p.lat); // negate so increasing latitude draws upward
-
-  const minX = Math.min(...xs);
-  const maxX = Math.max(...xs);
-  const minY = Math.min(...ys);
-  const maxY = Math.max(...ys);
-
-  const spanX = maxX - minX;
-  const spanY = maxY - minY;
-  const span = Math.max(spanX, spanY);
-  if (!(span > 0)) return null;
-
-  // Uniform scale for both axes — never stretch the roof to fill the box.
-  const scale = (VIEW - PAD * 2) / span;
-  const offsetX = PAD + (VIEW - PAD * 2 - spanX * scale) / 2;
-  const offsetY = PAD + (VIEW - PAD * 2 - spanY * scale) / 2;
-
-  const points = pts
-    .map((p, i) => {
-      const x = (xs[i] - minX) * scale + offsetX;
-      const y = (ys[i] - minY) * scale + offsetY;
-      return `${x.toFixed(2)},${y.toFixed(2)}`;
-    })
-    .join(" ");
-
-  const widthM = spanX * METRES_PER_DEG_LAT;
-  return { points, widthM: widthM > 0 ? widthM : null };
-}
+const VIEW = 100;
 
 function Empty({ note }: { note: string }) {
   return (
@@ -87,8 +45,8 @@ export default function RoofPlan({ payload }: { payload: LeadPayload | null }) {
     return <Empty note="Lead detail hasn't loaded." />;
   }
 
-  const coords = payload.polygonCoords;
-  if (!coords || coords.length < 3) {
+  const coords = sanitizePolygonCoords(payload.polygonCoords);
+  if (coords.length < 3) {
     return <Empty note="This lead was submitted without a drawn roof." />;
   }
 

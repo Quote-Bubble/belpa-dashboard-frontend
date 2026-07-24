@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 
 import type {
@@ -24,9 +24,9 @@ export type SortKey =
 export type SortDir = "asc" | "desc";
 
 /** One shared column template keeps header + every row aligned and static.
- *  All columns left-aligned with generous spacing. */
+ *  All columns left-aligned with generous spacing. Chevron + archive trail. */
 const GRID_TEMPLATE =
-  "minmax(220px,1.6fr) minmax(190px,1.4fr) 170px 140px 130px 44px";
+  "minmax(220px,1.6fr) minmax(190px,1.4fr) 170px 140px 130px 44px 44px";
 
 const gridStyle = { gridTemplateColumns: GRID_TEMPLATE } as const;
 
@@ -88,6 +88,26 @@ function ChevronLeftIcon() {
 function ChevronRightIcon() {
   return (
     <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M9 6l6 6-6 6" />
+    </svg>
+  );
+}
+
+function ExpandChevron({ expanded }: { expanded: boolean }) {
+  return (
+    <svg
+      width={16}
+      height={16}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      style={{ transform: expanded ? "rotate(90deg)" : "none" }}
+      className="transition-transform duration-150"
+    >
       <path d="M9 6l6 6-6 6" />
     </svg>
   );
@@ -196,31 +216,41 @@ export default function QuotesTable({
   rooferSlug: string;
   flashWonId: string | null;
   newId: string | null;
-  /** Zero-indexed current page over the already filtered + sorted list. */
+  /** Zero-indexed current page (server-driven). */
   page: number;
   pageSize: number;
   pageCount: number;
-  /** Count of leads matching the current filter (pre-pagination). */
+  /** Count of leads matching the server query (pre-pagination). */
   totalCount: number;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
 }) {
   const [swipingId, setSwipingId] = useState<string | null>(null);
+  const timers = useRef<number[]>([]);
+
+  useEffect(() => {
+    return () => {
+      timers.current.forEach((id) => window.clearTimeout(id));
+      timers.current = [];
+    };
+  }, []);
 
   const handleArchive = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     if (swipingId) return;
     setSwipingId(id); // foreground swipes aside, yellow shows behind
-    window.setTimeout(() => {
+    const t1 = window.setTimeout(() => {
       onArchive(id); // row leaves → AnimatePresence collapses the height
-      window.setTimeout(() => setSwipingId(null), 320);
+      const t2 = window.setTimeout(() => setSwipingId(null), 320);
+      timers.current.push(t2);
     }, SWIPE_MS);
+    timers.current.push(t1);
   };
 
   return (
     <div className="surface overflow-hidden rounded-2xl shadow-[0_12px_40px_-24px_rgba(10,11,13,0.35)]">
       <div className="overflow-x-auto">
-        <div className="min-w-[880px]">
+        <div className="min-w-[920px]">
           {/* Header */}
           <div
             className="grid items-center gap-x-4 border-b border-line px-6 py-3.5 text-sm"
@@ -244,6 +274,7 @@ export default function QuotesTable({
               );
             })}
             <div aria-hidden />
+            <div aria-hidden />
           </div>
 
           {/* Rows */}
@@ -253,6 +284,7 @@ export default function QuotesTable({
               const swiping = lead.id === swipingId;
               const flashing = lead.id === flashWonId;
               const isNew = lead.id === newId;
+              const detailId = `quote-detail-${lead.id}`;
               return (
                 <motion.div
                   key={lead.id}
@@ -282,19 +314,10 @@ export default function QuotesTable({
                         <span className="pointer-events-none absolute left-2 top-2 z-10 h-1.5 w-1.5 rounded-full bg-brand-500 pulse-dot" />
                       )}
 
-                      {/* Main row */}
+                      {/* Main row — not a button; expand via dedicated chevron */}
                       <div
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => onToggle(lead.id)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            onToggle(lead.id);
-                          }
-                        }}
                         className={[
-                          "grid cursor-pointer items-center gap-x-4 px-6 py-4 text-sm transition-colors duration-150",
+                          "grid items-center gap-x-4 px-6 py-4 text-sm transition-colors duration-150",
                           expanded ? "bg-brand-50" : "hover:bg-black/[0.02]",
                         ].join(" ")}
                         style={gridStyle}
@@ -324,7 +347,11 @@ export default function QuotesTable({
                         </div>
 
                         {/* Status */}
-                        <div className="min-w-0">
+                        <div
+                          className="min-w-0"
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
+                        >
                           <StatusPicker
                             status={lead.status}
                             onChange={(s) => onStatusChange(lead.id, s)}
@@ -336,8 +363,30 @@ export default function QuotesTable({
                           {formatRelativeTime(lead.receivedAt)}
                         </div>
 
-                        {/* Archive / restore */}
+                        {/* Expand chevron */}
                         <div className="flex justify-center">
+                          <button
+                            type="button"
+                            onClick={() => onToggle(lead.id)}
+                            aria-expanded={expanded}
+                            aria-controls={detailId}
+                            aria-label={
+                              expanded
+                                ? `Collapse quote for ${lead.contactName}`
+                                : `Expand quote for ${lead.contactName}`
+                            }
+                            className="grid h-8 w-8 place-items-center rounded-full text-ink-soft transition-colors hover:bg-black/[0.04] hover:text-ink"
+                          >
+                            <ExpandChevron expanded={expanded} />
+                          </button>
+                        </div>
+
+                        {/* Archive / restore */}
+                        <div
+                          className="flex justify-center"
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
+                        >
                           <button
                             type="button"
                             onClick={(e) => handleArchive(e, lead.id)}
@@ -359,6 +408,7 @@ export default function QuotesTable({
                         {expanded && (
                           <motion.div
                             key="detail"
+                            id={detailId}
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: "auto", opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}

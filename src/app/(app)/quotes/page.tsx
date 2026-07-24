@@ -4,6 +4,7 @@ import { getRoofer } from "@/lib/roofer";
 import QuotesClient from "@/components/QuotesClient";
 import PageHeader from "@/components/PageHeader";
 import NotLinkedNotice from "@/components/NotLinkedNotice";
+import { PAGE_SIZE_OPTIONS } from "@/components/QuotesTable";
 
 type LeadRow = {
   id: string;
@@ -40,16 +41,47 @@ function mapRow(row: LeadRow): DashboardLead {
   };
 }
 
+function parsePageSize(raw: string | undefined): number {
+  const n = Number(raw);
+  return (PAGE_SIZE_OPTIONS as readonly number[]).includes(n) ? n : 25;
+}
+
+function parsePage(raw: string | undefined): number {
+  const n = Number(raw);
+  return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 0;
+}
+
 // Leads change often; don't cache this page.
 export const dynamic = "force-dynamic";
 
-export default async function QuotesPage() {
-  const [user, roofer] = await Promise.all([getUser(), getRoofer()]);
-  const supabase = await createClient();
+export default async function QuotesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string; pageSize?: string }>;
+}) {
+  const user = await getUser();
+  const lookup = await getRoofer();
+
+  if (lookup.status === "error") {
+    return (
+      <>
+        <PageHeader title="Quotes" />
+        <div className="surface rounded-2xl p-6">
+          <h2 className="font-display text-lg font-semibold text-ink">
+            Couldn’t load your account
+          </h2>
+          <p className="mt-2 text-sm text-ink-soft">
+            Please refresh the page and try again. If this keeps happening,
+            contact support.
+          </p>
+        </div>
+      </>
+    );
+  }
 
   // No roofer membership means RLS will return zero leads no matter what — say
   // that plainly instead of rendering an empty table.
-  if (!roofer) {
+  if (lookup.status === "not_linked") {
     return (
       <>
         <PageHeader title="Quotes" />
@@ -58,12 +90,22 @@ export default async function QuotesPage() {
     );
   }
 
-  const { data, error } = await supabase
+  const roofer = lookup.roofer;
+  const params = await searchParams;
+  const pageSize = parsePageSize(params.pageSize);
+  let page = parsePage(params.page);
+  const from = page * pageSize;
+  const to = from + pageSize - 1;
+
+  const supabase = await createClient();
+  const { data, error, count } = await supabase
     .from("leads")
     .select(
       "id,status,lead_type,job_type,contact_name,contact_phone,contact_email,address_formatted,address_postcode,quote_min_ex_vat,quote_max_ex_vat,received_at,archived",
+      { count: "exact" },
     )
-    .order("received_at", { ascending: false });
+    .order("received_at", { ascending: false })
+    .range(from, to);
 
   if (error) {
     return (
@@ -73,12 +115,27 @@ export default async function QuotesPage() {
           <h2 className="font-display text-lg font-semibold text-ink">
             Couldn’t load your leads
           </h2>
-          <p className="mt-2 text-sm text-ink-soft">{error.message}</p>
+          <p className="mt-2 text-sm text-ink-soft">
+            Please refresh the page and try again. If this keeps happening,
+            contact support.
+          </p>
         </div>
       </>
     );
   }
 
+  const totalCount = count ?? 0;
+  const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
+  if (page > pageCount - 1) page = pageCount - 1;
+
   const leads = ((data as LeadRow[] | null) ?? []).map(mapRow);
-  return <QuotesClient initialLeads={leads} rooferSlug={roofer.slug} />;
+  return (
+    <QuotesClient
+      initialLeads={leads}
+      rooferSlug={roofer.slug}
+      page={page}
+      pageSize={pageSize}
+      totalCount={totalCount}
+    />
+  );
 }

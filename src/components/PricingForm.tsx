@@ -5,23 +5,60 @@ import { useState } from "react";
 import type { PricingProfile } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
 
+function parseMoney(raw: string): number | null {
+  const trimmed = raw.trim();
+  if (trimmed === "") return null;
+  const n = Number(trimmed);
+  if (!Number.isFinite(n) || n < 0) return null;
+  return n;
+}
+
 function MoneyInput({
   value,
-  onChange,
+  onCommit,
   suffix,
 }: {
   value: number;
-  onChange: (n: number) => void;
+  onCommit: (n: number) => void;
   suffix?: string;
 }) {
+  const [raw, setRaw] = useState(String(value));
+  const [invalid, setInvalid] = useState(false);
+
+  const commit = () => {
+    const n = parseMoney(raw);
+    if (n == null) {
+      setInvalid(true);
+      setRaw(String(value));
+      return;
+    }
+    setInvalid(false);
+    setRaw(String(n));
+    if (n !== value) onCommit(n);
+  };
+
   return (
-    <div className="field flex items-center gap-1 px-3 py-2">
+    <div
+      className={[
+        "field flex items-center gap-1 px-3 py-2",
+        invalid ? "ring-1 ring-red-400" : "",
+      ].join(" ")}
+    >
       <span className="text-sm text-muted">£</span>
       <input
-        type="number"
-        min={0}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
+        type="text"
+        inputMode="decimal"
+        value={raw}
+        onChange={(e) => {
+          setRaw(e.target.value);
+          setInvalid(false);
+        }}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.currentTarget.blur();
+          }
+        }}
         className="w-full bg-transparent text-sm font-medium tabular-nums text-ink outline-none"
       />
       {suffix && <span className="whitespace-nowrap text-xs text-muted">{suffix}</span>}
@@ -75,6 +112,19 @@ export default function PricingForm({
   };
 
   const handleSave = async () => {
+    // Reject negative / non-finite before hitting the DB CHECK constraints.
+    const numbers = [
+      profile.labourPerDay,
+      profile.minimumCallout,
+      profile.skipHire,
+      profile.scaffoldPerWeek,
+      ...profile.materials.map((m) => m.rate),
+    ];
+    if (numbers.some((n) => !Number.isFinite(n) || n < 0)) {
+      setError("All rates must be zero or positive numbers.");
+      return;
+    }
+
     setSaving(true);
     setError(null);
 
@@ -119,7 +169,7 @@ export default function PricingForm({
               <div className="w-40">
                 <MoneyInput
                   value={m.rate}
-                  onChange={(n) => updateMaterial(m.key, n)}
+                  onCommit={(n) => updateMaterial(m.key, n)}
                   suffix="/m²"
                 />
               </div>
@@ -132,7 +182,7 @@ export default function PricingForm({
         <Section title="Labour" description="Day rate per roofer on site.">
           <MoneyInput
             value={profile.labourPerDay}
-            onChange={(n) => update({ labourPerDay: n })}
+            onCommit={(n) => update({ labourPerDay: n })}
             suffix="/ day"
           />
         </Section>
@@ -140,21 +190,21 @@ export default function PricingForm({
         <Section title="Minimum callout" description="Floor price for small jobs.">
           <MoneyInput
             value={profile.minimumCallout}
-            onChange={(n) => update({ minimumCallout: n })}
+            onCommit={(n) => update({ minimumCallout: n })}
           />
         </Section>
 
         <Section title="Skip hire" description="Typical waste removal per job.">
           <MoneyInput
             value={profile.skipHire}
-            onChange={(n) => update({ skipHire: n })}
+            onCommit={(n) => update({ skipHire: n })}
           />
         </Section>
 
         <Section title="Scaffold" description="Hire cost per week.">
           <MoneyInput
             value={profile.scaffoldPerWeek}
-            onChange={(n) => update({ scaffoldPerWeek: n })}
+            onCommit={(n) => update({ scaffoldPerWeek: n })}
             suffix="/ week"
           />
         </Section>

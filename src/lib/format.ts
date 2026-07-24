@@ -25,9 +25,13 @@ export function formatMoney(value: number): string {
   return gbp.format(value);
 }
 
-/** Compact relative time: "1h ago", "3d ago". */
+/** Compact relative time: "1h ago", "3d ago". Caps at weeks, then a short date. */
 export function formatRelativeTime(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
+  const then = new Date(iso).getTime();
+  if (!Number.isFinite(then)) return "just now";
+  const diffMs = Date.now() - then;
+  // Clock skew / future timestamps — don't emit negative units.
+  if (diffMs < 0) return "just now";
   const mins = Math.round(diffMs / 60_000);
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins}m ago`;
@@ -36,7 +40,8 @@ export function formatRelativeTime(iso: string): string {
   const days = Math.round(hours / 24);
   if (days < 7) return `${days}d ago`;
   const weeks = Math.round(days / 7);
-  return `${weeks}w ago`;
+  if (weeks <= 8) return `${weeks}w ago`;
+  return formatDateOnly(iso);
 }
 
 /** Full date for the detail panel. Timezone is pinned to Europe/London so the
@@ -195,9 +200,30 @@ export function formatDateOnly(iso: string | null | undefined): string {
   });
 }
 
-/** Build a wa.me link from a UK phone number (07… → +447…). */
+/**
+ * Build a wa.me link from a UK / international phone number.
+ * Strips a leading `00` international prefix before the UK `0→44` rewrite so
+ * `00447…` becomes `447…`, not `440447…`.
+ */
 export function whatsappLink(phone: string): string {
-  const digits = phone.replace(/\D/g, "");
-  const intl = digits.startsWith("0") ? `44${digits.slice(1)}` : digits;
-  return `https://wa.me/${intl}`;
+  let digits = phone.replace(/\D/g, "");
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  if (digits.startsWith("0")) digits = `44${digits.slice(1)}`;
+  return `https://wa.me/${digits}`;
+}
+
+/** Strict tel: — digits/spaces/punctuation only; no DTMF pause/wait chars. */
+export function isSafeTelHref(phone: string): boolean {
+  const trimmed = phone.trim();
+  if (!trimmed || trimmed.length > 24) return false;
+  if (/[,#*]/.test(trimmed)) return false;
+  return /^\+?[0-9()\s.-]{7,24}$/.test(trimmed);
+}
+
+/** Strict mailto: — no query-string injection (?cc=&body=). */
+export function isSafeMailtoHref(email: string): boolean {
+  const trimmed = email.trim();
+  if (!trimmed || trimmed.length > 254) return false;
+  if (/[?]/.test(trimmed)) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
 }

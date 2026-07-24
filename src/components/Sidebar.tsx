@@ -82,9 +82,15 @@ export default function Sidebar({
 
   const handleSignOut = async () => {
     setSigningOut(true);
-    await createClient().auth.signOut();
-    router.push("/login");
-    router.refresh();
+    try {
+      await createClient().auth.signOut({ scope: "local" });
+      router.push("/login");
+      router.refresh();
+    } catch {
+      // Leave the user on the page with the button re-enabled so they can retry.
+    } finally {
+      setSigningOut(false);
+    }
   };
 
   return (

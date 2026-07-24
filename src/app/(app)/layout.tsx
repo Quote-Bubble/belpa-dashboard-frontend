@@ -10,8 +10,11 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [user, roofer] = await Promise.all([getUser(), getRoofer()]);
+  const user = await getUser();
   if (!user) redirect("/login");
+
+  const lookup = await getRoofer();
+  const roofer = lookup.status === "ok" ? lookup.roofer : null;
 
   return (
     <DashboardShell userEmail={user.email ?? null} roofer={roofer}>

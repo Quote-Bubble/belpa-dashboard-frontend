@@ -16,31 +16,12 @@ export default function NotLinkedNotice({ userId }: { userId: string }) {
       </h2>
       <p className="mt-2 max-w-xl text-sm text-ink-soft">
         You’re signed in, but this account isn’t a member of any roofing company
-        — so there are no leads to show. Send your user ID to whoever administers
-        the Supabase project and ask them to link you.
-      </p>
-
-      <div className="mt-5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
-          Your user ID
-        </p>
-        <code className="mt-1 block break-all rounded-lg bg-black/[0.04] px-3 py-2 font-mono text-sm text-ink">
+        — so there are no leads to show. Contact support and quote reference{" "}
+        <code className="rounded bg-black/[0.05] px-1 py-0.5 font-mono text-xs">
           {userId}
         </code>
-      </div>
-
-      <div className="mt-5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
-          They run
-        </p>
-        <pre className="mt-1 overflow-x-auto rounded-lg bg-black/[0.04] px-3 py-2 font-mono text-xs leading-relaxed text-ink">
-{`insert into public.roofer_members (roofer_id, user_id)
-select r.id, '${userId}'::uuid
-from public.roofers r
-where r.slug = 'quoter-landing-demo'
-on conflict do nothing;`}
-        </pre>
-      </div>
+        .
+      </p>
 
       <p className="mt-4 text-sm text-muted">
         Reload this page once that’s done.

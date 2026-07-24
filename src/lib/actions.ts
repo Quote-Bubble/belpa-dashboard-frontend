@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
+import { getUser } from "@/lib/supabase/server";
+
 /**
  * Quotes mutates leads via a direct client-side Supabase call (for instant
  * optimistic UI), which bypasses Next's Data/Router Cache entirely — so the
@@ -11,5 +13,8 @@ import { revalidatePath } from "next/cache";
  * prefetch) picks up fresh data instead of serving the stale one.
  */
 export async function revalidateAnalytics() {
+  const user = await getUser();
+  if (!user) return;
+
   revalidatePath("/analytics");
 }

@@ -47,6 +47,22 @@ export function dayKey(iso: string): string {
   return DAY_KEY_FORMAT.format(new Date(iso));
 }
 
+/** Shift a London YYYY-MM-DD key by `delta` calendar days via UTC arithmetic
+ *  so DST transitions never collapse two iterations onto the same key. */
+export function shiftDayKey(key: string, delta: number): string {
+  const [y, m, d] = key.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + delta));
+  const yy = dt.getUTCFullYear();
+  const mm = String(dt.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(dt.getUTCDate()).padStart(2, "0");
+  return `${yy}-${mm}-${dd}`;
+}
+
+function labelForDayKey(key: string): string {
+  // Noon UTC keeps the London calendar day stable around midnight boundaries.
+  return DAY_LABEL_FORMAT.format(new Date(`${key}T12:00:00.000Z`));
+}
+
 export type DailyBucket = {
   key: string;
   label: string;
@@ -66,16 +82,13 @@ export function buildDailyBuckets(
 ): DailyBucket[] {
   const buckets = new Map<string, DailyBucket>();
   const order: string[] = [];
-  const end = new Date();
-  end.setDate(end.getDate() - endOffsetDays);
+  const endKey = shiftDayKey(todayKey(), -endOffsetDays);
   for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(end);
-    d.setDate(d.getDate() - i);
-    const key = dayKey(d.toISOString());
+    const key = shiftDayKey(endKey, -i);
     order.push(key);
     buckets.set(key, {
       key,
-      label: DAY_LABEL_FORMAT.format(d),
+      label: labelForDayKey(key),
       count: 0,
       total: 0,
       values: [],
@@ -114,7 +127,5 @@ export function todayKey(): string {
 }
 
 export function yesterdayKey(): string {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
-  return dayKey(d.toISOString());
+  return shiftDayKey(todayKey(), -1);
 }
