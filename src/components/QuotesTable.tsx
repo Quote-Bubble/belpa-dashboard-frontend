@@ -10,6 +10,7 @@ import type {
 } from "@/lib/types";
 import { EXPAND_TRANSITION, rowExit } from "@/lib/motion";
 import { formatRelativeTime, jobTypeLabel } from "@/lib/format";
+import { PAGE_SIZE_OPTIONS } from "@/lib/pagination";
 import StatusPicker from "@/components/StatusPicker";
 import QuoteDetailPanel from "@/components/QuoteDetailPanel";
 import MoneyRange from "@/components/MoneyRange";
@@ -176,8 +177,6 @@ function PaginationBar({
     </div>
   );
 }
-
-export const PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
 
 export default function QuotesTable({
   leads,

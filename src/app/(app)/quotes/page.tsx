@@ -4,7 +4,7 @@ import { getRoofer } from "@/lib/roofer";
 import QuotesClient from "@/components/QuotesClient";
 import PageHeader from "@/components/PageHeader";
 import NotLinkedNotice from "@/components/NotLinkedNotice";
-import { PAGE_SIZE_OPTIONS } from "@/components/QuotesTable";
+import { PAGE_SIZE_OPTIONS } from "@/lib/pagination";
 
 type LeadRow = {
   id: string;
