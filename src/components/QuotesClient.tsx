@@ -19,7 +19,15 @@ import QuotesTable, {
   type SortKey,
 } from "@/components/QuotesTable";
 
-type StatusFilter = "all" | LeadStatus | "archived";
+// "followup" isn't a status — it's the estimate-only browsers (intent
+// `estimate_viewed`) who never asked to proceed. They're kept out of the main
+// views (which show genuine requests) and parked here for nurture.
+type StatusFilter = "all" | LeadStatus | "followup" | "archived";
+
+/** A confirmed lead actually asked to be contacted; a browser only priced. */
+function isBrowser(lead: DashboardLead): boolean {
+  return lead.intent === "estimate_viewed";
+}
 
 /** Pill colours per filter: `ink` idle text, `solid` bubble colour. */
 const FILTER_COLORS: Record<StatusFilter, { ink: string; solid: string }> = {
@@ -28,6 +36,7 @@ const FILTER_COLORS: Record<StatusFilter, { ink: string; solid: string }> = {
   contacted: { ink: "#6d28d9", solid: "#7c3aed" },
   won: { ink: "#0d6b3c", solid: "#12915a" },
   lost: { ink: "#c02626", solid: "#dc2626" },
+  followup: { ink: "#475569", solid: "#64748b" },
   archived: { ink: "#9a6510", solid: "#d99a17" },
 };
 
@@ -118,10 +127,12 @@ export default function QuotesClient({
       contacted: 0,
       won: 0,
       lost: 0,
+      followup: 0,
       archived: 0,
     };
     for (const l of leads) {
       if (l.archived) c.archived += 1;
+      else if (isBrowser(l)) c.followup += 1;
       else {
         c.all += 1;
         c[l.status] += 1;
@@ -133,10 +144,21 @@ export default function QuotesClient({
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
     const archivedView = statusFilter === "archived";
+    const followupView = statusFilter === "followup";
     const filtered = leads.filter((l) => {
-      if (archivedView ? !l.archived : l.archived) return false;
-      if (statusFilter !== "all" && !archivedView && l.status !== statusFilter)
+      if (archivedView) {
+        if (!l.archived) return false;
+      } else if (l.archived) {
         return false;
+      } else if (followupView) {
+        // Follow-up tab: only the estimate-only browsers.
+        if (!isBrowser(l)) return false;
+      } else {
+        // Main views: genuine requests only — a browser stays hidden until
+        // they come back and actually ask (which promotes their intent).
+        if (isBrowser(l)) return false;
+        if (statusFilter !== "all" && l.status !== statusFilter) return false;
+      }
       if (!q) return true;
       return (
         l.contactName.toLowerCase().includes(q) ||
@@ -265,9 +287,20 @@ export default function QuotesClient({
     loadPayload(id);
   };
 
-  const order: StatusFilter[] = ["all", ...STATUS_ORDER, "archived"];
+  const order: StatusFilter[] = [
+    "all",
+    ...STATUS_ORDER,
+    "followup",
+    "archived",
+  ];
   const filterLabel = (f: StatusFilter) =>
-    f === "all" ? "All" : f === "archived" ? "Archived" : statusLabel(f);
+    f === "all"
+      ? "All"
+      : f === "archived"
+        ? "Archived"
+        : f === "followup"
+          ? "Follow-up"
+          : statusLabel(f);
   const archiveIcon = (
     <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-label="Archived">
       <rect x="3" y="4" width="18" height="4" rx="1" />
