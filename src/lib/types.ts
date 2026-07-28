@@ -9,6 +9,16 @@
 
 export type LeadStatus = "new" | "contacted" | "won" | "lost";
 
+/**
+ * How much intent a lead has shown (mirrors LeadIntent in the backend). Lets
+ * the table tier leads so a roofer can tell a genuine quote request from
+ * someone who just peeked at a price. `estimate_viewed` = "priced only".
+ */
+export type LeadIntent =
+  | "estimate_viewed"
+  | "quote_requested"
+  | "callback_requested";
+
 export type JobType =
   | "full_replacement"
   | "tile_or_slate_repair"
@@ -20,6 +30,7 @@ export type JobType =
 export type DashboardLead = {
   id: string;
   status: LeadStatus;
+  intent: LeadIntent;
   leadType: "quote" | "manual_consultation";
   jobType: JobType;
   contactName: string;

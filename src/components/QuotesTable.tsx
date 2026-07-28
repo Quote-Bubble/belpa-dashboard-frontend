@@ -14,6 +14,7 @@ import { PAGE_SIZE_OPTIONS } from "@/lib/pagination";
 import StatusPicker from "@/components/StatusPicker";
 import QuoteDetailPanel from "@/components/QuoteDetailPanel";
 import MoneyRange from "@/components/MoneyRange";
+import IntentBadge from "@/components/IntentBadge";
 
 export type SortKey =
   | "contactName"
@@ -323,8 +324,11 @@ export default function QuotesTable({
                       >
                         {/* Contact */}
                         <div className="min-w-0">
-                          <div className="truncate font-semibold text-ink">
-                            {lead.contactName}
+                          <div className="flex min-w-0 items-center gap-2">
+                            <span className="truncate font-semibold text-ink">
+                              {lead.contactName}
+                            </span>
+                            <IntentBadge intent={lead.intent} />
                           </div>
                           <div className="truncate text-xs text-muted">
                             {lead.contactPhone}

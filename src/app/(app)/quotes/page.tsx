@@ -1,4 +1,9 @@
-import type { DashboardLead, JobType, LeadStatus } from "@/lib/types";
+import type {
+  DashboardLead,
+  JobType,
+  LeadIntent,
+  LeadStatus,
+} from "@/lib/types";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { getRoofer } from "@/lib/roofer";
 import QuotesClient from "@/components/QuotesClient";
@@ -6,9 +11,16 @@ import PageHeader from "@/components/PageHeader";
 import NotLinkedNotice from "@/components/NotLinkedNotice";
 import { PAGE_SIZE_OPTIONS } from "@/lib/pagination";
 
+const VALID_INTENTS: readonly LeadIntent[] = [
+  "estimate_viewed",
+  "quote_requested",
+  "callback_requested",
+];
+
 type LeadRow = {
   id: string;
   status: LeadStatus;
+  intent: string | null;
   lead_type: string | null;
   job_type: string | null;
   contact_name: string | null;
@@ -27,6 +39,10 @@ function mapRow(row: LeadRow): DashboardLead {
   return {
     id: row.id,
     status: row.status,
+    // Older rows (pre-tiering) have no intent — treat them as plain priced.
+    intent: (VALID_INTENTS as readonly string[]).includes(row.intent ?? "")
+      ? (row.intent as LeadIntent)
+      : "estimate_viewed",
     leadType: row.lead_type === "manual_consultation" ? "manual_consultation" : "quote",
     jobType: (row.job_type as JobType) ?? "other",
     contactName: row.contact_name ?? "Unknown",
@@ -101,7 +117,7 @@ export default async function QuotesPage({
   const { data, error, count } = await supabase
     .from("leads")
     .select(
-      "id,status,lead_type,job_type,contact_name,contact_phone,contact_email,address_formatted,address_postcode,quote_min_ex_vat,quote_max_ex_vat,received_at,archived",
+      "id,status,intent,lead_type,job_type,contact_name,contact_phone,contact_email,address_formatted,address_postcode,quote_min_ex_vat,quote_max_ex_vat,received_at,archived",
       { count: "exact" },
     )
     .order("received_at", { ascending: false })
