@@ -14,7 +14,6 @@ import { PAGE_SIZE_OPTIONS } from "@/lib/pagination";
 import StatusPicker from "@/components/StatusPicker";
 import QuoteDetailPanel from "@/components/QuoteDetailPanel";
 import MoneyRange from "@/components/MoneyRange";
-import IntentBadge from "@/components/IntentBadge";
 
 export type SortKey =
   | "contactName"
@@ -322,13 +321,26 @@ export default function QuotesTable({
                         ].join(" ")}
                         style={gridStyle}
                       >
-                        {/* Contact */}
+                        {/* Contact — a "priced only" lead (saw a price but
+                            never asked to proceed) is muted and labelled so
+                            genuine requests carry the visual weight; hot leads
+                            read as normal, unadorned rows. */}
                         <div className="min-w-0">
-                          <div className="flex min-w-0 items-center gap-2">
-                            <span className="truncate font-semibold text-ink">
+                          <div className="flex min-w-0 items-baseline gap-2">
+                            <span
+                              className={`truncate font-semibold ${
+                                lead.intent === "estimate_viewed"
+                                  ? "text-ink-soft"
+                                  : "text-ink"
+                              }`}
+                            >
                               {lead.contactName}
                             </span>
-                            <IntentBadge intent={lead.intent} />
+                            {lead.intent === "estimate_viewed" ? (
+                              <span className="flex-none text-[11px] font-medium text-muted">
+                                Priced only
+                              </span>
+                            ) : null}
                           </div>
                           <div className="truncate text-xs text-muted">
                             {lead.contactPhone}
