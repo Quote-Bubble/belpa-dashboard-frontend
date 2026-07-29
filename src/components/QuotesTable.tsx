@@ -248,7 +248,8 @@ export default function QuotesTable({
 
   return (
     <div className="surface overflow-hidden rounded-2xl shadow-[0_12px_40px_-24px_rgba(10,11,13,0.35)]">
-      <div className="overflow-x-auto">
+      {/* Desktop: the full grid table. Hidden on mobile in favour of cards. */}
+      <div className="hidden overflow-x-auto md:block">
         <div className="min-w-[920px]">
           {/* Header */}
           <div
@@ -432,6 +433,102 @@ export default function QuotesTable({
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Mobile: each lead as a stacked card */}
+      <ul className="md:hidden">
+        <AnimatePresence initial={false}>
+          {leads.map((lead) => {
+            const expanded = lead.id === expandedId;
+            const detailId = `quote-detail-m-${lead.id}`;
+            return (
+              <motion.li
+                key={lead.id}
+                animate={{ opacity: 1 }}
+                exit={{ height: 0, opacity: 0, overflow: "hidden", transition: rowExit }}
+                className="overflow-hidden border-b border-line/60 last:border-0"
+              >
+                <div className="flex items-start gap-3 px-4 py-3.5">
+                  <button
+                    type="button"
+                    onClick={() => onToggle(lead.id)}
+                    aria-expanded={expanded}
+                    aria-controls={detailId}
+                    className="min-w-0 flex-1 text-left"
+                  >
+                    <div className="truncate text-[15px] font-semibold text-ink">
+                      {lead.contactName}
+                    </div>
+                    <div className="mt-0.5 truncate text-[13px] text-muted">
+                      {lead.contactPhone}
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px]">
+                      <span className="text-ink-soft">
+                        {jobTypeLabel(lead.jobType)}
+                      </span>
+                      <span className="font-medium tabular-nums text-ink">
+                        <MoneyRange
+                          min={lead.quoteMinExVat}
+                          max={lead.quoteMaxExVat}
+                          animate={false}
+                        />
+                      </span>
+                    </div>
+                  </button>
+                  <div className="flex shrink-0 flex-col items-end gap-2">
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
+                      <StatusPicker
+                        status={lead.status}
+                        onChange={(s) => onStatusChange(lead.id, s)}
+                      />
+                    </div>
+                    <span
+                      className="text-[12px] text-muted"
+                      suppressHydrationWarning
+                    >
+                      {formatRelativeTime(lead.receivedAt)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex justify-end px-4 pb-2.5">
+                  <button
+                    type="button"
+                    onClick={() => onArchive(lead.id)}
+                    className="text-[12px] font-medium text-muted transition-colors hover:text-ink"
+                  >
+                    {archivedView ? "Restore" : "Archive"}
+                  </button>
+                </div>
+
+                <AnimatePresence initial={false}>
+                  {expanded && (
+                    <motion.div
+                      key="detail"
+                      id={detailId}
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={EXPAND_TRANSITION}
+                      style={{ overflow: "hidden" }}
+                      className="bg-black/[0.015]"
+                    >
+                      <QuoteDetailPanel
+                        lead={lead}
+                        payload={payloads[lead.id]?.data ?? null}
+                        loading={payloads[lead.id]?.loading ?? true}
+                        error={payloads[lead.id]?.error ?? null}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.li>
+            );
+          })}
+        </AnimatePresence>
+      </ul>
 
       {totalCount > 0 && (
         <PaginationBar

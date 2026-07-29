@@ -353,7 +353,8 @@ export default function JobsTable({
 
   return (
     <div className="surface overflow-hidden rounded-2xl shadow-[0_12px_40px_-24px_rgba(10,11,13,0.35)]">
-      <div className="overflow-x-auto">
+      {/* Desktop: the full grid table. Hidden on mobile in favour of cards. */}
+      <div className="hidden overflow-x-auto md:block">
         <div className="min-w-[920px]">
           <div
             className="grid items-center gap-x-4 border-b border-line px-6 py-3.5 text-sm"
@@ -522,6 +523,98 @@ export default function JobsTable({
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Mobile: each job as a stacked card */}
+      <ul className="md:hidden">
+        <AnimatePresence initial={false}>
+          {jobs.map((job) => {
+            const expanded = job.id === expandedId;
+            const detailId = `job-detail-m-${job.id}`;
+            const variance = priceVariance(
+              job.quoteMinExVat,
+              job.quoteMaxExVat,
+              job.actualPriceExVat,
+            );
+            return (
+              <motion.li
+                key={job.id}
+                animate={{ opacity: 1 }}
+                exit={{ height: 0, opacity: 0, overflow: "hidden", transition: rowExit }}
+                className="overflow-hidden border-b border-line/60 last:border-0"
+              >
+                <div className="px-4 py-3.5">
+                  <button
+                    type="button"
+                    onClick={() => onToggle(job.id)}
+                    aria-expanded={expanded}
+                    aria-controls={detailId}
+                    className="block w-full text-left"
+                  >
+                    <div className="truncate text-[15px] font-semibold text-ink">
+                      {job.contactName}
+                    </div>
+                    <div className="mt-0.5 truncate text-[13px] text-muted">
+                      {job.contactPhone}
+                    </div>
+                    <div className="mt-1 truncate text-[13px] text-ink-soft">
+                      {job.addressFormatted || job.addressPostcode || EMPTY}
+                    </div>
+                    <div className="mt-1 text-[12.5px] text-muted">
+                      {jobTypeLabel(job.jobType)} · {formatRelativeTime(job.receivedAt)}
+                    </div>
+                  </button>
+
+                  <div
+                    className="mt-3 flex items-end justify-between gap-3"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  >
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-medium text-ink-soft">
+                        Your price
+                      </p>
+                      <PriceInput
+                        value={job.actualPriceExVat}
+                        onCommit={(v) => onPriceChange(job.id, v)}
+                      />
+                      <VarianceHint result={variance} />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => onArchive(job.id)}
+                      className="shrink-0 text-[12px] font-medium text-muted transition-colors hover:text-ink"
+                    >
+                      {archivedView ? "Restore" : "Archive"}
+                    </button>
+                  </div>
+                </div>
+
+                <AnimatePresence initial={false}>
+                  {expanded && (
+                    <motion.div
+                      key="detail"
+                      id={detailId}
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={EXPAND_TRANSITION}
+                      style={{ overflow: "hidden" }}
+                      className="bg-black/[0.015]"
+                    >
+                      <QuoteDetailPanel
+                        lead={job}
+                        payload={payloads[job.id]?.data ?? null}
+                        loading={payloads[job.id]?.loading ?? true}
+                        error={payloads[job.id]?.error ?? null}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.li>
+            );
+          })}
+        </AnimatePresence>
+      </ul>
 
       {totalCount > 0 && (
         <PaginationBar
