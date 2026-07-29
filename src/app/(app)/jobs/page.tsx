@@ -6,9 +6,10 @@ import type {
 } from "@/lib/types";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { getRoofer } from "@/lib/roofer";
-import QuotesClient from "@/components/QuotesClient";
+import JobsClient from "@/components/JobsClient";
 import PageHeader from "@/components/PageHeader";
 import NotLinkedNotice from "@/components/NotLinkedNotice";
+import QuotesJobsSwitcher from "@/components/QuotesJobsSwitcher";
 import { PAGE_SIZE_OPTIONS } from "@/lib/pagination";
 
 const VALID_INTENTS: readonly LeadIntent[] = [
@@ -35,16 +36,15 @@ type LeadRow = {
   archived: boolean;
 };
 
-/** Map a persisted lead row to the dashboard view model. */
 function mapRow(row: LeadRow): DashboardLead {
   return {
     id: row.id,
     status: row.status,
-    // Older rows (pre-tiering) have no intent — treat them as plain priced.
     intent: (VALID_INTENTS as readonly string[]).includes(row.intent ?? "")
       ? (row.intent as LeadIntent)
       : "estimate_viewed",
-    leadType: row.lead_type === "manual_consultation" ? "manual_consultation" : "quote",
+    leadType:
+      row.lead_type === "manual_consultation" ? "manual_consultation" : "quote",
     jobType: (row.job_type as JobType) ?? "other",
     contactName: row.contact_name ?? "Unknown",
     contactPhone: row.contact_phone ?? "",
@@ -69,10 +69,9 @@ function parsePage(raw: string | undefined): number {
   return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 0;
 }
 
-// Leads change often; don't cache this page.
 export const dynamic = "force-dynamic";
 
-export default async function QuotesPage({
+export default async function JobsPage({
   searchParams,
 }: {
   searchParams: Promise<{ page?: string; pageSize?: string }>;
@@ -83,7 +82,8 @@ export default async function QuotesPage({
   if (lookup.status === "error") {
     return (
       <>
-        <PageHeader title="Quotes" />
+        <QuotesJobsSwitcher />
+        <PageHeader title="Jobs" />
         <div className="surface rounded-2xl p-6">
           <h2 className="font-display text-lg font-semibold text-ink">
             Couldn’t load your account
@@ -97,18 +97,16 @@ export default async function QuotesPage({
     );
   }
 
-  // No roofer membership means RLS will return zero leads no matter what — say
-  // that plainly instead of rendering an empty table.
   if (lookup.status === "not_linked") {
     return (
       <>
-        <PageHeader title="Quotes" />
+        <QuotesJobsSwitcher />
+        <PageHeader title="Jobs" />
         <NotLinkedNotice userId={user?.id ?? "unknown"} />
       </>
     );
   }
 
-  const roofer = lookup.roofer;
   const params = await searchParams;
   const pageSize = parsePageSize(params.pageSize);
   let page = parsePage(params.page);
@@ -116,22 +114,33 @@ export default async function QuotesPage({
   const to = from + pageSize - 1;
 
   const supabase = await createClient();
-  const { data, error, count } = await supabase
+
+  const jobsQuery = supabase
     .from("leads")
     .select(
       "id,status,intent,lead_type,job_type,contact_name,contact_phone,contact_email,address_formatted,address_postcode,quote_min_ex_vat,quote_max_ex_vat,actual_price_ex_vat,received_at,archived",
       { count: "exact" },
     )
+    .eq("status", "won")
+    .eq("archived", false)
     .order("received_at", { ascending: false })
     .range(from, to);
 
-  if (error) {
+  const denomQuery = supabase
+    .from("leads")
+    .select("id", { count: "exact", head: true })
+    .eq("archived", false);
+
+  const [jobsResult, denomResult] = await Promise.all([jobsQuery, denomQuery]);
+
+  if (jobsResult.error) {
     return (
       <>
-        <PageHeader title="Quotes" />
+        <QuotesJobsSwitcher />
+        <PageHeader title="Jobs" />
         <div className="surface rounded-2xl p-6">
           <h2 className="font-display text-lg font-semibold text-ink">
-            Couldn’t load your leads
+            Couldn’t load your jobs
           </h2>
           <p className="mt-2 text-sm text-ink-soft">
             Please refresh the page and try again. If this keeps happening,
@@ -142,18 +151,19 @@ export default async function QuotesPage({
     );
   }
 
-  const totalCount = count ?? 0;
+  const totalCount = jobsResult.count ?? 0;
   const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
   if (page > pageCount - 1) page = pageCount - 1;
 
-  const leads = ((data as LeadRow[] | null) ?? []).map(mapRow);
+  const jobs = ((jobsResult.data as LeadRow[] | null) ?? []).map(mapRow);
+
   return (
-    <QuotesClient
-      initialLeads={leads}
-      rooferSlug={roofer.slug}
+    <JobsClient
+      initialJobs={jobs}
       page={page}
       pageSize={pageSize}
       totalCount={totalCount}
+      totalNonArchivedLeads={denomResult.count ?? 0}
     />
   );
 }

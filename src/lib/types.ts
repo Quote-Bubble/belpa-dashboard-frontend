@@ -40,6 +40,8 @@ export type DashboardLead = {
   addressPostcode: string;
   quoteMinExVat: number | null;
   quoteMaxExVat: number | null;
+  /** Roofer-entered won price (ex VAT). Null until they fill it on Jobs. */
+  actualPriceExVat: number | null;
   receivedAt: string; // ISO timestamp
   /** Persisted on `leads.archived`. Hidden from the main tabs; shown under "Archived". */
   archived: boolean;

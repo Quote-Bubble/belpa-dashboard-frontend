@@ -1,4 +1,5 @@
 import PageHeader from "@/components/PageHeader";
+import QuotesJobsSwitcher from "@/components/QuotesJobsSwitcher";
 import QuotesSkeleton from "@/components/QuotesSkeleton";
 
 const PILL_WIDTHS = ["w-16", "w-16", "w-24", "w-16", "w-16", "w-9"];
@@ -8,6 +9,7 @@ const PILL_WIDTHS = ["w-16", "w-16", "w-24", "w-16", "w-16", "w-9"];
 export default function QuotesLoading() {
   return (
     <>
+      <QuotesJobsSwitcher />
       <PageHeader title="Quotes" />
 
       <div className="toolbar mb-5 flex flex-col gap-3 rounded-2xl p-2 sm:flex-row sm:items-center sm:justify-between">
