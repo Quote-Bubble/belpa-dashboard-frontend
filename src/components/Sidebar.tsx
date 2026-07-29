@@ -6,7 +6,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion } from "motion/react";
 
 import type { RooferProfile } from "@/lib/types";
+import { inboxPathForMode } from "@/lib/dashboard-mode";
 import { createClient } from "@/lib/supabase/client";
+import { useDashboardMode } from "@/components/DashboardModeProvider";
+import QuotesJobsSwitcher from "@/components/QuotesJobsSwitcher";
 
 type NavItem = {
   href: string;
@@ -25,16 +28,21 @@ const iconProps = {
   strokeLinejoin: "round" as const,
 };
 
-const NAV: NavItem[] = [
-  {
-    href: "/quotes",
-    label: "Quotes",
-    icon: (
-      <svg {...iconProps} aria-hidden>
-        <path d="M4 5h16M4 12h16M4 19h10" />
-      </svg>
-    ),
-  },
+const quotesIcon = (
+  <svg {...iconProps} aria-hidden>
+    <path d="M4 5h16M4 12h16M4 19h10" />
+  </svg>
+);
+
+const jobsIcon = (
+  <svg {...iconProps} aria-hidden>
+    <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+    <path d="M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v0Z" />
+    <path d="M9 12h6M9 16h4" />
+  </svg>
+);
+
+const REST_NAV: NavItem[] = [
   {
     href: "/analytics",
     label: "Analytics",
@@ -78,7 +86,16 @@ export default function Sidebar({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { mode } = useDashboardMode();
   const [signingOut, setSigningOut] = useState(false);
+
+  const inbox: NavItem =
+    mode === "jobs"
+      ? { href: "/jobs", label: "Jobs", icon: jobsIcon }
+      : { href: "/quotes", label: "Quotes", icon: quotesIcon };
+
+  const nav = [inbox, ...REST_NAV];
+  const homeHref = inboxPathForMode(mode);
 
   const handleSignOut = async () => {
     setSigningOut(true);
@@ -97,7 +114,7 @@ export default function Sidebar({
     <div className="flex h-full flex-col px-4 py-6">
       {/* Wordmark */}
       <Link
-        href="/quotes"
+        href={homeHref}
         onClick={onNavigate}
         className="font-display px-2 text-2xl font-semibold tracking-tight text-ink"
       >
@@ -107,9 +124,14 @@ export default function Sidebar({
         Dashboard
       </p>
 
+      {/* Mode switcher — scopes inbox + analytics */}
+      <div className="mt-5 px-0.5">
+        <QuotesJobsSwitcher onSelect={onNavigate} />
+      </div>
+
       {/* Nav */}
-      <nav className="mt-8 flex flex-col gap-1">
-        {NAV.map((item) => {
+      <nav className="mt-5 flex flex-col gap-1">
+        {nav.map((item) => {
           const active =
             pathname === item.href || pathname.startsWith(item.href + "/");
           return (

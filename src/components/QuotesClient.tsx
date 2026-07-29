@@ -13,7 +13,6 @@ import { jobTypeLabel, statusLabel, STATUS_ORDER } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
 import { revalidateAnalytics } from "@/lib/actions";
 import PageHeader from "@/components/PageHeader";
-import QuotesJobsSwitcher from "@/components/QuotesJobsSwitcher";
 import FilterBar, { type Filter } from "@/components/FilterBar";
 import QuotesTable, {
   type SortDir,
@@ -319,7 +318,6 @@ export default function QuotesClient({
 
   return (
     <>
-      <QuotesJobsSwitcher />
       <PageHeader title="Quotes" />
 
       {mutationError && (

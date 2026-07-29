@@ -8,7 +8,12 @@ import type { JobType, LeadStatus } from "@/lib/types";
 
 export type QuoteStat = {
   receivedAt: string; // ISO timestamp
-  value: number | null; // quote midpoint ex-VAT, or null (e.g. consultation leads)
+  /** Quote midpoint ex-VAT, or null (e.g. consultation leads). */
+  value: number | null;
+  /** Roofer-entered won price ex-VAT. Null until logged on Jobs. */
+  actualValue: number | null;
+  quoteMinExVat: number | null;
+  quoteMaxExVat: number | null;
   status: LeadStatus;
   jobType: JobType;
 };

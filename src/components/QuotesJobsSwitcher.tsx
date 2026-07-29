@@ -1,39 +1,47 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
 
-const TABS = [
-  { href: "/quotes", label: "Quotes" },
-  { href: "/jobs", label: "Jobs" },
-] as const;
+import { useDashboardMode } from "@/components/DashboardModeProvider";
+import type { DashboardMode } from "@/lib/dashboard-mode";
+
+const TABS: { mode: DashboardMode; label: string }[] = [
+  { mode: "quotes", label: "Quotes" },
+  { mode: "jobs", label: "Jobs" },
+];
 
 /**
- * Top-left Quotes | Jobs switcher with a sliding active pill.
- * Lives on both routes; sidebar nav stays Quotes-only.
+ * Shell-level Quotes | Jobs mode switcher. Sits above sidebar nav and scopes
+ * the inbox + analytics lens; Account/Support stay global.
  */
-export default function QuotesJobsSwitcher() {
-  const pathname = usePathname();
-  const active =
-    TABS.find((t) => pathname === t.href || pathname.startsWith(`${t.href}/`))
-      ?.href ?? "/quotes";
+export default function QuotesJobsSwitcher({
+  className = "",
+  onSelect,
+}: {
+  className?: string;
+  onSelect?: () => void;
+}) {
+  const { mode, setMode } = useDashboardMode();
 
   return (
     <div
       role="tablist"
-      aria-label="Quotes and jobs"
-      className="relative mb-5 inline-flex rounded-full bg-[color-mix(in_srgb,var(--surface)_88%,#0a0b0d_6%)] p-1 shadow-[inset_0_0_0_1px_rgba(10,11,13,0.06)]"
+      aria-label="Dashboard mode"
+      className={`relative inline-flex w-full rounded-full bg-[color-mix(in_srgb,var(--surface)_88%,#0a0b0d_6%)] p-1 shadow-[inset_0_0_0_1px_rgba(10,11,13,0.06)] ${className}`}
     >
       {TABS.map((tab) => {
-        const isActive = tab.href === active;
+        const isActive = tab.mode === mode;
         return (
-          <Link
-            key={tab.href}
-            href={tab.href}
+          <button
+            key={tab.mode}
+            type="button"
             role="tab"
             aria-selected={isActive}
-            className={`relative z-[1] rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${
+            onClick={() => {
+              setMode(tab.mode);
+              onSelect?.();
+            }}
+            className={`relative z-[1] flex-1 rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
               isActive ? "text-white" : "text-ink-soft hover:text-ink"
             }`}
           >
@@ -45,7 +53,7 @@ export default function QuotesJobsSwitcher() {
               />
             ) : null}
             {tab.label}
-          </Link>
+          </button>
         );
       })}
     </div>

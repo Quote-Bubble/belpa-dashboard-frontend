@@ -9,7 +9,6 @@ import { getRoofer } from "@/lib/roofer";
 import JobsClient from "@/components/JobsClient";
 import PageHeader from "@/components/PageHeader";
 import NotLinkedNotice from "@/components/NotLinkedNotice";
-import QuotesJobsSwitcher from "@/components/QuotesJobsSwitcher";
 import { PAGE_SIZE_OPTIONS } from "@/lib/pagination";
 
 const VALID_INTENTS: readonly LeadIntent[] = [
@@ -82,7 +81,6 @@ export default async function JobsPage({
   if (lookup.status === "error") {
     return (
       <>
-        <QuotesJobsSwitcher />
         <PageHeader title="Jobs" />
         <div className="surface rounded-2xl p-6">
           <h2 className="font-display text-lg font-semibold text-ink">
@@ -100,7 +98,6 @@ export default async function JobsPage({
   if (lookup.status === "not_linked") {
     return (
       <>
-        <QuotesJobsSwitcher />
         <PageHeader title="Jobs" />
         <NotLinkedNotice userId={user?.id ?? "unknown"} />
       </>
@@ -136,7 +133,6 @@ export default async function JobsPage({
   if (jobsResult.error) {
     return (
       <>
-        <QuotesJobsSwitcher />
         <PageHeader title="Jobs" />
         <div className="surface rounded-2xl p-6">
           <h2 className="font-display text-lg font-semibold text-ink">

@@ -8,7 +8,6 @@ import { jobTypeLabel } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
 import { computeJobStats } from "@/lib/job-stats";
 import PageHeader from "@/components/PageHeader";
-import QuotesJobsSwitcher from "@/components/QuotesJobsSwitcher";
 import JobStats from "@/components/JobStats";
 import JobsTable, { type SortDir, type SortKey } from "@/components/JobsTable";
 
@@ -155,7 +154,6 @@ export default function JobsClient({
 
   return (
     <>
-      <QuotesJobsSwitcher />
       <PageHeader
         title="Jobs"
         subtitle="Won work — log the final price and see how it compares to our estimate."

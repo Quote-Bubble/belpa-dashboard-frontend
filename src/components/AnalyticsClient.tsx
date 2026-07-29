@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 
 import PageHeader from "@/components/PageHeader";
+import { useDashboardMode } from "@/components/DashboardModeProvider";
 import LineChart, { type LinePoint } from "@/components/charts/LineChart";
 import {
   formatMoney,
@@ -21,6 +22,7 @@ import {
   yesterdayKey,
   type QuoteStat,
 } from "@/lib/analytics";
+import { estimateMidpoint } from "@/lib/job-stats";
 
 const RANGE_OPTIONS = [
   { days: 7, label: "Last 7 days" },
@@ -110,14 +112,46 @@ function BarRow({
       <div className="mt-1 h-1.5 rounded-full bg-black/[0.05]">
         <div
           className="h-1.5 rounded-full"
-          style={{ width: `${pct}%`, backgroundColor: color ?? "var(--color-brand-500)" }}
+          style={{
+            width: `${pct}%`,
+            backgroundColor: color ?? "var(--color-brand-500)",
+          }}
         />
       </div>
     </div>
   );
 }
 
-export default function AnalyticsClient({ stats }: { stats: QuoteStat[] }) {
+function RangeSelect({
+  rangeDays,
+  onChange,
+}: {
+  rangeDays: (typeof RANGE_OPTIONS)[number]["days"];
+  onChange: (days: (typeof RANGE_OPTIONS)[number]["days"]) => void;
+}) {
+  return (
+    <label className="flex items-center gap-2 text-sm text-muted">
+      Date range
+      <select
+        value={rangeDays}
+        onChange={(e) =>
+          onChange(
+            Number(e.target.value) as (typeof RANGE_OPTIONS)[number]["days"],
+          )
+        }
+        className="field rounded-lg px-2.5 py-1 text-sm font-medium text-ink outline-none"
+      >
+        {RANGE_OPTIONS.map((o) => (
+          <option key={o.days} value={o.days}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function QuotesAnalytics({ stats }: { stats: QuoteStat[] }) {
   const [rangeDays, setRangeDays] =
     useState<(typeof RANGE_OPTIONS)[number]["days"]>(7);
   const [statusFilter, setStatusFilter] = useState<StatusOrAll>("all");
@@ -130,8 +164,6 @@ export default function AnalyticsClient({ stats }: { stats: QuoteStat[] }) {
     [stats, yesterday],
   );
 
-  // Unfiltered window — drives Win rate, Value by job type and Won vs Lost,
-  // which are fixed insights regardless of what the picker below is set to.
   const buckets = useMemo(
     () => buildDailyBuckets(stats, rangeDays),
     [stats, rangeDays],
@@ -145,7 +177,6 @@ export default function AnalyticsClient({ stats }: { stats: QuoteStat[] }) {
     return stats.filter((s) => keys.has(dayKey(s.receivedAt)));
   }, [stats, buckets]);
 
-  // Win rate: won / (won + lost), per day and overall.
   const winRatePoints: LinePoint[] = useMemo(
     () =>
       buckets.map((b) => {
@@ -153,7 +184,10 @@ export default function AnalyticsClient({ stats }: { stats: QuoteStat[] }) {
         const wonCount = dayStats.filter((s) => s.status === "won").length;
         const lostCount = dayStats.filter((s) => s.status === "lost").length;
         const total = wonCount + lostCount;
-        return { label: b.label, value: total > 0 ? (wonCount / total) * 100 : 0 };
+        return {
+          label: b.label,
+          value: total > 0 ? (wonCount / total) * 100 : 0,
+        };
       }),
     [buckets, windowStats],
   );
@@ -172,7 +206,6 @@ export default function AnalyticsClient({ stats }: { stats: QuoteStat[] }) {
       ? (prevWonCount / (prevWonCount + prevLostCount)) * 100
       : null;
 
-  // Value by job type: median estimate per job type, within the window.
   const jobTypeRows = useMemo(() => {
     const groups = new Map<JobType, number[]>();
     for (const s of windowStats) {
@@ -192,7 +225,6 @@ export default function AnalyticsClient({ stats }: { stats: QuoteStat[] }) {
   }, [windowStats]);
   const maxJobTypeMedian = Math.max(1, ...jobTypeRows.map((r) => r.median));
 
-  // Won vs Lost: median value of leads that ended in each outcome.
   const wonValues = windowStats
     .filter((s) => s.status === "won" && s.value != null)
     .map((s) => s.value as number);
@@ -203,7 +235,6 @@ export default function AnalyticsClient({ stats }: { stats: QuoteStat[] }) {
   const lostMedian = median(lostValues);
   const maxOutcomeMedian = Math.max(1, wonMedian ?? 0, lostMedian ?? 0);
 
-  // Filtered by the status picker — drives the two trend cards.
   const filteredStats = useMemo(
     () =>
       statusFilter === "all"
@@ -246,7 +277,6 @@ export default function AnalyticsClient({ stats }: { stats: QuoteStat[] }) {
         subtitle="Quote volume and estimated value across your pipeline."
       />
 
-      {/* Today */}
       <div className="mb-4 grid gap-4 sm:grid-cols-2">
         <div className="surface rounded-2xl p-4">
           <p className="text-xs font-medium text-ink-soft">Quotes today</p>
@@ -269,33 +299,13 @@ export default function AnalyticsClient({ stats }: { stats: QuoteStat[] }) {
         </div>
       </div>
 
-      {/* Overview */}
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="font-display text-lg font-semibold text-ink">
           Your overview
         </h2>
-        <label className="flex items-center gap-2 text-sm text-muted">
-          Date range
-          <select
-            value={rangeDays}
-            onChange={(e) =>
-              setRangeDays(
-                Number(e.target.value) as (typeof RANGE_OPTIONS)[number]["days"],
-              )
-            }
-            className="field rounded-lg px-2.5 py-1 text-sm font-medium text-ink outline-none"
-          >
-            {RANGE_OPTIONS.map((o) => (
-              <option key={o.days} value={o.days}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <RangeSelect rangeDays={rangeDays} onChange={setRangeDays} />
       </div>
 
-      {/* Status picker — scopes the two trend cards below to a single
-          status, so "how many did I win/lose" reads as a trend. */}
       <div className="mb-3 flex flex-wrap gap-1.5">
         {STATUS_FILTERS.map((f) => {
           const active = statusFilter === f.key;
@@ -402,4 +412,284 @@ export default function AnalyticsClient({ stats }: { stats: QuoteStat[] }) {
       </div>
     </>
   );
+}
+
+/** Jobs lens: won work valued by actual price, plus estimate accuracy. */
+function JobsAnalytics({ stats }: { stats: QuoteStat[] }) {
+  const [rangeDays, setRangeDays] =
+    useState<(typeof RANGE_OPTIONS)[number]["days"]>(7);
+
+  const won = useMemo(
+    () => stats.filter((s) => s.status === "won"),
+    [stats],
+  );
+
+  // Reuse bucket helpers by projecting actual price into `value`.
+  const priced = useMemo(
+    () =>
+      won.map((s) => ({
+        ...s,
+        value: s.actualValue,
+      })),
+    [won],
+  );
+
+  const today = todayKey();
+  const yesterday = yesterdayKey();
+  const todaySummary = useMemo(() => summariseDay(priced, today), [priced, today]);
+  const yesterdaySummary = useMemo(
+    () => summariseDay(priced, yesterday),
+    [priced, yesterday],
+  );
+
+  const buckets = useMemo(
+    () => buildDailyBuckets(priced, rangeDays),
+    [priced, rangeDays],
+  );
+  const prevBuckets = useMemo(
+    () => buildDailyBuckets(priced, rangeDays, rangeDays),
+    [priced, rangeDays],
+  );
+
+  const windowJobs = useMemo(() => {
+    const keys = new Set(buckets.map((b) => b.key));
+    return won.filter((s) => keys.has(dayKey(s.receivedAt)));
+  }, [won, buckets]);
+  const prevWindowJobs = useMemo(() => {
+    const keys = new Set(prevBuckets.map((b) => b.key));
+    return won.filter((s) => keys.has(dayKey(s.receivedAt)));
+  }, [won, prevBuckets]);
+
+  const windowActuals = windowJobs
+    .map((s) => s.actualValue)
+    .filter((v): v is number => v != null && Number.isFinite(v));
+  const prevWindowActuals = prevWindowJobs
+    .map((s) => s.actualValue)
+    .filter((v): v is number => v != null && Number.isFinite(v));
+
+  const totalRevenue = windowActuals.reduce((sum, v) => sum + v, 0);
+  const prevTotalRevenue = prevWindowActuals.reduce((sum, v) => sum + v, 0);
+  const avgJob = median(windowActuals);
+  const prevAvgJob = median(prevWindowActuals);
+
+  const accuracyErrors = windowJobs
+    .map((s) => {
+      if (s.actualValue == null) return null;
+      const mid = estimateMidpoint(s.quoteMinExVat, s.quoteMaxExVat);
+      if (mid == null || mid === 0) return null;
+      return Math.abs((100 * (s.actualValue - mid)) / mid);
+    })
+    .filter((v): v is number => v != null);
+  const accuracyWithin =
+    accuracyErrors.length > 0
+      ? Math.round(
+          accuracyErrors.reduce((sum, v) => sum + v, 0) / accuracyErrors.length,
+        )
+      : null;
+
+  const prevAccuracyErrors = prevWindowJobs
+    .map((s) => {
+      if (s.actualValue == null) return null;
+      const mid = estimateMidpoint(s.quoteMinExVat, s.quoteMaxExVat);
+      if (mid == null || mid === 0) return null;
+      return Math.abs((100 * (s.actualValue - mid)) / mid);
+    })
+    .filter((v): v is number => v != null);
+  const prevAccuracyWithin =
+    prevAccuracyErrors.length > 0
+      ? Math.round(
+          prevAccuracyErrors.reduce((sum, v) => sum + v, 0) /
+            prevAccuracyErrors.length,
+        )
+      : null;
+
+  const accuracyPoints: LinePoint[] = useMemo(
+    () =>
+      buckets.map((b) => {
+        const dayJobs = windowJobs.filter((s) => dayKey(s.receivedAt) === b.key);
+        const errors = dayJobs
+          .map((s) => {
+            if (s.actualValue == null) return null;
+            const mid = estimateMidpoint(s.quoteMinExVat, s.quoteMaxExVat);
+            if (mid == null || mid === 0) return null;
+            return Math.abs((100 * (s.actualValue - mid)) / mid);
+          })
+          .filter((v): v is number => v != null);
+        return {
+          label: b.label,
+          value:
+            errors.length > 0
+              ? errors.reduce((sum, v) => sum + v, 0) / errors.length
+              : 0,
+        };
+      }),
+    [buckets, windowJobs],
+  );
+
+  const jobTypeRows = useMemo(() => {
+    const groups = new Map<JobType, number[]>();
+    for (const s of windowJobs) {
+      if (s.actualValue == null) continue;
+      const arr = groups.get(s.jobType) ?? [];
+      arr.push(s.actualValue);
+      groups.set(s.jobType, arr);
+    }
+    return Array.from(groups.entries())
+      .map(([jobType, values]) => ({
+        jobType,
+        count: values.length,
+        median: median(values) ?? 0,
+        total: values.reduce((sum, v) => sum + v, 0),
+      }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 5);
+  }, [windowJobs]);
+  const maxJobTypeTotal = Math.max(1, ...jobTypeRows.map((r) => r.total));
+
+  const pricedCount = windowActuals.length;
+  const unpricedCount = windowJobs.length - pricedCount;
+
+  return (
+    <>
+      <PageHeader
+        title="Analytics"
+        subtitle="Won jobs valued by the prices you logged — not estimates."
+      />
+
+      <div className="mb-4 grid gap-4 sm:grid-cols-2">
+        <div className="surface rounded-2xl p-4">
+          <p className="text-xs font-medium text-ink-soft">Jobs won today</p>
+          <p className="mt-0.5 text-xl font-semibold text-ink">
+            {todaySummary.count}
+          </p>
+          <p className="text-xs text-muted">{yesterdaySummary.count} yesterday</p>
+        </div>
+        <div className="surface rounded-2xl p-4">
+          <p className="text-xs font-medium text-ink-soft">
+            Median actual price today
+          </p>
+          <p className="mt-0.5 text-xl font-semibold text-ink">
+            {todaySummary.median != null ? formatMoney(todaySummary.median) : "—"}
+          </p>
+          <p className="text-xs text-muted">
+            {yesterdaySummary.median != null
+              ? formatMoney(yesterdaySummary.median)
+              : "—"}{" "}
+            yesterday
+          </p>
+        </div>
+      </div>
+
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="font-display text-lg font-semibold text-ink">
+          Your overview
+        </h2>
+        <RangeSelect rangeDays={rangeDays} onChange={setRangeDays} />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard
+          title="Jobs won"
+          value={formatCount(windowJobs.length)}
+          deltaLabel={`${prevWindowJobs.length} previous period`}
+          data={buckets.map((b) => ({ label: b.label, value: b.count }))}
+          formatValue={formatCount}
+        />
+        <StatCard
+          title="Total revenue"
+          value={pricedCount > 0 ? formatMoney(totalRevenue) : "—"}
+          deltaLabel={
+            prevWindowActuals.length > 0
+              ? `${formatMoney(prevTotalRevenue)} previous period`
+              : "No priced jobs previous period"
+          }
+          data={buckets.map((b) => ({
+            label: b.label,
+            value: b.total,
+          }))}
+          formatValue={compactMoney}
+        />
+        <StatCard
+          title="Estimate accuracy"
+          value={
+            accuracyWithin != null ? `within ${accuracyWithin}%` : "—"
+          }
+          deltaLabel={
+            prevAccuracyWithin != null
+              ? `within ${prevAccuracyWithin}% previous period`
+              : "No priced jobs previous period"
+          }
+          data={accuracyPoints}
+          formatValue={(v) => `${Math.round(v)}%`}
+        />
+      </div>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div className="surface rounded-2xl p-4">
+          <p className="text-xs font-medium text-ink-soft">Revenue by job type</p>
+          <p className="text-xs text-muted">Actual price total, this range</p>
+          <div className="mt-3 space-y-2.5">
+            {jobTypeRows.length === 0 ? (
+              <p className="text-sm text-muted">
+                No priced jobs in this range. Log prices on Jobs to unlock this.
+              </p>
+            ) : (
+              jobTypeRows.map((row) => (
+                <BarRow
+                  key={row.jobType}
+                  label={jobTypeLabel(row.jobType)}
+                  count={row.count}
+                  value={row.total}
+                  pct={(row.total / maxJobTypeTotal) * 100}
+                />
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="surface rounded-2xl p-4">
+          <p className="text-xs font-medium text-ink-soft">Pricing coverage</p>
+          <p className="text-xs text-muted">
+            Avg job {avgJob != null ? formatMoney(avgJob) : "—"}
+            {prevAvgJob != null
+              ? ` · ${formatMoney(prevAvgJob)} previous`
+              : ""}
+          </p>
+          <div className="mt-3 space-y-2.5">
+            <BarRow
+              label="Price logged"
+              count={pricedCount}
+              value={pricedCount > 0 ? totalRevenue : null}
+              pct={
+                windowJobs.length > 0
+                  ? (pricedCount / windowJobs.length) * 100
+                  : 0
+              }
+              color={statusColor("won").fg}
+            />
+            <BarRow
+              label="Awaiting price"
+              count={unpricedCount}
+              value={null}
+              pct={
+                windowJobs.length > 0
+                  ? (unpricedCount / windowJobs.length) * 100
+                  : 0
+              }
+              color="var(--color-muted)"
+            />
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+export default function AnalyticsClient({ stats }: { stats: QuoteStat[] }) {
+  const { mode } = useDashboardMode();
+
+  if (mode === "jobs") {
+    return <JobsAnalytics stats={stats} />;
+  }
+  return <QuotesAnalytics stats={stats} />;
 }

@@ -11,6 +11,7 @@ type LeadRow = {
   job_type: string | null;
   quote_min_ex_vat: number | null;
   quote_max_ex_vat: number | null;
+  actual_price_ex_vat: number | null;
   received_at: string;
 };
 
@@ -60,7 +61,9 @@ export default async function AnalyticsPage() {
   const { data, error } = await supabase
     .from("leads")
     // Non-PII columns only — never ship name/phone/email/address into analytics.
-    .select("status,job_type,quote_min_ex_vat,quote_max_ex_vat,received_at")
+    .select(
+      "status,job_type,quote_min_ex_vat,quote_max_ex_vat,actual_price_ex_vat,received_at",
+    )
     .eq("archived", false)
     .gte("received_at", since.toISOString())
     .order("received_at", { ascending: false })
@@ -86,6 +89,9 @@ export default async function AnalyticsPage() {
   const stats: QuoteStat[] = ((data as LeadRow[] | null) ?? []).map((row) => ({
     receivedAt: row.received_at,
     value: quoteValue(row.quote_min_ex_vat, row.quote_max_ex_vat),
+    actualValue: row.actual_price_ex_vat,
+    quoteMinExVat: row.quote_min_ex_vat,
+    quoteMaxExVat: row.quote_max_ex_vat,
     status: row.status,
     jobType: (row.job_type as JobType) ?? "other",
   }));
