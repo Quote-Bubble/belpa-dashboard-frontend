@@ -1,26 +1,24 @@
 import PageHeader from "@/components/PageHeader";
+import QuotesSkeleton from "@/components/QuotesSkeleton";
 
+const PILL_WIDTHS = ["w-14", "w-16", "w-20", "w-9"];
+
+/** Match Quotes loading so Jobs ↔ Quotes mode swaps don’t jump layout. */
 export default function JobsLoading() {
   return (
     <>
       <PageHeader title="Jobs" />
-      <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="surface rounded-2xl p-4">
-            <div className="skeleton h-3 w-16 rounded" />
-            <div className="skeleton mt-2 h-6 w-20 rounded" />
-          </div>
-        ))}
+
+      <div className="toolbar mb-5 flex flex-col gap-3 rounded-2xl p-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-1 px-1 py-0.5">
+          {PILL_WIDTHS.map((w, i) => (
+            <div key={i} className={`skeleton h-7 ${w} rounded-full`} />
+          ))}
+        </div>
+        <div className="skeleton h-9 w-full rounded-xl sm:w-64" />
       </div>
-      <div className="surface overflow-hidden rounded-2xl">
-        <div className="skeleton h-10 w-full rounded-none" />
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className="skeleton mx-4 my-3 h-12 rounded-xl"
-          />
-        ))}
-      </div>
+
+      <QuotesSkeleton />
     </>
   );
 }

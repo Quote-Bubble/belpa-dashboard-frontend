@@ -119,18 +119,12 @@ export default async function JobsPage({
       { count: "exact" },
     )
     .eq("status", "won")
-    .eq("archived", false)
     .order("received_at", { ascending: false })
     .range(from, to);
 
-  const denomQuery = supabase
-    .from("leads")
-    .select("id", { count: "exact", head: true })
-    .eq("archived", false);
+  const { data, error, count } = await jobsQuery;
 
-  const [jobsResult, denomResult] = await Promise.all([jobsQuery, denomQuery]);
-
-  if (jobsResult.error) {
+  if (error) {
     return (
       <>
         <PageHeader title="Jobs" />
@@ -147,11 +141,11 @@ export default async function JobsPage({
     );
   }
 
-  const totalCount = jobsResult.count ?? 0;
+  const totalCount = count ?? 0;
   const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
   if (page > pageCount - 1) page = pageCount - 1;
 
-  const jobs = ((jobsResult.data as LeadRow[] | null) ?? []).map(mapRow);
+  const jobs = ((data as LeadRow[] | null) ?? []).map(mapRow);
 
   return (
     <JobsClient
@@ -159,7 +153,6 @@ export default async function JobsPage({
       page={page}
       pageSize={pageSize}
       totalCount={totalCount}
-      totalNonArchivedLeads={denomResult.count ?? 0}
     />
   );
 }
