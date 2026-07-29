@@ -157,14 +157,15 @@ export default function FilterBar({
       ref={containerRef}
       onPointerMove={onPointerMove}
       onPointerLeave={() => setHoverIndex(null)}
-      // One row that scrolls sideways rather than wrapping — the active-pill
-      // bubble is full-height, so wrapping would stretch it across every row.
-      className="relative flex gap-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      // Mobile: wrap so every filter is visible at once (the animated bubble is
+      // hidden there and the active chip gets a solid fill instead). Desktop:
+      // one row with the jelly bubble; scroll rather than wrap if it's tight.
+      className="relative flex flex-wrap gap-1 md:flex-nowrap md:overflow-x-auto md:[-ms-overflow-style:none] md:[scrollbar-width:none] md:[&::-webkit-scrollbar]:hidden"
     >
       {/* The squishy bubble */}
       <motion.div
         aria-hidden
-        className="pointer-events-none absolute top-0 bottom-0 left-0 rounded-full transition-opacity duration-500"
+        className="pointer-events-none absolute top-0 bottom-0 left-0 hidden rounded-full transition-opacity duration-500 md:block"
         style={{
           x,
           width: w,
@@ -190,8 +191,15 @@ export default function FilterBar({
             }}
             type="button"
             onClick={() => onSelect(f.key)}
-            className="relative z-10 shrink-0 rounded-full px-3 py-1.5 text-sm font-medium leading-none transition-colors"
-            style={{ color: covered ? "#fff" : f.ink }}
+            className={`relative z-10 shrink-0 rounded-full px-3 py-1.5 text-sm font-medium leading-none transition-colors ${
+              covered ? "bg-[var(--pill-solid)] md:bg-transparent" : ""
+            }`}
+            style={
+              {
+                color: covered ? "#fff" : f.ink,
+                "--pill-solid": f.solid,
+              } as React.CSSProperties
+            }
           >
             <span className="inline-flex items-center gap-1.5 leading-none">
               <span className="flex items-center">{f.icon ?? f.label}</span>
