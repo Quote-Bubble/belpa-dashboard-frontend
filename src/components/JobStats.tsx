@@ -44,7 +44,7 @@ export default function JobStats({ stats }: { stats: JobAggregateStats }) {
             ? `within ${stats.accuracyWithinPct}%`
             : "—"
         }
-        hint="vs our midpoint"
+        hint="of your actual prices"
       />
       <StatCard
         label="Conversion rate"

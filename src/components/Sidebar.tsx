@@ -94,7 +94,15 @@ export default function Sidebar({
       ? { href: "/jobs", label: "Jobs", icon: jobsIcon }
       : { href: "/quotes", label: "Quotes", icon: quotesIcon };
 
-  const nav = [inbox, ...REST_NAV];
+  // The /analytics page is the Quotes lens. In Jobs mode the job analytics live
+  // inline on the Jobs page, so hide the nav item rather than link to a view
+  // that contradicts the switcher.
+  const rest =
+    mode === "jobs"
+      ? REST_NAV.filter((item) => item.href !== "/analytics")
+      : REST_NAV;
+
+  const nav = [inbox, ...rest];
   const homeHref = inboxPathForMode(mode);
 
   const handleSignOut = async () => {

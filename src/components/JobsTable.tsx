@@ -31,7 +31,7 @@ const SWIPE_MS = 260;
 const HEADER_COLS: { key: SortKey; label: string }[] = [
   { key: "contactName", label: "Contact" },
   { key: "jobType", label: "Job type" },
-  { key: "quote", label: "Estimate" },
+  { key: "quote", label: "Quoter estimate" },
   { key: "actualPrice", label: "Your price" },
   { key: "receivedAt", label: "Received" },
 ];
