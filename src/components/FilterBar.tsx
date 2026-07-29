@@ -157,7 +157,9 @@ export default function FilterBar({
       ref={containerRef}
       onPointerMove={onPointerMove}
       onPointerLeave={() => setHoverIndex(null)}
-      className="relative flex flex-wrap gap-1"
+      // One row that scrolls sideways rather than wrapping — the active-pill
+      // bubble is full-height, so wrapping would stretch it across every row.
+      className="relative flex gap-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {/* The squishy bubble */}
       <motion.div
@@ -188,7 +190,7 @@ export default function FilterBar({
             }}
             type="button"
             onClick={() => onSelect(f.key)}
-            className="relative z-10 rounded-full px-3 py-1.5 text-sm font-medium leading-none transition-colors"
+            className="relative z-10 shrink-0 rounded-full px-3 py-1.5 text-sm font-medium leading-none transition-colors"
             style={{ color: covered ? "#fff" : f.ink }}
           >
             <span className="inline-flex items-center gap-1.5 leading-none">
