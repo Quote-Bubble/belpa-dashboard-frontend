@@ -8,21 +8,21 @@ import { EXPAND_TRANSITION, rowExit } from "@/lib/motion";
 import { EMPTY, formatRelativeTime, jobTypeLabel } from "@/lib/format";
 import { PAGE_SIZE_OPTIONS } from "@/lib/pagination";
 import { priceVariance, type VarianceResult } from "@/lib/job-stats";
-import MoneyRange from "@/components/MoneyRange";
 import QuoteDetailPanel from "@/components/QuoteDetailPanel";
 
 export type SortKey =
   | "contactName"
+  | "address"
   | "jobType"
-  | "quote"
   | "actualPrice"
   | "receivedAt";
 
 export type SortDir = "asc" | "desc";
 
-/** Same template as QuotesTable so the two modes share alignment + density. */
+/** Jobs lead with where + who up front; the Quoter estimate moves to the detail
+ *  view since the variance chip already carries the accuracy story here. */
 const GRID_TEMPLATE =
-  "minmax(220px,1.6fr) minmax(190px,1.4fr) 170px 140px 130px 44px 44px";
+  "minmax(200px,1.4fr) minmax(200px,1.5fr) 150px 150px 120px 44px 44px";
 
 const gridStyle = { gridTemplateColumns: GRID_TEMPLATE } as const;
 
@@ -30,8 +30,8 @@ const SWIPE_MS = 260;
 
 const HEADER_COLS: { key: SortKey; label: string }[] = [
   { key: "contactName", label: "Contact" },
+  { key: "address", label: "Address" },
   { key: "jobType", label: "Job type" },
-  { key: "quote", label: "Quoter estimate" },
   { key: "actualPrice", label: "Your price" },
   { key: "receivedAt", label: "Received" },
 ];
@@ -430,15 +430,13 @@ export default function JobsTable({
                         </div>
 
                         <div className="truncate text-ink-soft">
-                          {jobTypeLabel(job.jobType)}
+                          {job.addressFormatted ||
+                            job.addressPostcode ||
+                            EMPTY}
                         </div>
 
-                        <div className="truncate font-medium tabular-nums text-ink">
-                          <MoneyRange
-                            min={job.quoteMinExVat}
-                            max={job.quoteMaxExVat}
-                            animate={false}
-                          />
+                        <div className="truncate text-ink-soft">
+                          {jobTypeLabel(job.jobType)}
                         </div>
 
                         <div

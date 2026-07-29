@@ -29,14 +29,10 @@ function compare(a: DashboardLead, b: DashboardLead, key: SortKey): number {
       return a.contactName.localeCompare(b.contactName);
     case "jobType":
       return jobTypeLabel(a.jobType).localeCompare(jobTypeLabel(b.jobType));
-    case "quote": {
-      const aq = a.quoteMaxExVat;
-      const bq = b.quoteMaxExVat;
-      if (aq == null && bq == null) return 0;
-      if (aq == null) return 1;
-      if (bq == null) return -1;
-      return aq - bq;
-    }
+    case "address":
+      return (a.addressFormatted || a.addressPostcode || "").localeCompare(
+        b.addressFormatted || b.addressPostcode || "",
+      );
     case "actualPrice": {
       const aq = a.actualPriceExVat;
       const bq = b.actualPriceExVat;
@@ -137,7 +133,11 @@ export default function JobsClient({
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     } else {
       setSortKey(key);
-      setSortDir(key === "contactName" || key === "jobType" ? "asc" : "desc");
+      setSortDir(
+        key === "contactName" || key === "jobType" || key === "address"
+          ? "asc"
+          : "desc",
+      );
     }
   };
 
