@@ -153,16 +153,46 @@ export default function FilterBar({
   const targetColor = filters[targetIndex]?.solid ?? "#0a0b0d";
 
   return (
-    <div
-      ref={containerRef}
-      onPointerMove={onPointerMove}
-      onPointerLeave={() => setHoverIndex(null)}
-      // Mobile: wrap so every filter is visible at once (the animated bubble is
-      // hidden there and the active chip gets a solid fill instead). Desktop:
-      // one row with the jelly bubble; scroll rather than wrap if it's tight.
-      className="relative flex flex-wrap gap-1 md:flex-nowrap md:overflow-x-auto md:[-ms-overflow-style:none] md:[scrollbar-width:none] md:[&::-webkit-scrollbar]:hidden"
-    >
-      {/* The squishy bubble */}
+    <>
+      {/* Mobile: one compact dropdown so filters live behind a single tap and
+          don't eat vertical space. Counts ride along in each option. */}
+      <div className="relative md:hidden">
+        <select
+          value={activeKey}
+          onChange={(e) => onSelect(e.target.value)}
+          aria-label="Filter"
+          className="field w-full appearance-none rounded-full py-2.5 pl-4 pr-10 text-sm font-semibold text-ink outline-none"
+        >
+          {filters.map((f) => (
+            <option key={f.key} value={f.key}>
+              {f.label} ({f.count})
+            </option>
+          ))}
+        </select>
+        <svg
+          width={16}
+          height={16}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2.4}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+          className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-soft"
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </div>
+
+      {/* Desktop: the chip bar with the jelly bubble. */}
+      <div
+        ref={containerRef}
+        onPointerMove={onPointerMove}
+        onPointerLeave={() => setHoverIndex(null)}
+        className="relative hidden gap-1 md:flex md:flex-nowrap md:overflow-x-auto md:[-ms-overflow-style:none] md:[scrollbar-width:none] md:[&::-webkit-scrollbar]:hidden"
+      >
+        {/* The squishy bubble */}
       <motion.div
         aria-hidden
         className="pointer-events-none absolute top-0 bottom-0 left-0 hidden rounded-full transition-opacity duration-500 md:block"
@@ -191,15 +221,8 @@ export default function FilterBar({
             }}
             type="button"
             onClick={() => onSelect(f.key)}
-            className={`relative z-10 shrink-0 rounded-full px-3 py-1.5 text-sm font-medium leading-none transition-colors ${
-              covered ? "bg-[var(--pill-solid)] md:bg-transparent" : ""
-            }`}
-            style={
-              {
-                color: covered ? "#fff" : f.ink,
-                "--pill-solid": f.solid,
-              } as React.CSSProperties
-            }
+            className="relative z-10 shrink-0 rounded-full px-3 py-1.5 text-sm font-medium leading-none transition-colors"
+            style={{ color: covered ? "#fff" : f.ink }}
           >
             <span className="inline-flex items-center gap-1.5 leading-none">
               <span className="flex items-center">{f.icon ?? f.label}</span>
@@ -213,6 +236,7 @@ export default function FilterBar({
           </button>
         );
       })}
-    </div>
+      </div>
+    </>
   );
 }
