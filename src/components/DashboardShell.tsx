@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 
 import type { RooferProfile } from "@/lib/types";
 import { DashboardModeProvider } from "@/components/DashboardModeProvider";
@@ -59,21 +60,33 @@ export default function DashboardShell({
         </header>
 
         {/* Mobile drawer */}
-        {mobileOpen && (
-          <div className="fixed inset-0 z-40 md:hidden">
-            <div
-              className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-              onClick={() => setMobileOpen(false)}
-            />
-            <div className="surface absolute inset-y-0 left-0 w-72 max-w-[80%]">
-              <Sidebar
-                userEmail={userEmail}
-                roofer={roofer}
-                onNavigate={() => setMobileOpen(false)}
+        <AnimatePresence>
+          {mobileOpen && (
+            <div key="drawer" className="fixed inset-0 z-40 md:hidden">
+              <motion.div
+                className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+                onClick={() => setMobileOpen(false)}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
               />
+              <motion.div
+                className="surface absolute inset-y-0 left-0 w-72 max-w-[80%]"
+                initial={{ x: "-100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "-100%" }}
+                transition={{ type: "spring", stiffness: 380, damping: 38 }}
+              >
+                <Sidebar
+                  userEmail={userEmail}
+                  roofer={roofer}
+                  onNavigate={() => setMobileOpen(false)}
+                />
+              </motion.div>
             </div>
-          </div>
-        )}
+          )}
+        </AnimatePresence>
 
         <div className="flex">
           {/* Desktop sidebar */}
