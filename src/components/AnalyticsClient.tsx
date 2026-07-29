@@ -356,12 +356,12 @@ function QuotesAnalytics({ stats }: { stats: QuoteStat[] }) {
           formatValue={compactMoney}
         />
         <StatCard
-          title="Win rate"
+          title="Completion rate"
           value={winRate != null ? formatPercent(winRate) : "—"}
           deltaLabel={
             prevWinRate != null
               ? `${formatPercent(prevWinRate)} previous period`
-              : "No won/lost previous period"
+              : "No completed/lost previous period"
           }
           data={winRatePoints}
           formatValue={formatPercent}
@@ -390,7 +390,7 @@ function QuotesAnalytics({ stats }: { stats: QuoteStat[] }) {
         </div>
 
         <div className="surface rounded-2xl p-4">
-          <p className="text-xs font-medium text-ink-soft">Won vs. lost value</p>
+          <p className="text-xs font-medium text-ink-soft">Completed vs. lost value</p>
           <p className="text-xs text-muted">Median estimate, this range</p>
           <div className="mt-3 space-y-2.5">
             <BarRow
@@ -553,12 +553,12 @@ function JobsAnalytics({ stats }: { stats: QuoteStat[] }) {
     <>
       <PageHeader
         title="Analytics"
-        subtitle="Won jobs valued by the prices you logged — not estimates."
+        subtitle="Completed jobs valued by the prices you logged, not estimates."
       />
 
       <div className="mb-4 grid gap-4 sm:grid-cols-2">
         <div className="surface rounded-2xl p-4">
-          <p className="text-xs font-medium text-ink-soft">Jobs won today</p>
+          <p className="text-xs font-medium text-ink-soft">Jobs completed today</p>
           <p className="mt-0.5 text-xl font-semibold text-ink">
             {todaySummary.count}
           </p>
@@ -589,7 +589,7 @@ function JobsAnalytics({ stats }: { stats: QuoteStat[] }) {
 
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard
-          title="Jobs won"
+          title="Jobs completed"
           value={formatCount(windowJobs.length)}
           deltaLabel={`${prevWindowJobs.length} previous period`}
           data={buckets.map((b) => ({ label: b.label, value: b.count }))}

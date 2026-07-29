@@ -24,7 +24,7 @@ function StatCard({
 export default function JobStats({ stats }: { stats: JobAggregateStats }) {
   return (
     <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-      <StatCard label="Jobs won" value={String(stats.jobsWon)} />
+      <StatCard label="Jobs completed" value={String(stats.jobsWon)} />
       <StatCard
         label="Total value"
         value={stats.pricedCount > 0 ? formatMoney(stats.totalValue) : "—"}

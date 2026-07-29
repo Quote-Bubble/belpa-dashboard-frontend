@@ -71,10 +71,11 @@ export function jobTypeLabel(job: JobType): string {
   return JOB_LABELS[job] ?? "Other";
 }
 
+// Internal status value stays "won"; roofers see "Completed".
 const STATUS_LABELS: Record<LeadStatus, string> = {
   new: "New",
   contacted: "Contacted",
-  won: "Won",
+  won: "Completed",
   lost: "Lost",
 };
 

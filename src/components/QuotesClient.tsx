@@ -18,6 +18,7 @@ import QuotesTable, {
   type SortDir,
   type SortKey,
 } from "@/components/QuotesTable";
+import CompleteQuoteModal from "@/components/CompleteQuoteModal";
 
 // "followup" isn't a status — it's the estimate-only browsers (intent
 // `estimate_viewed`) who never asked to proceed. They're kept out of the main
@@ -85,6 +86,8 @@ export default function QuotesClient({
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [flashWonId, setFlashWonId] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
+  // The lead whose "Completed" pop-up (capture actual price) is open.
+  const [completing, setCompleting] = useState<DashboardLead | null>(null);
   const flashTimer = useRef<number | null>(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -185,7 +188,24 @@ export default function QuotesClient({
     }
   };
 
+  // Marking Completed opens the price pop-up first; every other status writes
+  // straight through.
   const handleStatusChange = (id: string, status: LeadStatus) => {
+    if (status === "won") {
+      const lead = leads.find((l) => l.id === id);
+      if (lead) {
+        setCompleting(lead);
+        return;
+      }
+    }
+    applyStatus(id, status);
+  };
+
+  const applyStatus = (
+    id: string,
+    status: LeadStatus,
+    actualPrice?: number | null,
+  ) => {
     const prevStatus = leads.find((l) => l.id === id)?.status;
     setMutationError(null);
     setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)));
@@ -194,11 +214,17 @@ export default function QuotesClient({
       if (flashTimer.current) window.clearTimeout(flashTimer.current);
       flashTimer.current = window.setTimeout(() => setFlashWonId(null), 650);
     }
+    // Only include the price when one was given, so "Skip for now" never
+    // clobbers an existing price with null.
+    const update =
+      actualPrice != null
+        ? { status, actual_price_ex_vat: actualPrice }
+        : { status };
     // Persist (RLS allows authenticated members to update lead status).
     // Guard lost-update: only roll back if the UI still shows the optimistic value.
     void createClient()
       .from("leads")
-      .update({ status })
+      .update(update)
       .eq("id", id)
       .then(({ error }) => {
         if (error) {
@@ -216,6 +242,13 @@ export default function QuotesClient({
           syncAnalytics();
         }
       });
+  };
+
+  const commitCompletion = (actualPrice: number | null) => {
+    if (!completing) return;
+    const id = completing.id;
+    setCompleting(null);
+    applyStatus(id, "won", actualPrice);
   };
 
   const handleArchive = (id: string) => {
@@ -381,6 +414,14 @@ export default function QuotesClient({
         onPageChange={(p) => navigatePage(p)}
         onPageSizeChange={(size) => navigatePage(0, size)}
       />
+
+      {completing ? (
+        <CompleteQuoteModal
+          lead={completing}
+          onConfirm={commitCompletion}
+          onCancel={() => setCompleting(null)}
+        />
+      ) : null}
     </>
   );
 }

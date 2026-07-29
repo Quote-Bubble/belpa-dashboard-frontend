@@ -545,14 +545,14 @@ export default function JobsTable({
             {archivedView
               ? "Nothing archived"
               : noJobsAtAll
-                ? "No won jobs yet"
+                ? "No completed jobs yet"
                 : "No jobs match"}
           </p>
           <p className="mt-1 max-w-sm text-sm text-muted">
             {archivedView
               ? "Jobs you archive will appear here."
               : noJobsAtAll
-                ? "When you mark a quote as Won, it shows up here so you can log the final price."
+                ? "When you mark a quote as Completed, it shows up here so you can log the final price."
                 : "Try a different filter or clear the search."}
           </p>
         </div>
