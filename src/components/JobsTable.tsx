@@ -511,6 +511,8 @@ export default function JobsTable({
                               payload={payloads[job.id]?.data ?? null}
                               loading={payloads[job.id]?.loading ?? true}
                               error={payloads[job.id]?.error ?? null}
+                              onArchive={onArchive}
+                              archivedView={archivedView}
                             />
                           </motion.div>
                         )}
@@ -606,6 +608,8 @@ export default function JobsTable({
                         payload={payloads[job.id]?.data ?? null}
                         loading={payloads[job.id]?.loading ?? true}
                         error={payloads[job.id]?.error ?? null}
+                        onArchive={onArchive}
+                        archivedView={archivedView}
                       />
                     </motion.div>
                   )}

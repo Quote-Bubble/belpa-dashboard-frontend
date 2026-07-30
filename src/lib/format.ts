@@ -1,6 +1,7 @@
 import type {
   ConditionAnswer,
   JobType,
+  LeadIntent,
   LeadStatus,
   RooflineScope,
 } from "@/lib/types";
@@ -97,6 +98,70 @@ export function statusColor(status: LeadStatus): { fg: string; bg: string } {
     case "lost":
       return { fg: "#c02626", bg: "#fdeaea" };
   }
+}
+
+// ---------------------------------------------------------------------------
+// Intent
+//
+// How much the customer actually asked for, as opposed to what stage the
+// roofer has moved them to. `estimate_viewed` is someone who priced a roof and
+// left; the other two asked to be contacted. QuotesClient already tiers on
+// this for its "Follow-up" tab — these labels put the same signal on the lead
+// itself.
+// ---------------------------------------------------------------------------
+
+const INTENT_LABELS: Record<LeadIntent, string> = {
+  estimate_viewed: "Priced only",
+  quote_requested: "Quote requested",
+  callback_requested: "Callback requested",
+};
+
+export function intentLabel(intent: LeadIntent): string {
+  return INTENT_LABELS[intent] ?? INTENT_LABELS.estimate_viewed;
+}
+
+/**
+ * Badge colours for intent. Same `{fg, bg}` shape as statusColor, but the
+ * backgrounds are deliberately far paler: intent renders as a quiet outlined
+ * tag next to the status pill, so the two never compete for the same
+ * "filled coloured pill" reading. `estimate_viewed` reuses the slate that
+ * QuotesClient's Follow-up filter already uses (FILTER_COLORS.followup.ink),
+ * so the tab and the badge agree on what a browser looks like.
+ */
+export function intentTone(intent: LeadIntent): { fg: string; bg: string } {
+  switch (intent) {
+    case "estimate_viewed":
+      return { fg: "#475569", bg: "#f1f5f9" };
+    case "quote_requested":
+      return { fg: "#0f766e", bg: "#f0fdfa" };
+    case "callback_requested":
+      return { fg: "#b45309", bg: "#fffbeb" };
+  }
+}
+
+/** Whitespace and case vary between the geocoder's postcode and the one
+ *  embedded in the formatted address ("HP13 6TS" vs "hp136ts"), so compare on
+ *  a stripped, upper-cased form rather than a raw substring test. */
+function normalisePostcode(value: string): string {
+  return value.replace(/\s+/g, "").toUpperCase();
+}
+
+/**
+ * The formatted address almost always already ends with the postcode, so
+ * rendering both prints it twice. Returns the postcode only when the address
+ * does NOT already contain it — otherwise null, and the caller omits the row.
+ */
+export function displayPostcode(
+  addressFormatted: string | null | undefined,
+  addressPostcode: string | null | undefined,
+): string | null {
+  const postcode = addressPostcode?.trim();
+  if (!postcode) return null;
+  const address = addressFormatted?.trim();
+  if (!address) return postcode;
+  return normalisePostcode(address).includes(normalisePostcode(postcode))
+    ? null
+    : postcode;
 }
 
 // ---------------------------------------------------------------------------

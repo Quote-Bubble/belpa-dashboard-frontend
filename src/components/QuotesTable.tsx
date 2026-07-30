@@ -421,6 +421,9 @@ export default function QuotesTable({
                               payload={payloads[lead.id]?.data ?? null}
                               loading={payloads[lead.id]?.loading ?? true}
                               error={payloads[lead.id]?.error ?? null}
+                              onStatusChange={onStatusChange}
+                              onArchive={onArchive}
+                              archivedView={archivedView}
                             />
                           </motion.div>
                         )}
@@ -520,6 +523,9 @@ export default function QuotesTable({
                         payload={payloads[lead.id]?.data ?? null}
                         loading={payloads[lead.id]?.loading ?? true}
                         error={payloads[lead.id]?.error ?? null}
+                        onStatusChange={onStatusChange}
+                        onArchive={onArchive}
+                        archivedView={archivedView}
                       />
                     </motion.div>
                   )}
