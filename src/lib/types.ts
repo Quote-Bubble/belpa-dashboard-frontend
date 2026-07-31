@@ -80,6 +80,11 @@ export type LeadPayload = {
    *  the rest (quoter-widget-frontend/lib/quote-flow.ts:532). When the customer
    *  never drew, it falls back to a rectangle from the scan bounding box. */
   polygonCoords?: LatLng[] | null;
+  /** Centre + zoom of the satellite map the customer drew on. Lets the roof
+   *  reopen on the framing they actually saw instead of one inferred from the
+   *  polygon. Absent on leads captured before the widget sent it, and on
+   *  consultations, which never show a map. */
+  mapView?: { center: LatLng; zoom: number } | null;
   conditionAnswer?: ConditionAnswer | null;
   conditionFlagged?: boolean;
   material?: string | null;

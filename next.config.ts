@@ -18,13 +18,19 @@ const nextConfig: NextConfig = {
     },
   },
   async headers() {
+    /* The Google Maps entries exist for the roof map on the lead detail panel
+       (RoofMap.tsx). Maps JS loads its own further scripts from gstatic,
+       fetches tiles and metadata over XHR, pulls Roboto from fonts.gstatic,
+       and spawns blob: workers for vector rendering — leave any one out and
+       the map fails closed against this CSP rather than rendering. */
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-      "style-src 'self' 'unsafe-inline'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://maps.gstatic.com",
+      "worker-src 'self' blob:",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: blob: https:",
-      "font-src 'self' data:",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+      "font-src 'self' data: https://fonts.gstatic.com",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://maps.googleapis.com https://maps.gstatic.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
