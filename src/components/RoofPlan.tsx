@@ -59,6 +59,10 @@ export default function RoofPlan({ payload }: { payload: LeadPayload | null }) {
   const pitch = payload.solar?.pitchDegrees;
   const roofType = payload.solar?.roofType;
 
+  /* Sighted users read these three off the Roof cluster sitting directly
+     beneath the plan, so they are no longer drawn as chips on the image —
+     that printed every figure twice. They stay here purely to describe the
+     shape to screen readers, which have no such adjacent context. */
   const facts = [
     area != null ? `${Math.round(area)} m²` : null,
     pitch != null ? `${Math.round(pitch)}°` : null,
@@ -100,19 +104,6 @@ export default function RoofPlan({ payload }: { payload: LeadPayload | null }) {
           strokeLinejoin="round"
         />
       </svg>
-
-      {facts.length > 0 && (
-        <figcaption className="absolute left-3 top-3 flex flex-wrap gap-1.5">
-          {facts.map((f) => (
-            <span
-              key={f}
-              className="rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-semibold capitalize text-white backdrop-blur-sm"
-            >
-              {f}
-            </span>
-          ))}
-        </figcaption>
-      )}
 
       {projected.widthM != null && projected.widthM > 0 && (
         <span className="absolute bottom-3 right-3 text-[11px] font-medium text-white/60">
