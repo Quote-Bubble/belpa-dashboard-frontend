@@ -31,7 +31,7 @@ import {
   storeysLabel,
   whatsappLink,
 } from "@/lib/format";
-import RoofPlan from "@/components/RoofPlan";
+import RoofMap from "@/components/RoofMap";
 import StatusPicker from "@/components/StatusPicker";
 
 const iconProps = {
@@ -362,11 +362,11 @@ export default function QuoteDetailPanel({
 
           {/* ---------------- Evidence: everything you verify ---------------- */}
           <div className="min-w-0">
-            <div className="h-56 sm:h-64">
+            <div className="h-56 sm:h-72">
               {loading ? (
                 <div className="h-full animate-pulse rounded-xl bg-black/[0.04]" />
               ) : (
-                <RoofPlan payload={payload} />
+                <RoofMap payload={payload} />
               )}
             </div>
 
