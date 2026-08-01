@@ -271,6 +271,39 @@ body {
   background: radial-gradient(58% 80% at 50% 0%, rgba(255, 255, 255, 0.7), transparent 72%);
 }
 
+/* —— On-load choreography ——
+   A dramatic single-take: the aurora blooms open, the wordmark surges up from
+   the floor, then the card lands last (the thing you actually use). The global
+   reduced-motion rule above collapses all of this to instant. */
+@keyframes auth-bloom {
+  from { opacity: 0; transform: scale(1.1); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes auth-glow-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes auth-word-rise {
+  from { opacity: 0; transform: translateY(84px) scale(1.04); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes auth-card-in {
+  from { opacity: 0; transform: translateY(32px) scale(0.955); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.auth-aurora {
+  animation: auth-bloom 1.5s var(--ease-out-soft) both;
+}
+.auth-glow {
+  animation: auth-glow-in 1.6s ease both;
+}
+.auth-echo-word {
+  animation: auth-word-rise 1.25s var(--ease-out-expo) 0.15s both;
+}
+.auth-card {
+  animation: auth-card-in 0.85s var(--ease-out-expo) 0.45s both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .auth-blob {
     animation: none;
