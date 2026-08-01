@@ -14,6 +14,16 @@ export function hostedLink(slug: string): string {
   return `${WIDGET_ORIGIN}/l/${slug}`;
 }
 
+/** Preview the button flow on a mock roofer site (Summit & Slate). */
+export function previewButton(slug: string): string {
+  return `${WIDGET_ORIGIN}/demo-button.html?roofer=${encodeURIComponent(slug)}`;
+}
+
+/** Preview the inline widget on a different mock roofer site (Kingfisher). */
+export function previewWidget(slug: string): string {
+  return `${WIDGET_ORIGIN}/demo-widget.html?roofer=${encodeURIComponent(slug)}`;
+}
+
 /** Fullscreen button flow: a button + the launch loader. */
 export function buttonSnippet(slug: string): string {
   return `<button data-quoter-launch data-roofer="${slug}">Get a free quote</button>

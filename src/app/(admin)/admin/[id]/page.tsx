@@ -6,7 +6,13 @@ import DeleteRooferButton from "@/components/admin/DeleteRooferButton";
 import InstallSnippets from "@/components/admin/InstallSnippets";
 import { createClient } from "@/lib/supabase/server";
 import { updateRoofer } from "@/lib/admin-actions";
-import { buttonSnippet, hostedLink, widgetSnippet } from "@/lib/embed-snippets";
+import {
+  buttonSnippet,
+  hostedLink,
+  previewButton,
+  previewWidget,
+  widgetSnippet,
+} from "@/lib/embed-snippets";
 import type { RooferAdminRow } from "@/lib/types";
 
 const field =
@@ -70,6 +76,11 @@ export default async function RooferDetailPage({
             button={buttonSnippet(roofer.slug)}
             widget={widgetSnippet(roofer.slug)}
             link={hostedLink(roofer.slug)}
+            preview={{
+              button: previewButton(roofer.slug),
+              widget: previewWidget(roofer.slug),
+              link: hostedLink(roofer.slug),
+            }}
           />
         </section>
 

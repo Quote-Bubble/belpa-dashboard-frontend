@@ -22,11 +22,15 @@ export default function InstallSnippets({
   button,
   widget,
   link,
+  preview,
 }: {
   slug: string;
   button: string;
   widget: string;
   link: string;
+  /** Where "Preview ↗" opens per tab — a mock roofer site for button/inline,
+   *  the hosted page for link. */
+  preview: { button: string; widget: string; link: string };
 }) {
   const [tab, setTab] = useState<Method>("button");
   const [copied, setCopied] = useState(false);
@@ -78,12 +82,18 @@ export default function InstallSnippets({
         </div>
         <div className="flex gap-2">
           <a
-            href={link}
+            href={
+              tab === "button"
+                ? preview.button
+                : tab === "widget"
+                  ? preview.widget
+                  : preview.link
+            }
             target="_blank"
             rel="noopener noreferrer"
             className="btn-ghost flex-1 rounded-full px-3 py-1.5 text-center text-xs font-semibold sm:flex-none"
           >
-            Preview ↗
+            {tab === "link" ? "Open ↗" : "Preview ↗"}
           </a>
           <button
             type="button"
