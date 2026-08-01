@@ -103,7 +103,7 @@ export default function RooferPanel({
         })}
       </div>
 
-      <div className="p-4 sm:p-5">
+      <div className={tab === "pricing" ? "p-3 sm:p-4" : "p-4 sm:p-5"}>
         {tab === "details" && (
           <form
             action={async (fd) => showResult(await updateAction(fd))}

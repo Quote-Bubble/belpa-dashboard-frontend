@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 
 import {
   SERVICE_CATALOG,
@@ -22,64 +23,14 @@ import { createClient } from "@/lib/supabase/client";
 
 const ACCESS_OPTIONS: { value: AccessMode; label: string }[] = [
   { value: "scaffold_weeks", label: "Scaffold" },
-  { value: "fixed_access", label: "Fixed £" },
+  { value: "fixed_access", label: "Fixed" },
   { value: "mewp_day", label: "MEWP" },
   { value: "tower", label: "Tower" },
   { value: "none", label: "None" },
 ];
 
-function MoneyInput({
-  value,
-  onChange,
-  suffix,
-  disabled,
-  className = "",
-}: {
-  value: number;
-  onChange: (n: number) => void;
-  suffix?: string;
-  disabled?: boolean;
-  className?: string;
-}) {
-  const [raw, setRaw] = useState(String(value));
-  useEffect(() => {
-    setRaw(String(value));
-  }, [value]);
-
-  return (
-    <label
-      className={[
-        "inline-flex h-9 items-center gap-1 rounded-lg border border-line bg-white px-2.5",
-        disabled ? "opacity-40" : "focus-within:border-brand-400",
-        className,
-      ].join(" ")}
-    >
-      <span className="text-xs text-muted">£</span>
-      <input
-        type="text"
-        inputMode="decimal"
-        disabled={disabled}
-        value={raw}
-        onChange={(e) => setRaw(e.target.value)}
-        onBlur={() => {
-          const n = Number(raw);
-          if (!Number.isFinite(n) || n < 0) {
-            setRaw(String(value));
-            return;
-          }
-          setRaw(String(n));
-          if (n !== value) onChange(n);
-        }}
-        className="w-full min-w-0 bg-transparent text-sm font-medium tabular-nums text-ink outline-none"
-      />
-      {suffix ? (
-        <span className="shrink-0 text-[11px] text-muted">{suffix}</span>
-      ) : null}
-    </label>
-  );
-}
-
-function TinySwitch({
+/** iOS-style switch — thumb always clipped inside the track. */
+function IosSwitch({
   checked,
   onChange,
   label,
@@ -99,18 +50,140 @@ function TinySwitch({
         onChange(!checked);
       }}
       className={[
-        "relative inline-block h-5 w-9 shrink-0 overflow-hidden rounded-full transition-colors",
-        checked ? "bg-brand-600" : "bg-black/[0.12]",
+        "relative h-[31px] w-[51px] shrink-0 rounded-full transition-colors duration-200 ease-out",
+        checked ? "bg-[#34c759]" : "bg-[#e9e9eb]",
       ].join(" ")}
     >
       <span
         aria-hidden
         className={[
-          "pointer-events-none absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-150",
-          checked ? "translate-x-4" : "translate-x-0",
+          "pointer-events-none absolute top-[2px] left-[2px] h-[27px] w-[27px] rounded-full bg-white",
+          "shadow-[0_3px_8px_rgba(0,0,0,0.15),0_1px_1px_rgba(0,0,0,0.06)]",
+          "transition-transform duration-200 ease-out",
+          checked ? "translate-x-[20px]" : "translate-x-0",
         ].join(" ")}
       />
     </button>
+  );
+}
+
+function MoneyField({
+  value,
+  onChange,
+  suffix,
+  disabled,
+}: {
+  value: number;
+  onChange: (n: number) => void;
+  suffix?: string;
+  disabled?: boolean;
+}) {
+  const [raw, setRaw] = useState(String(value));
+  useEffect(() => {
+    setRaw(String(value));
+  }, [value]);
+
+  return (
+    <label
+      className={[
+        "inline-flex h-9 min-w-[6.5rem] items-center gap-1 rounded-[10px] bg-black/[0.04] px-2.5",
+        disabled ? "opacity-40" : "focus-within:bg-black/[0.06]",
+      ].join(" ")}
+    >
+      <span className="text-[13px] text-[#8e8e93]">£</span>
+      <input
+        type="text"
+        inputMode="decimal"
+        disabled={disabled}
+        value={raw}
+        onChange={(e) => setRaw(e.target.value)}
+        onBlur={() => {
+          const n = Number(raw);
+          if (!Number.isFinite(n) || n < 0) {
+            setRaw(String(value));
+            return;
+          }
+          setRaw(String(n));
+          if (n !== value) onChange(n);
+        }}
+        className="w-full min-w-0 bg-transparent text-[15px] font-medium tabular-nums text-ink outline-none"
+      />
+      {suffix ? (
+        <span className="shrink-0 text-[12px] text-[#8e8e93]">{suffix}</span>
+      ) : null}
+    </label>
+  );
+}
+
+function Group({
+  title,
+  footer,
+  children,
+}: {
+  title?: string;
+  footer?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="space-y-2">
+      {title ? (
+        <h4 className="px-1 text-[12px] font-medium uppercase tracking-[0.04em] text-[#8e8e93]">
+          {title}
+        </h4>
+      ) : null}
+      <div className="overflow-hidden rounded-[12px] bg-white shadow-[0_1px_0_rgba(0,0,0,0.04)] ring-1 ring-black/[0.06]">
+        {children}
+      </div>
+      {footer ? (
+        <p className="px-1 text-[12px] leading-snug text-[#8e8e93]">{footer}</p>
+      ) : null}
+    </section>
+  );
+}
+
+function Row({
+  children,
+  last,
+}: {
+  children: React.ReactNode;
+  last?: boolean;
+}) {
+  return (
+    <div
+      className={[
+        "flex min-h-[44px] items-center justify-between gap-3 px-4 py-2.5",
+        last ? "" : "border-b border-black/[0.06]",
+      ].join(" ")}
+    >
+      {children}
+    </div>
+  );
+}
+
+function ProgressPill({
+  complete,
+  total,
+}: {
+  complete: number;
+  total: number;
+}) {
+  const ready = total > 0 && complete === total;
+  return (
+    <div
+      className={[
+        "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[13px] font-medium",
+        ready
+          ? "bg-[#e8f8ee] text-[#1b7a3d]"
+          : "bg-black/[0.04] text-[#636366]",
+      ].join(" ")}
+    >
+      <span className="tabular-nums">
+        {total === 0 ? "—" : `${complete}/${total}`}
+      </span>
+      <span className="text-[12px] font-normal opacity-80">
+        {ready ? "Ready" : total === 0 ? "Pick services" : "In progress"}
+      </span>
+    </div>
   );
 }
 
@@ -122,63 +195,76 @@ function AccessEditor({
   onChange: (a: AccessPolicy) => void;
 }) {
   return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-      <div
-        className="inline-flex flex-wrap rounded-lg border border-line bg-black/[0.02] p-0.5"
-        role="radiogroup"
-        aria-label="Access"
-      >
-        {ACCESS_OPTIONS.map((o) => {
-          const active = value.mode === o.value;
-          return (
-            <button
-              key={o.value}
-              type="button"
-              role="radio"
-              aria-checked={active}
-              onClick={() =>
-                onChange({
-                  mode: o.value,
-                  rateExVat:
-                    o.value === "none"
-                      ? 0
-                      : value.rateExVat ||
-                        (o.value === "scaffold_weeks"
-                          ? 625
-                          : o.value === "mewp_day"
-                            ? 280
-                            : o.value === "tower"
-                              ? 120
-                              : 350),
-                })
-              }
-              className={[
-                "rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
-                active
-                  ? "bg-white text-ink shadow-sm"
-                  : "text-muted hover:text-ink",
-              ].join(" ")}
-            >
-              {o.label}
-            </button>
-          );
-        })}
+    <Group
+      title="Access"
+      footer={
+        value.mode === "scaffold_weeks"
+          ? "Storeys map to weeks × your weekly rate."
+          : value.mode === "none"
+            ? "No access line is added to the quote."
+            : "A single access figure is added to the quote."
+      }
+    >
+      <div className="border-b border-black/[0.06] p-2">
+        <div
+          className="grid grid-cols-5 gap-0.5 rounded-[9px] bg-black/[0.05] p-0.5"
+          role="radiogroup"
+          aria-label="Access type"
+        >
+          {ACCESS_OPTIONS.map((o) => {
+            const active = value.mode === o.value;
+            return (
+              <button
+                key={o.value}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() =>
+                  onChange({
+                    mode: o.value,
+                    rateExVat:
+                      o.value === "none"
+                        ? 0
+                        : value.rateExVat ||
+                          (o.value === "scaffold_weeks"
+                            ? 625
+                            : o.value === "mewp_day"
+                              ? 280
+                              : o.value === "tower"
+                                ? 120
+                                : 350),
+                  })
+                }
+                className={[
+                  "rounded-[7px] px-1 py-1.5 text-[12px] font-semibold transition-all",
+                  active
+                    ? "bg-white text-ink shadow-[0_1px_3px_rgba(0,0,0,0.12)]"
+                    : "text-[#636366]",
+                ].join(" ")}
+              >
+                {o.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
       {value.mode !== "none" ? (
-        <MoneyInput
-          className="w-[140px]"
-          value={value.rateExVat}
-          onChange={(n) => onChange({ ...value, rateExVat: n })}
-          suffix={value.mode === "scaffold_weeks" ? "/wk" : ""}
-        />
-      ) : (
-        <span className="text-xs text-muted">No access line on quotes</span>
-      )}
-    </div>
+        <Row last>
+          <span className="text-[15px] text-ink">
+            {value.mode === "scaffold_weeks" ? "Per week" : "Rate"}
+          </span>
+          <MoneyField
+            value={value.rateExVat}
+            onChange={(n) => onChange({ ...value, rateExVat: n })}
+            suffix={value.mode === "scaffold_weeks" ? "/wk" : ""}
+          />
+        </Row>
+      ) : null}
+    </Group>
   );
 }
 
-function MaterialTable({
+function MaterialRows({
   materials,
   onChange,
 }: {
@@ -186,71 +272,54 @@ function MaterialTable({
   onChange: (m: ReplacementServiceConfig["materials"]) => void;
 }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-line">
-      <table className="w-full text-left text-sm">
-        <thead>
-          <tr className="border-b border-line bg-black/[0.02] text-[11px] font-medium uppercase tracking-wide text-muted">
-            <th className="px-3 py-2 font-medium">Material</th>
-            <th className="w-16 px-2 py-2 text-center font-medium">Offer</th>
-            <th className="w-36 px-3 py-2 text-right font-medium">£ / m²</th>
-          </tr>
-        </thead>
-        <tbody>
-          {materials.map((m, i) => (
-            <tr
-              key={m.key}
+    <Group title="Coverings" footer="Turn off anything they don’t offer.">
+      {materials.map((m, i) => (
+        <Row key={m.key} last={i === materials.length - 1}>
+          <div className="flex min-w-0 items-center gap-3">
+            <IosSwitch
+              checked={m.enabled}
+              label={`${m.enabled ? "Disable" : "Enable"} ${m.label}`}
+              onChange={(enabled) => {
+                onChange(
+                  materials.map((x, j) => (j === i ? { ...x, enabled } : x)),
+                );
+              }}
+            />
+            <span
               className={[
-                i > 0 ? "border-t border-line" : "",
-                m.enabled ? "" : "text-muted",
+                "truncate text-[15px]",
+                m.enabled ? "text-ink" : "text-[#8e8e93]",
               ].join(" ")}
             >
-              <td className="px-3 py-2 font-medium text-ink">{m.label}</td>
-              <td className="px-2 py-2 text-center">
-                <div className="flex justify-center">
-                  <TinySwitch
-                    checked={m.enabled}
-                    label={`${m.enabled ? "Disable" : "Enable"} ${m.label}`}
-                    onChange={(enabled) => {
-                      onChange(
-                        materials.map((x, j) =>
-                          j === i ? { ...x, enabled } : x,
-                        ),
-                      );
-                    }}
-                  />
-                </div>
-              </td>
-              <td className="px-3 py-2">
-                <div className="flex justify-end">
-                  <MoneyInput
-                    className="w-[7.5rem]"
-                    value={m.rateExVat}
-                    disabled={!m.enabled}
-                    onChange={(rateExVat) => {
-                      onChange(
-                        materials.map((x, j) =>
-                          j === i ? { ...x, rateExVat } : x,
-                        ),
-                      );
-                    }}
-                  />
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+              {m.label}
+            </span>
+          </div>
+          <MoneyField
+            value={m.rateExVat}
+            disabled={!m.enabled}
+            onChange={(rateExVat) => {
+              onChange(
+                materials.map((x, j) =>
+                  j === i ? { ...x, rateExVat } : x,
+                ),
+              );
+            }}
+            suffix="/m²"
+          />
+        </Row>
+      ))}
+    </Group>
   );
 }
 
-function ExtraRow({
+function ToggleMoneyRow({
   checked,
   onToggle,
   label,
   value,
   onRate,
   suffix,
+  last,
 }: {
   checked: boolean;
   onToggle: (v: boolean) => void;
@@ -258,30 +327,20 @@ function ExtraRow({
   value: number;
   onRate: (n: number) => void;
   suffix?: string;
+  last?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 py-1.5">
-      <label className="flex min-w-0 cursor-pointer items-center gap-2.5">
-        <TinySwitch checked={checked} onChange={onToggle} label={label} />
-        <span className="text-sm text-ink">{label}</span>
-      </label>
+    <Row last={last}>
+      <div className="flex min-w-0 items-center gap-3">
+        <IosSwitch checked={checked} onChange={onToggle} label={label} />
+        <span className="text-[15px] text-ink">{label}</span>
+      </div>
       {checked ? (
-        <MoneyInput
-          className="w-[7.5rem]"
-          value={value}
-          onChange={onRate}
-          suffix={suffix}
-        />
+        <MoneyField value={value} onChange={onRate} suffix={suffix} />
       ) : (
-        <span className="text-xs text-muted">Off</span>
+        <span className="text-[13px] text-[#8e8e93]">Off</span>
       )}
-    </div>
-  );
-}
-
-function FieldLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="mb-2 text-xs font-medium text-muted">{children}</p>
+    </Row>
   );
 }
 
@@ -294,68 +353,60 @@ function ReplacementEditor({
 }) {
   return (
     <div className="space-y-5">
-      <div>
-        <FieldLabel>Coverings</FieldLabel>
-        <MaterialTable
-          materials={value.materials}
-          onChange={(materials) => onChange({ ...value, materials })}
-        />
-      </div>
+      <MaterialRows
+        materials={value.materials}
+        onChange={(materials) => onChange({ ...value, materials })}
+      />
 
-      <div className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
-        <div>
-          <FieldLabel>Strip-off</FieldLabel>
-          <MoneyInput
-            className="w-full max-w-[10rem]"
+      <Group title="Job extras">
+        <Row>
+          <span className="text-[15px] text-ink">Strip-off</span>
+          <MoneyField
             value={value.stripOffPerM2}
             onChange={(stripOffPerM2) =>
               onChange({ ...value, stripOffPerM2 })
             }
             suffix="/m²"
           />
-        </div>
-        <div className="space-y-0.5">
-          <ExtraRow
-            checked={value.includeSkip}
-            onToggle={(includeSkip) => onChange({ ...value, includeSkip })}
-            label="Skip hire"
-            value={value.skipHireExVat}
-            onRate={(skipHireExVat) => onChange({ ...value, skipHireExVat })}
-          />
-          <ExtraRow
-            checked={value.includeGutters}
-            onToggle={(includeGutters) =>
-              onChange({ ...value, includeGutters })
-            }
-            label="Gutters (when measured)"
-            value={value.gutterPerMExVat}
-            onRate={(gutterPerMExVat) =>
-              onChange({ ...value, gutterPerMExVat })
-            }
-            suffix="/m"
-          />
-          <ExtraRow
-            checked={value.includeChimneyAllowance}
-            onToggle={(includeChimneyAllowance) =>
-              onChange({ ...value, includeChimneyAllowance })
-            }
-            label="Chimney flashing"
-            value={value.chimneyAllowanceExVat}
-            onRate={(chimneyAllowanceExVat) =>
-              onChange({ ...value, chimneyAllowanceExVat })
-            }
-            suffix="/each"
-          />
-        </div>
-      </div>
-
-      <div>
-        <FieldLabel>Access</FieldLabel>
-        <AccessEditor
-          value={value.access}
-          onChange={(access) => onChange({ ...value, access })}
+        </Row>
+        <ToggleMoneyRow
+          checked={value.includeSkip}
+          onToggle={(includeSkip) => onChange({ ...value, includeSkip })}
+          label="Skip hire"
+          value={value.skipHireExVat}
+          onRate={(skipHireExVat) => onChange({ ...value, skipHireExVat })}
         />
-      </div>
+        <ToggleMoneyRow
+          checked={value.includeGutters}
+          onToggle={(includeGutters) =>
+            onChange({ ...value, includeGutters })
+          }
+          label="Gutters"
+          value={value.gutterPerMExVat}
+          onRate={(gutterPerMExVat) =>
+            onChange({ ...value, gutterPerMExVat })
+          }
+          suffix="/m"
+        />
+        <ToggleMoneyRow
+          checked={value.includeChimneyAllowance}
+          onToggle={(includeChimneyAllowance) =>
+            onChange({ ...value, includeChimneyAllowance })
+          }
+          label="Chimney flashing"
+          value={value.chimneyAllowanceExVat}
+          onRate={(chimneyAllowanceExVat) =>
+            onChange({ ...value, chimneyAllowanceExVat })
+          }
+          suffix="/each"
+          last
+        />
+      </Group>
+
+      <AccessEditor
+        value={value.access}
+        onChange={(access) => onChange({ ...value, access })}
+      />
     </div>
   );
 }
@@ -369,20 +420,14 @@ function RepairEditor({
 }) {
   return (
     <div className="space-y-5">
-      <div>
-        <FieldLabel>Coverings</FieldLabel>
-        <MaterialTable
-          materials={value.materials}
-          onChange={(materials) => onChange({ ...value, materials })}
-        />
-      </div>
-      <div>
-        <FieldLabel>Access</FieldLabel>
-        <AccessEditor
-          value={value.access}
-          onChange={(access) => onChange({ ...value, access })}
-        />
-      </div>
+      <MaterialRows
+        materials={value.materials}
+        onChange={(materials) => onChange({ ...value, materials })}
+      />
+      <AccessEditor
+        value={value.access}
+        onChange={(access) => onChange({ ...value, access })}
+      />
     </div>
   );
 }
@@ -396,37 +441,32 @@ function RooflineEditor({
 }) {
   return (
     <div className="space-y-5">
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div>
-          <FieldLabel>Gutters</FieldLabel>
-          <MoneyInput
-            className="w-full max-w-[12rem]"
+      <Group title="Linear rates">
+        <Row>
+          <span className="text-[15px] text-ink">Gutters</span>
+          <MoneyField
             value={value.gutterPerMExVat}
             onChange={(gutterPerMExVat) =>
               onChange({ ...value, gutterPerMExVat })
             }
             suffix="/m"
           />
-        </div>
-        <div>
-          <FieldLabel>Fascias & soffits</FieldLabel>
-          <MoneyInput
-            className="w-full max-w-[12rem]"
+        </Row>
+        <Row last>
+          <span className="text-[15px] text-ink">Fascias & soffits</span>
+          <MoneyField
             value={value.fasciaSoffitPerMExVat}
             onChange={(fasciaSoffitPerMExVat) =>
               onChange({ ...value, fasciaSoffitPerMExVat })
             }
             suffix="/m"
           />
-        </div>
-      </div>
-      <div>
-        <FieldLabel>Access</FieldLabel>
-        <AccessEditor
-          value={value.access}
-          onChange={(access) => onChange({ ...value, access })}
-        />
-      </div>
+        </Row>
+      </Group>
+      <AccessEditor
+        value={value.access}
+        onChange={(access) => onChange({ ...value, access })}
+      />
     </div>
   );
 }
@@ -448,7 +488,6 @@ export default function QuoteConfigEditor({
   const [originsText, setOriginsText] = useState(initialOrigins.join("\n"));
   const [openService, setOpenService] =
     useState<ServiceKey>("full_replacement");
-  const [showMore, setShowMore] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
@@ -528,234 +567,283 @@ export default function QuoteConfigEditor({
 
   const openMeta = SERVICE_CATALOG.find((s) => s.key === openService)!;
   const openEnabled = config.enabledServices.includes(openService);
-  const status =
-    completeness.enabledPriced === 0
-      ? "Turn on at least one priced service"
-      : completeness.ready
-        ? `${completeness.completePriced} services priced`
-        : `${completeness.completePriced}/${completeness.enabledPriced} priced`;
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <div>
-          <h2 className="text-base font-semibold text-ink">Pricing</h2>
-          <p className="mt-0.5 text-sm text-muted">
-            Choose services, then set rates for the one you&apos;re on.
-          </p>
+    <div
+      className="rounded-[20px] px-1 py-1 sm:px-2 sm:py-2"
+      style={{
+        background:
+          "linear-gradient(180deg, #f5f5f7 0%, #eef0f4 100%)",
+      }}
+    >
+      <div className="space-y-5 p-3 sm:p-4">
+        {/* Header — quiet, like iOS Settings nav */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#8e8e93]">
+              Setup
+            </p>
+            <h2 className="mt-0.5 text-[22px] font-semibold tracking-tight text-ink">
+              Bubble pricing
+            </h2>
+            <p className="mt-1 max-w-md text-[14px] leading-snug text-[#636366]">
+              Turn on what they offer, then set rates for the service you’re
+              looking at.
+            </p>
+          </div>
+          <ProgressPill
+            complete={completeness.completePriced}
+            total={completeness.enabledPriced}
+          />
         </div>
-        <p
-          className={[
-            "text-xs font-medium",
-            completeness.ready ? "text-emerald-700" : "text-muted",
-          ].join(" ")}
-        >
-          {status}
-        </p>
-      </div>
 
-      {!completeness.ready && completeness.warnings.length > 0 ? (
-        <p className="text-xs text-amber-800">
-          Still needed: {completeness.warnings.slice(0, 2).join(" · ")}
-        </p>
-      ) : null}
+        {!completeness.ready && completeness.warnings.length > 0 ? (
+          <div className="rounded-[12px] bg-[#fff8e8] px-3.5 py-2.5 text-[13px] text-[#8a5a00] ring-1 ring-[#f0d48a]/80">
+            {completeness.warnings.slice(0, 2).join(" · ")}
+          </div>
+        ) : null}
 
-      {/* Service picker — compact chips */}
-      <div className="flex flex-wrap gap-1.5">
-        {SERVICE_CATALOG.map((s) => {
-          const enabled = config.enabledServices.includes(s.key);
-          const active = openService === s.key;
-          return (
-            <div
-              key={s.key}
-              className={[
-                "inline-flex items-center gap-2 rounded-full border py-1.5 pl-3 pr-2",
-                active
-                  ? "border-brand-500 bg-brand-50 text-ink"
-                  : "border-line bg-white text-ink-soft hover:border-ink/20",
-                !enabled && !active ? "opacity-55" : "",
-              ].join(" ")}
-            >
-              <button
-                type="button"
-                onClick={() => setOpenService(s.key)}
-                className="text-left text-sm font-medium"
-              >
-                {s.label}
-              </button>
-              <TinySwitch
-                checked={enabled}
-                label={`${enabled ? "Disable" : "Enable"} ${s.label}`}
-                onChange={() => toggleService(s.key)}
+        {/* Split: service list + detail — same structure as before */}
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,260px)_minmax(0,1fr)] lg:gap-5">
+          <aside>
+            <p className="mb-2 px-1 text-[12px] font-medium uppercase tracking-[0.04em] text-[#8e8e93]">
+              Services
+            </p>
+            <div className="overflow-hidden rounded-[12px] bg-white shadow-[0_1px_0_rgba(0,0,0,0.04)] ring-1 ring-black/[0.06]">
+              {SERVICE_CATALOG.map((s, idx) => {
+                const enabled = config.enabledServices.includes(s.key);
+                const active = openService === s.key;
+                const last = idx === SERVICE_CATALOG.length - 1;
+                return (
+                  <div
+                    key={s.key}
+                    className={[
+                      "flex items-center gap-2 px-3 py-2.5",
+                      last ? "" : "border-b border-black/[0.06]",
+                      active ? "bg-[#eef4ff]" : "",
+                    ].join(" ")}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setOpenService(s.key)}
+                      className="min-w-0 flex-1 text-left"
+                    >
+                      <span
+                        className={[
+                          "block truncate text-[15px] font-medium",
+                          active ? "text-brand-700" : "text-ink",
+                        ].join(" ")}
+                      >
+                        {s.label}
+                      </span>
+                      <span className="mt-0.5 block truncate text-[12px] text-[#8e8e93]">
+                        {s.priced ? s.description : "Callback only"}
+                      </span>
+                    </button>
+                    <IosSwitch
+                      checked={enabled}
+                      label={`${enabled ? "Disable" : "Enable"} ${s.label}`}
+                      onChange={() => toggleService(s.key)}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </aside>
+
+          <div className="min-w-0">
+            <div className="mb-3 flex items-center justify-between gap-3 px-1">
+              <div className="min-w-0">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={openService}
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.18 }}
+                  >
+                    <h3 className="truncate text-[17px] font-semibold tracking-tight text-ink">
+                      {openMeta.label}
+                    </h3>
+                    <p className="text-[13px] text-[#8e8e93]">
+                      {openEnabled
+                        ? openMeta.priced
+                          ? "Rates for this service only"
+                          : "No rates — callback lead"
+                        : "Off for this bubble"}
+                    </p>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+              {!openEnabled ? (
+                <button
+                  type="button"
+                  onClick={() => toggleService(openService)}
+                  className="shrink-0 rounded-full bg-brand-600 px-3.5 py-1.5 text-[13px] font-semibold text-white"
+                >
+                  Turn on
+                </button>
+              ) : null}
+            </div>
+
+            {!openEnabled ? (
+              <Group>
+                <div className="px-4 py-8 text-center text-[14px] text-[#8e8e93]">
+                  This job won’t appear until you turn it on.
+                </div>
+              </Group>
+            ) : (
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={openService}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-5"
+                >
+                  {openService === "full_replacement" &&
+                    config.services.full_replacement && (
+                      <ReplacementEditor
+                        value={config.services.full_replacement}
+                        onChange={(full_replacement) =>
+                          setConfig((c) => ({
+                            ...c,
+                            services: { ...c.services, full_replacement },
+                          }))
+                        }
+                      />
+                    )}
+                  {openService === "flat_roof_replacement" &&
+                    config.services.flat_roof_replacement && (
+                      <ReplacementEditor
+                        value={config.services.flat_roof_replacement}
+                        onChange={(flat_roof_replacement) =>
+                          setConfig((c) => ({
+                            ...c,
+                            services: {
+                              ...c.services,
+                              flat_roof_replacement,
+                            },
+                          }))
+                        }
+                      />
+                    )}
+                  {openService === "tile_or_slate_repair" &&
+                    config.services.tile_or_slate_repair && (
+                      <RepairEditor
+                        value={config.services.tile_or_slate_repair}
+                        onChange={(tile_or_slate_repair) =>
+                          setConfig((c) => ({
+                            ...c,
+                            services: {
+                              ...c.services,
+                              tile_or_slate_repair,
+                            },
+                          }))
+                        }
+                      />
+                    )}
+                  {openService === "gutters_fascias_soffits" &&
+                    config.services.gutters_fascias_soffits && (
+                      <RooflineEditor
+                        value={config.services.gutters_fascias_soffits}
+                        onChange={(gutters_fascias_soffits) =>
+                          setConfig((c) => ({
+                            ...c,
+                            services: {
+                              ...c.services,
+                              gutters_fascias_soffits,
+                            },
+                          }))
+                        }
+                      />
+                    )}
+                  {!openMeta.priced ? (
+                    <Group footer="Homeowners leave details; you call back. No instant estimate.">
+                      <div className="px-4 py-5 text-[14px] text-[#636366]">
+                        Callback-only — nothing to price here.
+                      </div>
+                    </Group>
+                  ) : null}
+                </motion.div>
+              </AnimatePresence>
+            )}
+          </div>
+        </div>
+
+        {/* Company options — Settings-style group */}
+        <Group title="Company">
+          <Row>
+            <div>
+              <p className="text-[15px] text-ink">VAT registered</p>
+              <p className="text-[12px] text-[#8e8e93]">Quotes shown ex VAT</p>
+            </div>
+            <IosSwitch
+              checked={config.vatRegistered}
+              label="VAT registered"
+              onChange={(vatRegistered) =>
+                setConfig((c) => ({ ...c, vatRegistered }))
+              }
+            />
+          </Row>
+          <Row last={!showOrigins}>
+            <div className="min-w-0 flex-1 pr-3">
+              <p className="text-[15px] text-ink">Quote range width</p>
+              <p className="text-[12px] text-[#8e8e93]">
+                Optional · e.g. 0.12 = ±12%
+              </p>
+            </div>
+            <input
+              type="text"
+              inputMode="decimal"
+              className="h-9 w-[5.5rem] rounded-[10px] bg-black/[0.04] px-2.5 text-right text-[15px] tabular-nums text-ink outline-none"
+              placeholder="Auto"
+              value={
+                config.confidenceWidth == null
+                  ? ""
+                  : String(config.confidenceWidth)
+              }
+              onChange={(e) => {
+                const v = e.target.value.trim();
+                if (v === "") {
+                  setConfig((c) => ({ ...c, confidenceWidth: null }));
+                  return;
+                }
+                const n = Number(v);
+                if (Number.isFinite(n) && n >= 0 && n <= 0.5) {
+                  setConfig((c) => ({ ...c, confidenceWidth: n }));
+                }
+              }}
+            />
+          </Row>
+          {showOrigins ? (
+            <div className="border-t border-black/[0.06] px-4 py-3">
+              <p className="text-[15px] text-ink">Allowed embed sites</p>
+              <p className="mb-2 text-[12px] text-[#8e8e93]">
+                One per line · blank = anywhere
+              </p>
+              <textarea
+                rows={2}
+                className="w-full rounded-[10px] bg-black/[0.04] px-3 py-2 text-[14px] text-ink outline-none"
+                placeholder="https://ridgewayroofing.co.uk"
+                value={originsText}
+                onChange={(e) => setOriginsText(e.target.value)}
               />
             </div>
-          );
-        })}
-      </div>
-
-      {/* Active service body */}
-      <div className="rounded-xl border border-line bg-white">
-        <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
-          <div className="min-w-0">
-            <h3 className="truncate text-sm font-semibold text-ink">
-              {openMeta.label}
-            </h3>
-            {!openMeta.priced ? (
-              <p className="text-xs text-muted">Callback only — no rates</p>
-            ) : null}
-          </div>
-          {!openEnabled ? (
-            <button
-              type="button"
-              onClick={() => toggleService(openService)}
-              className="shrink-0 text-xs font-semibold text-brand-600 hover:text-brand-700"
-            >
-              Turn on
-            </button>
           ) : null}
-        </div>
+        </Group>
 
-        <div className="px-4 py-4">
-          {!openEnabled ? (
-            <p className="text-sm text-muted">
-              Off — won&apos;t show in their bubble.
-            </p>
-          ) : (
-            <>
-              {openService === "full_replacement" &&
-                config.services.full_replacement && (
-                  <ReplacementEditor
-                    value={config.services.full_replacement}
-                    onChange={(full_replacement) =>
-                      setConfig((c) => ({
-                        ...c,
-                        services: { ...c.services, full_replacement },
-                      }))
-                    }
-                  />
-                )}
-              {openService === "flat_roof_replacement" &&
-                config.services.flat_roof_replacement && (
-                  <ReplacementEditor
-                    value={config.services.flat_roof_replacement}
-                    onChange={(flat_roof_replacement) =>
-                      setConfig((c) => ({
-                        ...c,
-                        services: { ...c.services, flat_roof_replacement },
-                      }))
-                    }
-                  />
-                )}
-              {openService === "tile_or_slate_repair" &&
-                config.services.tile_or_slate_repair && (
-                  <RepairEditor
-                    value={config.services.tile_or_slate_repair}
-                    onChange={(tile_or_slate_repair) =>
-                      setConfig((c) => ({
-                        ...c,
-                        services: { ...c.services, tile_or_slate_repair },
-                      }))
-                    }
-                  />
-                )}
-              {openService === "gutters_fascias_soffits" &&
-                config.services.gutters_fascias_soffits && (
-                  <RooflineEditor
-                    value={config.services.gutters_fascias_soffits}
-                    onChange={(gutters_fascias_soffits) =>
-                      setConfig((c) => ({
-                        ...c,
-                        services: { ...c.services, gutters_fascias_soffits },
-                      }))
-                    }
-                  />
-                )}
-              {!openMeta.priced ? (
-                <p className="text-sm text-muted">
-                  Homeowners who pick this leave details for a call-back. No
-                  instant estimate.
-                </p>
-              ) : null}
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Footer: save + collapsed company options */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 flex-1">
+        <div className="flex justify-end pt-1">
           <button
             type="button"
-            onClick={() => setShowMore((v) => !v)}
-            className="text-xs font-medium text-muted hover:text-ink"
+            disabled={saving}
+            onClick={() => void handleSave()}
+            className="rounded-full bg-brand-600 px-6 py-2.5 text-[15px] font-semibold text-white shadow-[0_8px_20px_-8px_rgba(31,87,240,0.65)] disabled:opacity-60"
           >
-            {showMore ? "Hide company options" : "Company options"}
+            {saving ? "Saving…" : "Save"}
           </button>
-          {showMore ? (
-            <div className="mt-3 max-w-lg space-y-3">
-              <label className="flex items-center justify-between gap-3">
-                <span className="text-sm text-ink">VAT registered</span>
-                <TinySwitch
-                  checked={config.vatRegistered}
-                  label="VAT registered"
-                  onChange={(vatRegistered) =>
-                    setConfig((c) => ({ ...c, vatRegistered }))
-                  }
-                />
-              </label>
-              <div>
-                <label className="mb-1 block text-xs text-muted">
-                  Quote range width (optional, e.g. 0.12 = ±12%)
-                </label>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  className="field h-9 w-full max-w-[12rem] rounded-lg px-2.5 text-sm outline-none"
-                  placeholder="Default"
-                  value={
-                    config.confidenceWidth == null
-                      ? ""
-                      : String(config.confidenceWidth)
-                  }
-                  onChange={(e) => {
-                    const v = e.target.value.trim();
-                    if (v === "") {
-                      setConfig((c) => ({ ...c, confidenceWidth: null }));
-                      return;
-                    }
-                    const n = Number(v);
-                    if (Number.isFinite(n) && n >= 0 && n <= 0.5) {
-                      setConfig((c) => ({ ...c, confidenceWidth: n }));
-                    }
-                  }}
-                />
-              </div>
-              {showOrigins ? (
-                <div>
-                  <label className="mb-1 block text-xs text-muted">
-                    Allowed embed sites (one per line; blank = anywhere)
-                  </label>
-                  <textarea
-                    rows={2}
-                    className="field w-full rounded-lg px-2.5 py-2 text-sm outline-none"
-                    placeholder="https://ridgewayroofing.co.uk"
-                    value={originsText}
-                    onChange={(e) => setOriginsText(e.target.value)}
-                  />
-                </div>
-              ) : null}
-            </div>
-          ) : null}
         </div>
-
-        <button
-          type="button"
-          disabled={saving}
-          onClick={() => void handleSave()}
-          className="btn-primary shrink-0 rounded-lg px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
-        >
-          {saving ? "Saving…" : "Save"}
-        </button>
       </div>
 
       <Toast
