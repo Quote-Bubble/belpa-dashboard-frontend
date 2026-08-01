@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 import type {
   DashboardLead,
@@ -71,12 +71,15 @@ export default function QuotesClient({
   page,
   pageSize,
   totalCount,
+  hideHeader = false,
 }: {
   initialLeads: DashboardLead[];
   rooferSlug: string;
   page: number;
   pageSize: number;
   totalCount: number;
+  /** When embedded in the admin roofer hub (title lives on the hub). */
+  hideHeader?: boolean;
 }) {
   const [leads, setLeads] = useState<DashboardLead[]>(initialLeads);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -91,6 +94,7 @@ export default function QuotesClient({
   const flashTimer = useRef<number | null>(null);
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   // Sync when the server re-renders a new page of leads.
   useEffect(() => {
@@ -112,7 +116,8 @@ export default function QuotesClient({
   };
 
   const navigatePage = (nextPage: number, nextSize = pageSize) => {
-    const params = new URLSearchParams();
+    // Preserve hub tab (and anything else) when paginating inside /admin/[id].
+    const params = new URLSearchParams(searchParams.toString());
     params.set("page", String(Math.max(0, nextPage)));
     params.set("pageSize", String(nextSize));
     router.push(`${pathname}?${params.toString()}`);
@@ -351,7 +356,7 @@ export default function QuotesClient({
 
   return (
     <>
-      <PageHeader title="Quotes" />
+      {hideHeader ? null : <PageHeader title="Quotes" />}
 
       {mutationError && (
         <div

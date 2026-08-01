@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import type {
   DashboardLead,
@@ -53,11 +53,14 @@ export default function JobsClient({
   page,
   pageSize,
   totalCount,
+  hideHeader = false,
 }: {
   initialJobs: DashboardLead[];
   page: number;
   pageSize: number;
   totalCount: number;
+  /** When embedded in the admin roofer hub (title lives on the hub). */
+  hideHeader?: boolean;
 }) {
   const [jobs, setJobs] = useState<DashboardLead[]>(initialJobs);
   const [jobsFilter, setJobsFilter] = useState<JobsFilter>("all");
@@ -68,6 +71,7 @@ export default function JobsClient({
   const [mutationError, setMutationError] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [payloads, setPayloads] = useState<Record<string, LeadPayloadState>>({});
   const requested = useRef<Set<string>>(new Set());
 
@@ -76,7 +80,8 @@ export default function JobsClient({
   }, [initialJobs]);
 
   const navigatePage = (nextPage: number, nextSize = pageSize) => {
-    const params = new URLSearchParams();
+    // Preserve hub tab (and anything else) when paginating inside /admin/[id].
+    const params = new URLSearchParams(searchParams.toString());
     params.set("page", String(Math.max(0, nextPage)));
     params.set("pageSize", String(nextSize));
     router.push(`${pathname}?${params.toString()}`);
@@ -270,7 +275,7 @@ export default function JobsClient({
 
   return (
     <>
-      <PageHeader title="Jobs" />
+      {hideHeader ? null : <PageHeader title="Jobs" />}
 
       {mutationError && (
         <div

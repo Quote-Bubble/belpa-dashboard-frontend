@@ -30,9 +30,8 @@ type Props = {
 };
 
 /**
- * One card, three tabs. Keeps the roofer detail focused — you see only the
- * panel you need (grab a snippet, edit details, or link a login) instead of
- * everything at once.
+ * Setup panel for a roofer workspace: details, install snippets, and login
+ * access. Quotes / Jobs live as sibling hub tabs outside this card.
  */
 export default function RooferPanel({
   install,
