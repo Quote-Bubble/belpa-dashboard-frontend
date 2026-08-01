@@ -42,8 +42,8 @@ export default function InstallSnippets({
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-3">
-        <div className="inline-flex rounded-full border border-line bg-white p-0.5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex w-full rounded-full border border-line bg-white p-0.5 sm:inline-flex sm:w-auto">
           {TABS.map((t) => {
             const active = t.value === tab;
             return (
@@ -52,7 +52,7 @@ export default function InstallSnippets({
                 type="button"
                 onClick={() => setTab(t.value)}
                 className={[
-                  "rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+                  "flex-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors sm:flex-none",
                   active
                     ? "bg-brand-600 text-white"
                     : "text-ink-soft hover:text-ink",
@@ -63,19 +63,19 @@ export default function InstallSnippets({
             );
           })}
         </div>
-        <div className="flex shrink-0 gap-2">
+        <div className="flex gap-2">
           <a
             href={link}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-ghost rounded-full px-3 py-1.5 text-xs font-semibold"
+            className="btn-ghost flex-1 rounded-full px-3 py-1.5 text-center text-xs font-semibold sm:flex-none"
           >
             Preview ↗
           </a>
           <button
             type="button"
             onClick={copy}
-            className="btn-primary rounded-full px-3.5 py-1.5 text-xs font-semibold"
+            className="btn-primary flex-1 rounded-full px-3.5 py-1.5 text-xs font-semibold sm:flex-none"
           >
             {copied ? "Copied ✓" : "Copy"}
           </button>

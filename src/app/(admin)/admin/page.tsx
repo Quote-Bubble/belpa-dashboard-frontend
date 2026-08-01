@@ -75,11 +75,11 @@ export default async function AdminFleetPage() {
 
                     <DeployBadge status={r.deploy_status} />
 
-                    <span className="w-20 shrink-0 text-right text-sm text-ink-soft">
+                    <span className="hidden w-20 shrink-0 text-right text-sm text-ink-soft sm:block">
                       <span className="font-semibold tabular-nums text-ink">
                         {leads}
                       </span>{" "}
-                      <span className="hidden text-xs text-muted sm:inline">
+                      <span className="text-xs text-muted">
                         lead{leads === 1 ? "" : "s"}
                       </span>
                     </span>
