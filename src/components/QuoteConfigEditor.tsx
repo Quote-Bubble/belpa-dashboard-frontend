@@ -29,6 +29,7 @@ const ACCESS_OPTIONS: { value: AccessMode; label: string }[] = [
 ];
 
 type SectionId = "coverings" | "extras" | "access" | "rates";
+type OpenSection = SectionId | null;
 
 function IosSwitch({
   checked,
@@ -434,7 +435,7 @@ export default function QuoteConfigEditor({
   );
   const [openService, setOpenService] =
     useState<ServiceKey>("full_replacement");
-  const [openSection, setOpenSection] = useState<SectionId>("coverings");
+  const [openSection, setOpenSection] = useState<OpenSection>("coverings");
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
@@ -534,7 +535,7 @@ export default function QuoteConfigEditor({
   };
 
   const toggleSection = (id: SectionId) => {
-    setOpenSection(id);
+    setOpenSection((cur) => (cur === id ? null : id));
   };
 
   const missingCount = Math.max(
@@ -926,7 +927,7 @@ function ReplacementSections({
 }: {
   value: ReplacementServiceConfig;
   onChange: (v: ReplacementServiceConfig) => void;
-  openSection: SectionId;
+  openSection: OpenSection;
   onSection: (id: SectionId) => void;
 }) {
   const enabledMats = value.materials.filter((m) => m.enabled).length;
@@ -1032,7 +1033,7 @@ function RepairSections({
 }: {
   value: RepairServiceConfig;
   onChange: (v: RepairServiceConfig) => void;
-  openSection: SectionId;
+  openSection: OpenSection;
   onSection: (id: SectionId) => void;
 }) {
   const enabledMats = value.materials.filter((m) => m.enabled).length;
@@ -1076,7 +1077,7 @@ function RooflineSections({
 }: {
   value: RooflineServiceConfig;
   onChange: (v: RooflineServiceConfig) => void;
-  openSection: SectionId;
+  openSection: OpenSection;
   onSection: (id: SectionId) => void;
 }) {
   return (
