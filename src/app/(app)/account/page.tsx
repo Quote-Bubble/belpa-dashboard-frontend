@@ -1,6 +1,6 @@
 import { getUser } from "@/lib/supabase/server";
 import { getRoofer } from "@/lib/roofer";
-import { getPricing } from "@/lib/pricing";
+import { getQuoteConfig } from "@/lib/pricing";
 import PageHeader from "@/components/PageHeader";
 import PricingPanel from "@/components/PricingPanel";
 import NotLinkedNotice from "@/components/NotLinkedNotice";
@@ -49,16 +49,15 @@ export default async function AccountPage() {
   }
 
   const roofer = lookup.roofer;
-  const pricing = await getPricing(roofer.id);
+  const quoteConfig = await getQuoteConfig(roofer.id);
 
   return (
     <>
       <PageHeader
         title="Account"
-        subtitle="Your rates, stored against your company."
+        subtitle="Your services and rates — these power your quote bubble."
       />
 
-      {/* Profile summary */}
       <div className="surface mb-6 flex flex-col gap-5 rounded-2xl p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div className="flex items-center gap-4">
           <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-b from-brand-400 to-brand-600 text-xl font-semibold text-white">
@@ -76,15 +75,13 @@ export default async function AccountPage() {
         </div>
       </div>
 
-      {/* Saved rates are not yet read by the quote engine — say so rather than
-          implying the widget uses them. */}
-      <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-        <strong className="font-semibold">Not live yet.</strong> These rates save
-        to your account, but the quote widget still prices from its built-in rate
-        card. Wiring it to use your numbers is separate work.
+      <div className="mb-6 rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-900">
+        <strong className="font-semibold">These rates power your quote bubble.</strong>{" "}
+        Homeowners only see the services you enable, priced with the numbers you
+        set here.
       </div>
 
-      <PricingPanel rooferId={roofer.id} initial={pricing} />
+      <PricingPanel rooferId={roofer.id} initial={quoteConfig} />
     </>
   );
 }

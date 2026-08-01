@@ -1,13 +1,15 @@
 import type { PricingProfile } from "@/lib/types";
+import {
+  defaultQuoteConfig,
+  legacyToQuoteConfig,
+  parseQuoteConfig,
+  type QuoteConfig,
+} from "@/lib/quote-config";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Pricing lives in `roofer_pricing` (supabase/migrations/0002_roofer_pricing.sql),
- * one row per roofer, read and written under the same membership RLS as leads.
- *
- * Material keys deliberately match the widget's `Material` enum
- * (quoter-backend/lib/types.ts) so these rates can be joined to a lead's chosen
- * material once the widget is wired to read them.
+ * Pricing lives in `roofer_pricing`. Prefer `quote_config` (service-first).
+ * Legacy scalar/materials columns are dual-read for older rows.
  */
 
 export const DEFAULT_PRICING: PricingProfile = {
@@ -33,11 +35,10 @@ type PricingRow = {
   skip_hire: number | null;
   scaffold_per_week: number | null;
   vat_registered: boolean | null;
+  quote_config: unknown | null;
 };
 
-/** Merge a stored row over the defaults so a partially-filled row still renders,
- *  and so newly added default materials appear for roofers who saved earlier. */
-function rowToProfile(row: PricingRow): PricingProfile {
+function rowToLegacyProfile(row: PricingRow): PricingProfile {
   const stored = row.materials?.length ? row.materials : null;
   const materials = stored
     ? DEFAULT_PRICING.materials.map((d) => {
@@ -56,8 +57,24 @@ function rowToProfile(row: PricingRow): PricingProfile {
   };
 }
 
-/** Stored pricing for a roofer, falling back to defaults when nothing is saved
- *  yet. RLS scopes the read; `rooferId` only narrows it to a single row. */
+/** Load quote config for a roofer (quote_config or legacy migrate). */
+export async function getQuoteConfig(rooferId: string): Promise<QuoteConfig> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("roofer_pricing")
+    .select(
+      "materials,labour_per_day,minimum_callout,skip_hire,scaffold_per_week,vat_registered,quote_config",
+    )
+    .eq("roofer_id", rooferId)
+    .maybeSingle();
+
+  if (error || !data) return defaultQuoteConfig();
+  const row = data as PricingRow;
+  if (row.quote_config) return parseQuoteConfig(row.quote_config);
+  return legacyToQuoteConfig(rowToLegacyProfile(row));
+}
+
+/** @deprecated Prefer getQuoteConfig — kept for any legacy callers. */
 export async function getPricing(rooferId: string): Promise<PricingProfile> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -69,5 +86,22 @@ export async function getPricing(rooferId: string): Promise<PricingProfile> {
     .maybeSingle();
 
   if (error || !data) return DEFAULT_PRICING;
-  return rowToProfile(data as PricingRow);
+  return rowToLegacyProfile(data as PricingRow);
+}
+
+/** Persist quote_config (and mirror vat onto legacy column). */
+export async function saveQuoteConfig(
+  rooferId: string,
+  config: QuoteConfig,
+): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("roofer_pricing").upsert(
+    {
+      roofer_id: rooferId,
+      quote_config: config,
+      vat_registered: config.vatRegistered,
+    },
+    { onConflict: "roofer_id" },
+  );
+  return { error: error?.message ?? null };
 }

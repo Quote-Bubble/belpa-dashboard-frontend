@@ -1,16 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 
 import InstallSnippets from "@/components/admin/InstallSnippets";
+import QuoteConfigEditor from "@/components/QuoteConfigEditor";
+import Toast from "@/components/Toast";
+import type { ActionResult } from "@/lib/action-result";
+import { unlinkRooferLogin } from "@/lib/admin-actions";
+import type { QuoteConfig } from "@/lib/quote-config";
 
 const field =
   "field w-full px-3 py-2.5 text-sm text-ink outline-none placeholder:text-muted";
 const label = "mb-1.5 block text-xs font-medium text-ink-soft";
 
-type Tab = "details" | "install" | "access";
+type Tab = "details" | "pricing" | "install" | "access";
 
 type Props = {
+  rooferId: string;
   install: {
     slug: string;
     button: string;
@@ -25,31 +32,52 @@ type Props = {
     contactPhone: string;
   };
   members: { email: string }[];
-  updateAction: (formData: FormData) => void | Promise<void>;
-  linkAction: (formData: FormData) => void | Promise<void>;
+  quoteConfig: QuoteConfig;
+  allowedOrigins: string[];
+  updateAction: (formData: FormData) => Promise<ActionResult>;
+  linkAction: (formData: FormData) => Promise<ActionResult>;
 };
 
 /**
- * Setup panel: profile, install snippets, logins.
+ * Setup panel: profile, pricing onboarding, install snippets, logins.
  * Destructive actions live in the page-header ⋯ menu.
  */
 export default function RooferPanel({
+  rooferId,
   install,
   details,
   members,
+  quoteConfig,
+  allowedOrigins,
   updateAction,
   linkAction,
 }: Props) {
-  const [tab, setTab] = useState<Tab>("details");
+  const router = useRouter();
+  const [tab, setTab] = useState<Tab>("pricing");
+  const [toast, setToast] = useState<{
+    message: string;
+    tone: "ok" | "error";
+  } | null>(null);
+  const [unlinking, startUnlink] = useTransition();
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "details", label: "Details" },
+    { id: "pricing", label: "Pricing" },
     { id: "install", label: "Install" },
     {
       id: "access",
       label: members.length ? `Access · ${members.length}` : "Access",
     },
   ];
+
+  const showResult = (result: ActionResult) => {
+    if (result.ok) {
+      setToast({ message: result.message ?? "Done.", tone: "ok" });
+      router.refresh();
+    } else {
+      setToast({ message: result.error, tone: "error" });
+    }
+  };
 
   return (
     <section className="surface overflow-hidden rounded-2xl">
@@ -75,9 +103,16 @@ export default function RooferPanel({
         })}
       </div>
 
-      <div className="p-4 sm:p-5">
+      <div
+        className={
+          tab === "pricing" ? "p-4 sm:p-6" : "p-4 sm:p-5"
+        }
+      >
         {tab === "details" && (
-          <form action={updateAction} className="grid gap-3 sm:grid-cols-2">
+          <form
+            action={async (fd) => showResult(await updateAction(fd))}
+            className="grid gap-3 sm:grid-cols-2"
+          >
             <div className="sm:col-span-2">
               <label className={label} htmlFor="name">
                 Company
@@ -134,6 +169,16 @@ export default function RooferPanel({
           </form>
         )}
 
+        {tab === "pricing" && (
+          <QuoteConfigEditor
+            rooferId={rooferId}
+            initial={quoteConfig}
+            allowedOrigins={allowedOrigins}
+            showOrigins
+            onSaved={() => router.refresh()}
+          />
+        )}
+
         {tab === "install" && (
           <InstallSnippets
             slug={install.slug}
@@ -147,13 +192,29 @@ export default function RooferPanel({
         {tab === "access" && (
           <div className="space-y-3">
             {members.length > 0 ? (
-              <ul className="flex flex-wrap gap-2">
+              <ul className="space-y-2">
                 {members.map((m) => (
                   <li
                     key={m.email}
-                    className="rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700"
+                    className="flex items-center justify-between gap-3 rounded-xl bg-brand-50/80 px-3 py-2"
                   >
-                    {m.email}
+                    <span className="truncate text-xs font-medium text-brand-700">
+                      {m.email}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={unlinking}
+                      onClick={() =>
+                        startUnlink(async () => {
+                          showResult(
+                            await unlinkRooferLogin(rooferId, m.email),
+                          );
+                        })
+                      }
+                      className="shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:opacity-60"
+                    >
+                      Unlink
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -161,7 +222,7 @@ export default function RooferPanel({
               <p className="text-sm text-muted">No logins linked yet.</p>
             )}
             <form
-              action={linkAction}
+              action={async (fd) => showResult(await linkAction(fd))}
               className="flex flex-col gap-2 sm:flex-row"
             >
               <input
@@ -178,9 +239,19 @@ export default function RooferPanel({
                 Link
               </button>
             </form>
+            <p className="text-xs text-muted">
+              They must create an account first. Then link their signup email
+              here.
+            </p>
           </div>
         )}
       </div>
+
+      <Toast
+        message={toast?.message ?? null}
+        tone={toast?.tone}
+        onDone={() => setToast(null)}
+      />
     </section>
   );
 }

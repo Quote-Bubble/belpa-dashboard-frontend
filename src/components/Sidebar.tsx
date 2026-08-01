@@ -10,6 +10,7 @@ import { inboxPathForMode } from "@/lib/dashboard-mode";
 import { createClient } from "@/lib/supabase/client";
 import { useDashboardMode } from "@/components/DashboardModeProvider";
 import QuotesJobsSwitcher from "@/components/QuotesJobsSwitcher";
+import NewLeadBadge from "@/components/NewLeadBadge";
 
 type NavItem = {
   href: string;
@@ -166,6 +167,9 @@ export default function Sidebar({
                 {item.icon}
               </span>
               {item.label}
+              {item.href === "/quotes" ? (
+                <NewLeadBadge active={!!active} />
+              ) : null}
             </Link>
           );
         })}

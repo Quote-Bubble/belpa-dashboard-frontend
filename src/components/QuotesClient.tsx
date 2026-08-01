@@ -9,6 +9,7 @@ import type {
   LeadPayloadState,
   LeadStatus,
 } from "@/lib/types";
+import type { LeadFilterCounts, LeadStatusFilter } from "@/lib/lead-filters";
 import { jobTypeLabel, statusLabel, STATUS_ORDER } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
 import { revalidateAnalytics } from "@/lib/actions";
@@ -20,18 +21,8 @@ import QuotesTable, {
 } from "@/components/QuotesTable";
 import CompleteQuoteModal from "@/components/CompleteQuoteModal";
 
-// "followup" isn't a status — it's the estimate-only browsers (intent
-// `estimate_viewed`) who never asked to proceed. They're kept out of the main
-// views (which show genuine requests) and parked here for nurture.
-type StatusFilter = "all" | LeadStatus | "followup" | "archived";
-
-/** A confirmed lead actually asked to be contacted; a browser only priced. */
-function isBrowser(lead: DashboardLead): boolean {
-  return lead.intent === "estimate_viewed";
-}
-
 /** Pill colours per filter: `ink` idle text, `solid` bubble colour. */
-const FILTER_COLORS: Record<StatusFilter, { ink: string; solid: string }> = {
+const FILTER_COLORS: Record<LeadStatusFilter, { ink: string; solid: string }> = {
   all: { ink: "#3d4148", solid: "#0a0b0d" },
   new: { ink: "#1546c9", solid: "#2f6bff" },
   contacted: { ink: "#6d28d9", solid: "#7c3aed" },
@@ -50,7 +41,6 @@ function compare(a: DashboardLead, b: DashboardLead, key: SortKey): number {
     case "quote": {
       const aq = a.quoteMaxExVat;
       const bq = b.quoteMaxExVat;
-      // Null quotes always sort last, regardless of direction.
       if (aq == null && bq == null) return 0;
       if (aq == null) return 1;
       if (bq == null) return -1;
@@ -71,6 +61,9 @@ export default function QuotesClient({
   page,
   pageSize,
   totalCount,
+  statusFilter,
+  searchQuery,
+  filterCounts,
   hideHeader = false,
 }: {
   initialLeads: DashboardLead[];
@@ -78,28 +71,32 @@ export default function QuotesClient({
   page: number;
   pageSize: number;
   totalCount: number;
+  statusFilter: LeadStatusFilter;
+  searchQuery: string;
+  filterCounts: LeadFilterCounts;
   /** When embedded in the admin roofer hub (title lives on the hub). */
   hideHeader?: boolean;
 }) {
   const [leads, setLeads] = useState<DashboardLead[]>(initialLeads);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(searchQuery);
   const [sortKey, setSortKey] = useState<SortKey>("receivedAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [flashWonId, setFlashWonId] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
-  // The lead whose "Completed" pop-up (capture actual price) is open.
   const [completing, setCompleting] = useState<DashboardLead | null>(null);
   const flashTimer = useRef<number | null>(null);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // Sync when the server re-renders a new page of leads.
   useEffect(() => {
     setLeads(initialLeads);
   }, [initialLeads]);
+
+  useEffect(() => {
+    setSearch(searchQuery);
+  }, [searchQuery]);
 
   useEffect(() => {
     return () => {
@@ -107,79 +104,50 @@ export default function QuotesClient({
     };
   }, []);
 
-  // Quotes writes go straight to Supabase for instant optimistic UI, which
-  // bypasses Next's cache — so Analytics silently kept stale numbers until a
-  // manual refresh. Invalidate its cached copy, then eagerly re-fetch it in
-  // the background so it's already warm by the time you actually click over.
+  // Debounce search → URL so the server filters the full inbox.
+  useEffect(() => {
+    const trimmed = search.trim();
+    if (trimmed === searchQuery) return;
+    const t = window.setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (trimmed) params.set("q", trimmed);
+      else params.delete("q");
+      params.set("page", "0");
+      router.push(`${pathname}?${params.toString()}`);
+    }, 350);
+    return () => window.clearTimeout(t);
+  }, [search, searchQuery, pathname, router, searchParams]);
+
   const syncAnalytics = () => {
     void revalidateAnalytics().then(() => router.prefetch("/analytics"));
   };
 
-  const navigatePage = (nextPage: number, nextSize = pageSize) => {
-    // Preserve hub tab (and anything else) when paginating inside /admin/[id].
+  const navigate = (patch: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString());
-    params.set("page", String(Math.max(0, nextPage)));
-    params.set("pageSize", String(nextSize));
+    for (const [k, v] of Object.entries(patch)) {
+      if (v == null || v === "") params.delete(k);
+      else params.set(k, v);
+    }
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  // `payload` is a fat jsonb column (roof segments, per-segment contributions),
-  // so it's fetched per lead on expand rather than in the list query.
+  const navigatePage = (nextPage: number, nextSize = pageSize) => {
+    navigate({
+      page: String(Math.max(0, nextPage)),
+      pageSize: String(nextSize),
+    });
+  };
+
   const [payloads, setPayloads] = useState<Record<string, LeadPayloadState>>({});
   const requested = useRef<Set<string>>(new Set());
 
-  const counts = useMemo(() => {
-    const c: Record<StatusFilter, number> = {
-      all: 0,
-      new: 0,
-      contacted: 0,
-      won: 0,
-      lost: 0,
-      followup: 0,
-      archived: 0,
-    };
-    for (const l of leads) {
-      if (l.archived) c.archived += 1;
-      else if (isBrowser(l)) c.followup += 1;
-      else {
-        c.all += 1;
-        c[l.status] += 1;
-      }
-    }
-    return c;
-  }, [leads]);
-
+  // Server already filtered; client only sorts the current page.
   const visible = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const archivedView = statusFilter === "archived";
-    const followupView = statusFilter === "followup";
-    const filtered = leads.filter((l) => {
-      if (archivedView) {
-        if (!l.archived) return false;
-      } else if (l.archived) {
-        return false;
-      } else if (followupView) {
-        // Follow-up tab: only the estimate-only browsers.
-        if (!isBrowser(l)) return false;
-      } else {
-        // Main views: genuine requests only — a browser stays hidden until
-        // they come back and actually ask (which promotes their intent).
-        if (isBrowser(l)) return false;
-        if (statusFilter !== "all" && l.status !== statusFilter) return false;
-      }
-      if (!q) return true;
-      return (
-        l.contactName.toLowerCase().includes(q) ||
-        l.addressPostcode.toLowerCase().includes(q) ||
-        l.addressFormatted.toLowerCase().includes(q)
-      );
-    });
-    // Multiply by direction instead of reverse() so ties keep stable order.
-    return [...filtered].sort((a, b) => {
+    return [...leads].sort((a, b) => {
       const cmp = compare(a, b, sortKey);
       return sortDir === "asc" ? cmp : -cmp;
     });
-  }, [leads, statusFilter, search, sortKey, sortDir]);
+  }, [leads, sortKey, sortDir]);
 
   const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
   const safePage = Math.min(page, pageCount - 1);
@@ -193,8 +161,6 @@ export default function QuotesClient({
     }
   };
 
-  // Marking Completed opens the price pop-up first; every other status writes
-  // straight through.
   const handleStatusChange = (id: string, status: LeadStatus) => {
     if (status === "won") {
       const lead = leads.find((l) => l.id === id);
@@ -219,14 +185,10 @@ export default function QuotesClient({
       if (flashTimer.current) window.clearTimeout(flashTimer.current);
       flashTimer.current = window.setTimeout(() => setFlashWonId(null), 650);
     }
-    // Only include the price when one was given, so "Skip for now" never
-    // clobbers an existing price with null.
     const update =
       actualPrice != null
         ? { status, actual_price_ex_vat: actualPrice }
         : { status };
-    // Persist (RLS allows authenticated members to update lead status).
-    // Guard lost-update: only roll back if the UI still shows the optimistic value.
     void createClient()
       .from("leads")
       .update(update)
@@ -245,6 +207,7 @@ export default function QuotesClient({
           }
         } else {
           syncAnalytics();
+          router.refresh();
         }
       });
   };
@@ -281,7 +244,6 @@ export default function QuotesClient({
           );
         } else {
           syncAnalytics();
-          // Row left this page's filter — refresh so counts/pages stay honest.
           router.refresh();
         }
       });
@@ -302,7 +264,7 @@ export default function QuotesClient({
       .maybeSingle()
       .then(({ data, error }) => {
         if (error) {
-          requested.current.delete(id); // let a re-expand retry
+          requested.current.delete(id);
           setPayloads((p) => ({
             ...p,
             [id]: { data: null, loading: false, error: error.message },
@@ -325,13 +287,13 @@ export default function QuotesClient({
     loadPayload(id);
   };
 
-  const order: StatusFilter[] = [
+  const order: LeadStatusFilter[] = [
     "all",
     ...STATUS_ORDER,
     "followup",
     "archived",
   ];
-  const filterLabel = (f: StatusFilter) =>
+  const filterLabel = (f: LeadStatusFilter) =>
     f === "all"
       ? "All"
       : f === "archived"
@@ -348,7 +310,7 @@ export default function QuotesClient({
   const filterItems: Filter[] = order.map((f) => ({
     key: f,
     label: filterLabel(f),
-    count: counts[f],
+    count: filterCounts[f],
     ink: FILTER_COLORS[f].ink,
     solid: FILTER_COLORS[f].solid,
     icon: f === "archived" ? archiveIcon : undefined,
@@ -378,7 +340,12 @@ export default function QuotesClient({
         <FilterBar
           filters={filterItems}
           activeKey={statusFilter}
-          onSelect={(k) => setStatusFilter(k as StatusFilter)}
+          onSelect={(k) =>
+            navigate({
+              status: k === "all" ? null : k,
+              page: "0",
+            })
+          }
         />
 
         <label className="search-box field flex items-center gap-2 px-3 py-2 sm:w-64">
@@ -397,7 +364,7 @@ export default function QuotesClient({
       </div>
 
       <QuotesTable
-        key={`${statusFilter}-${safePage}-${pageSize}`}
+        key={`${statusFilter}-${safePage}-${pageSize}-${searchQuery}`}
         leads={visible}
         sortKey={sortKey}
         sortDir={sortDir}
@@ -408,7 +375,7 @@ export default function QuotesClient({
         onStatusChange={handleStatusChange}
         onArchive={handleArchive}
         archivedView={statusFilter === "archived"}
-        noLeadsAtAll={totalCount === 0}
+        noLeadsAtAll={totalCount === 0 && !searchQuery && statusFilter === "all"}
         rooferSlug={rooferSlug}
         flashWonId={flashWonId}
         newId={null}

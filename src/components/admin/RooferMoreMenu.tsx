@@ -2,7 +2,18 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 
+import Toast from "@/components/Toast";
 import { deleteRoofer } from "@/lib/admin-actions";
+
+function isRedirectError(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "digest" in err &&
+    typeof (err as { digest?: unknown }).digest === "string" &&
+    String((err as { digest: string }).digest).startsWith("NEXT_REDIRECT")
+  );
+}
 
 /**
  * Quiet ⋯ menu for destructive / rare ops on a roofer workspace.
@@ -17,6 +28,10 @@ export default function RooferMoreMenu({
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [pending, start] = useTransition();
+  const [toast, setToast] = useState<{
+    message: string;
+    tone: "ok" | "error";
+  } | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -88,7 +103,26 @@ export default function RooferMoreMenu({
                 <button
                   type="button"
                   disabled={pending}
-                  onClick={() => start(() => deleteRoofer(id))}
+                  onClick={() =>
+                    start(async () => {
+                      try {
+                        const result = await deleteRoofer(id);
+                        if (!result.ok) {
+                          setToast({ message: result.error, tone: "error" });
+                          setOpen(false);
+                          setConfirming(false);
+                        }
+                      } catch (err) {
+                        if (isRedirectError(err)) throw err;
+                        setToast({
+                          message: "Couldn’t delete that roofer.",
+                          tone: "error",
+                        });
+                        setOpen(false);
+                        setConfirming(false);
+                      }
+                    })
+                  }
                   className="rounded-full bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
                 >
                   {pending ? "Deleting…" : "Delete"}
@@ -98,6 +132,12 @@ export default function RooferMoreMenu({
           )}
         </div>
       )}
+
+      <Toast
+        message={toast?.message ?? null}
+        tone={toast?.tone}
+        onDone={() => setToast(null)}
+      />
     </div>
   );
 }

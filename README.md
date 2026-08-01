@@ -79,9 +79,10 @@ Apply in order in the Supabase SQL Editor:
 
 These are deliberate and surfaced in the UI rather than faked:
 
-- **Pricing isn't wired to quoting.** Rates save to `roofer_pricing`, but the
-  widget still prices from its own hardcoded card
-  (`quoter-widget-frontend/config/rates.ts`). The Account page says so.
+- **Per-roofer quote config is live.** `roofer_pricing.quote_config` stores
+  enabled services + per-service variables; `GET /api/roofer` exposes them;
+  the widget merges into its rate table. Admin Setup → Pricing is the call
+  playbook; Account uses the same editor.
 - **Roof markup is partial.** The widget keeps only the largest roof face and
   stores gutter/obstruction *totals*, not positions
   (`quoter-widget-frontend/lib/quote-flow.ts:532`). So the plan view draws one

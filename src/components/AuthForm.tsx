@@ -83,9 +83,19 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
           />
         </div>
         <div>
-          <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-ink">
-            Password
-          </label>
+          <div className="mb-1.5 flex items-center justify-between gap-2">
+            <label htmlFor="password" className="block text-sm font-medium text-ink">
+              Password
+            </label>
+            {!isSignup && (
+              <Link
+                href="/forgot-password"
+                className="text-xs font-medium text-brand-600 hover:text-brand-700"
+              >
+                Forgot password?
+              </Link>
+            )}
+          </div>
           <input
             id="password"
             type="password"

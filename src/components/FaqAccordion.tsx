@@ -11,7 +11,7 @@ const FAQS: Faq[] = [
   },
   {
     q: "Can I change my prices?",
-    a: "Yes — head to the Account page and update your material rates, day rate, skip hire and scaffold costs. New quotes use your latest prices automatically.",
+    a: "Yes — on the Account page, pick the services your bubble should offer and set the rates for each one (coverings, access, skip, gutters, and so on). Homeowners only see what you enable, priced with your numbers.",
   },
   {
     q: "What does the access rating mean?",

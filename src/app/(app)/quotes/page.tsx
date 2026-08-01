@@ -7,6 +7,12 @@ import {
   parsePageSize,
   type LeadRow,
 } from "@/lib/leads";
+import {
+  buildLeadListQuery,
+  fetchLeadFilterCounts,
+  parseSearchQuery,
+  parseStatusFilter,
+} from "@/lib/lead-filters";
 import QuotesClient from "@/components/QuotesClient";
 import PageHeader from "@/components/PageHeader";
 import NotLinkedNotice from "@/components/NotLinkedNotice";
@@ -17,7 +23,12 @@ export const dynamic = "force-dynamic";
 export default async function QuotesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; pageSize?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    pageSize?: string;
+    status?: string;
+    q?: string;
+  }>;
 }) {
   const user = await getUser();
   const lookup = await getRoofer();
@@ -56,13 +67,19 @@ export default async function QuotesPage({
   let page = parsePage(params.page);
   const from = page * pageSize;
   const to = from + pageSize - 1;
+  const statusFilter = parseStatusFilter(params.status);
+  const q = parseSearchQuery(params.q);
 
   const supabase = await createClient();
-  const { data, error, count } = await supabase
-    .from("leads")
-    .select(LEAD_LIST_COLUMNS, { count: "exact" })
-    .order("received_at", { ascending: false })
-    .range(from, to);
+  const [{ data, error, count }, filterCounts] = await Promise.all([
+    buildLeadListQuery(supabase, LEAD_LIST_COLUMNS, {
+      status: statusFilter,
+      q,
+    })
+      .order("received_at", { ascending: false })
+      .range(from, to),
+    fetchLeadFilterCounts(supabase, { q }),
+  ]);
 
   if (error) {
     return (
@@ -93,6 +110,9 @@ export default async function QuotesPage({
       page={page}
       pageSize={pageSize}
       totalCount={totalCount}
+      statusFilter={statusFilter}
+      searchQuery={q}
+      filterCounts={filterCounts}
     />
   );
 }

@@ -46,7 +46,14 @@ export async function middleware(request: NextRequest) {
   }
 
   const path = request.nextUrl.pathname;
-  const isAuthPage = path === "/login" || path === "/signup";
+  const isAuthPage =
+    path === "/login" ||
+    path === "/signup" ||
+    path === "/forgot-password";
+  // Password-recovery links land here with a session from the email token —
+  // allow both signed-out and signed-in users through.
+  const isRecoveryPage = path === "/update-password";
+  const isAuthCallback = path === "/auth/callback";
 
   const copySessionCookies = (target: NextResponse) => {
     supabaseResponse.cookies.getAll().forEach((c) => {
@@ -55,7 +62,7 @@ export async function middleware(request: NextRequest) {
     return target;
   };
 
-  if (!user && !isAuthPage) {
+  if (!user && !isAuthPage && !isRecoveryPage && !isAuthCallback) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return copySessionCookies(NextResponse.redirect(url));

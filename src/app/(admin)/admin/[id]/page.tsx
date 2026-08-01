@@ -12,6 +12,8 @@ import QuotesClient from "@/components/QuotesClient";
 import JobsClient from "@/components/JobsClient";
 import { createClient } from "@/lib/supabase/server";
 import { linkRooferLogin, updateRoofer } from "@/lib/admin-actions";
+import { getQuoteConfig } from "@/lib/pricing";
+import { assessCompleteness } from "@/lib/quote-config";
 import {
   LEAD_LIST_COLUMNS,
   mapLeadRow,
@@ -19,6 +21,16 @@ import {
   parsePageSize,
   type LeadRow,
 } from "@/lib/leads";
+import {
+  buildLeadListQuery,
+  fetchJobsFilterCounts,
+  fetchLeadFilterCounts,
+  parseJobsStatusFilter,
+  parseSearchQuery,
+  parseStatusFilter,
+  type JobsFilterCounts,
+  type LeadFilterCounts,
+} from "@/lib/lead-filters";
 import {
   buttonSnippet,
   hostedLink,
@@ -40,23 +52,34 @@ export default async function RooferDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ tab?: string; page?: string; pageSize?: string }>;
+  searchParams: Promise<{
+    tab?: string;
+    page?: string;
+    pageSize?: string;
+    status?: string;
+    q?: string;
+  }>;
 }) {
   const { id } = await params;
   const sp = await searchParams;
   const tab = parseTab(sp.tab);
+  const q = parseSearchQuery(sp.q);
+  const statusFilter = parseStatusFilter(sp.status);
+  const jobsFilter = parseJobsStatusFilter(sp.status);
 
   const supabase = await createClient();
   const { data } = await supabase
     .from("roofers")
     .select(
-      "id,slug,name,website,contact_name,contact_phone,deploy_status,created_at",
+      "id,slug,name,website,contact_name,contact_phone,deploy_status,created_at,allowed_origins",
     )
     .eq("id", id)
     .maybeSingle();
 
   if (!data) notFound();
-  const roofer = data as RooferAdminRow;
+  const roofer = data as RooferAdminRow & { allowed_origins?: string[] | null };
+  const quoteConfig = await getQuoteConfig(roofer.id);
+  const pricingCompleteness = assessCompleteness(quoteConfig);
 
   const [{ count: quoteCount }, { count: jobCount }] = await Promise.all([
     supabase
@@ -80,16 +103,25 @@ export default async function RooferDetailPage({
     const from = page * pageSize;
     const to = from + pageSize - 1;
 
-    let query = supabase
-      .from("leads")
-      .select(LEAD_LIST_COLUMNS, { count: "exact" })
-      .eq("roofer_id", roofer.id);
+    const query =
+      tab === "jobs"
+        ? buildLeadListQuery(supabase, LEAD_LIST_COLUMNS, {
+            rooferId: roofer.id,
+            status: "all",
+            jobsStatus: jobsFilter,
+            q,
+            wonOnly: true,
+          })
+        : buildLeadListQuery(supabase, LEAD_LIST_COLUMNS, {
+            rooferId: roofer.id,
+            status: statusFilter,
+            q,
+          });
 
-    if (tab === "jobs") query = query.eq("status", "won");
-
-    const { data: leadData, error, count } = await query
+    const listResult = await query
       .order("received_at", { ascending: false })
       .range(from, to);
+    const { data: leadData, error, count } = listResult;
 
     const loadError = (
       <div className="surface rounded-2xl p-6">
@@ -112,6 +144,10 @@ export default async function RooferDetailPage({
       const rows = ((leadData as LeadRow[] | null) ?? []).map(mapLeadRow);
 
       if (tab === "quotes") {
+        const filterCounts: LeadFilterCounts = await fetchLeadFilterCounts(
+          supabase,
+          { rooferId: roofer.id, q },
+        );
         quotesBody = (
           <Suspense fallback={null}>
             <QuotesClient
@@ -120,11 +156,18 @@ export default async function RooferDetailPage({
               page={page}
               pageSize={pageSize}
               totalCount={totalCount}
+              statusFilter={statusFilter}
+              searchQuery={q}
+              filterCounts={filterCounts}
               hideHeader
             />
           </Suspense>
         );
       } else {
+        const filterCounts: JobsFilterCounts = await fetchJobsFilterCounts(
+          supabase,
+          { rooferId: roofer.id, q },
+        );
         jobsBody = (
           <Suspense fallback={null}>
             <JobsClient
@@ -132,6 +175,9 @@ export default async function RooferDetailPage({
               page={page}
               pageSize={pageSize}
               totalCount={totalCount}
+              jobsFilter={jobsFilter}
+              searchQuery={q}
+              filterCounts={filterCounts}
               hideHeader
             />
           </Suspense>
@@ -149,6 +195,7 @@ export default async function RooferDetailPage({
     setupBody = (
       <div className="mx-auto max-w-3xl">
         <RooferPanel
+          rooferId={roofer.id}
           install={{
             slug: roofer.slug,
             button: buttonSnippet(roofer.slug),
@@ -167,6 +214,8 @@ export default async function RooferDetailPage({
             contactPhone: roofer.contact_phone ?? "",
           }}
           members={members}
+          quoteConfig={quoteConfig}
+          allowedOrigins={roofer.allowed_origins ?? []}
           updateAction={updateRoofer.bind(null, roofer.id)}
           linkAction={linkRooferLogin.bind(null, roofer.id)}
         />
@@ -188,7 +237,15 @@ export default async function RooferDetailPage({
           {roofer.name}
         </h1>
         <div className="flex items-center gap-1.5 sm:gap-2">
-          <DeployStatusControl id={roofer.id} status={roofer.deploy_status} />
+          <DeployStatusControl
+            id={roofer.id}
+            status={roofer.deploy_status}
+            pricingReady={pricingCompleteness.ready}
+            pricingWarning={
+              pricingCompleteness.warnings[0] ??
+              "Pricing isn’t complete yet. Mark live anyway?"
+            }
+          />
           <RooferMoreMenu id={roofer.id} name={roofer.name} />
         </div>
       </div>

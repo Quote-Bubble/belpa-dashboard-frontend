@@ -8,15 +8,14 @@ import type {
   LeadPayload,
   LeadPayloadState,
 } from "@/lib/types";
+import type { JobsFilterCounts, JobsStatusFilter } from "@/lib/lead-filters";
 import { jobTypeLabel } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
 import PageHeader from "@/components/PageHeader";
 import FilterBar, { type Filter } from "@/components/FilterBar";
 import JobsTable, { type SortDir, type SortKey } from "@/components/JobsTable";
 
-type JobsFilter = "all" | "priced" | "unpriced" | "archived";
-
-const FILTER_COLORS: Record<JobsFilter, { ink: string; solid: string }> = {
+const FILTER_COLORS: Record<JobsStatusFilter, { ink: string; solid: string }> = {
   all: { ink: "#3d4148", solid: "#0a0b0d" },
   priced: { ink: "#0d6b3c", solid: "#12915a" },
   unpriced: { ink: "#1546c9", solid: "#2f6bff" },
@@ -53,18 +52,23 @@ export default function JobsClient({
   page,
   pageSize,
   totalCount,
+  jobsFilter,
+  searchQuery,
+  filterCounts,
   hideHeader = false,
 }: {
   initialJobs: DashboardLead[];
   page: number;
   pageSize: number;
   totalCount: number;
+  jobsFilter: JobsStatusFilter;
+  searchQuery: string;
+  filterCounts: JobsFilterCounts;
   /** When embedded in the admin roofer hub (title lives on the hub). */
   hideHeader?: boolean;
 }) {
   const [jobs, setJobs] = useState<DashboardLead[]>(initialJobs);
-  const [jobsFilter, setJobsFilter] = useState<JobsFilter>("all");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(searchQuery);
   const [sortKey, setSortKey] = useState<SortKey>("receivedAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -79,59 +83,45 @@ export default function JobsClient({
     setJobs(initialJobs);
   }, [initialJobs]);
 
-  const navigatePage = (nextPage: number, nextSize = pageSize) => {
-    // Preserve hub tab (and anything else) when paginating inside /admin/[id].
+  useEffect(() => {
+    setSearch(searchQuery);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const trimmed = search.trim();
+    if (trimmed === searchQuery) return;
+    const t = window.setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (trimmed) params.set("q", trimmed);
+      else params.delete("q");
+      params.set("page", "0");
+      router.push(`${pathname}?${params.toString()}`);
+    }, 350);
+    return () => window.clearTimeout(t);
+  }, [search, searchQuery, pathname, router, searchParams]);
+
+  const navigate = (patch: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString());
-    params.set("page", String(Math.max(0, nextPage)));
-    params.set("pageSize", String(nextSize));
+    for (const [k, v] of Object.entries(patch)) {
+      if (v == null || v === "") params.delete(k);
+      else params.set(k, v);
+    }
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const counts = useMemo(() => {
-    const c: Record<JobsFilter, number> = {
-      all: 0,
-      priced: 0,
-      unpriced: 0,
-      archived: 0,
-    };
-    for (const j of jobs) {
-      if (j.archived) {
-        c.archived += 1;
-        continue;
-      }
-      c.all += 1;
-      if (j.actualPriceExVat != null) c.priced += 1;
-      else c.unpriced += 1;
-    }
-    return c;
-  }, [jobs]);
+  const navigatePage = (nextPage: number, nextSize = pageSize) => {
+    navigate({
+      page: String(Math.max(0, nextPage)),
+      pageSize: String(nextSize),
+    });
+  };
 
   const visible = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const archivedView = jobsFilter === "archived";
-    const filtered = jobs.filter((j) => {
-      if (archivedView) {
-        if (!j.archived) return false;
-      } else if (j.archived) {
-        return false;
-      } else if (jobsFilter === "priced") {
-        if (j.actualPriceExVat == null) return false;
-      } else if (jobsFilter === "unpriced") {
-        if (j.actualPriceExVat != null) return false;
-      }
-      if (!q) return true;
-      return (
-        j.contactName.toLowerCase().includes(q) ||
-        j.addressPostcode.toLowerCase().includes(q) ||
-        j.addressFormatted.toLowerCase().includes(q) ||
-        j.contactPhone.toLowerCase().includes(q)
-      );
-    });
-    return [...filtered].sort((a, b) => {
+    return [...jobs].sort((a, b) => {
       const cmp = compare(a, b, sortKey);
       return sortDir === "asc" ? cmp : -cmp;
     });
-  }, [jobs, jobsFilter, search, sortKey, sortDir]);
+  }, [jobs, sortKey, sortDir]);
 
   const handleSort = (key: SortKey) => {
     if (key === sortKey) {
@@ -202,6 +192,8 @@ export default function JobsClient({
                 : j,
             ),
           );
+        } else {
+          router.refresh();
         }
       });
   };
@@ -257,8 +249,13 @@ export default function JobsClient({
     </svg>
   );
 
-  const filterOrder: JobsFilter[] = ["all", "priced", "unpriced", "archived"];
-  const filterLabel = (f: JobsFilter) => {
+  const filterOrder: JobsStatusFilter[] = [
+    "all",
+    "priced",
+    "unpriced",
+    "archived",
+  ];
+  const filterLabel = (f: JobsStatusFilter) => {
     if (f === "all") return "All";
     if (f === "priced") return "Priced";
     if (f === "unpriced") return "Unpriced";
@@ -267,7 +264,7 @@ export default function JobsClient({
   const filterItems: Filter[] = filterOrder.map((f) => ({
     key: f,
     label: filterLabel(f),
-    count: counts[f],
+    count: filterCounts[f],
     ink: FILTER_COLORS[f].ink,
     solid: FILTER_COLORS[f].solid,
     icon: f === "archived" ? archiveIcon : undefined,
@@ -297,7 +294,12 @@ export default function JobsClient({
         <FilterBar
           filters={filterItems}
           activeKey={jobsFilter}
-          onSelect={(k) => setJobsFilter(k as JobsFilter)}
+          onSelect={(k) =>
+            navigate({
+              status: k === "all" ? null : k,
+              page: "0",
+            })
+          }
         />
 
         <label className="search-box field flex items-center gap-2 px-3 py-2 sm:w-64">
@@ -326,7 +328,7 @@ export default function JobsClient({
       </div>
 
       <JobsTable
-        key={`${jobsFilter}-${safePage}-${pageSize}`}
+        key={`${jobsFilter}-${safePage}-${pageSize}-${searchQuery}`}
         jobs={visible}
         sortKey={sortKey}
         sortDir={sortDir}
@@ -337,7 +339,7 @@ export default function JobsClient({
         onArchive={handleArchive}
         onPriceChange={handlePriceChange}
         archivedView={jobsFilter === "archived"}
-        noJobsAtAll={totalCount === 0}
+        noJobsAtAll={totalCount === 0 && !searchQuery && jobsFilter === "all"}
         page={safePage}
         pageSize={pageSize}
         pageCount={pageCount}

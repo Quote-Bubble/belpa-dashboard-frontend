@@ -11,22 +11,38 @@ const SUPPORT_EMAIL = "support@quoter.com";
 export default function SupportPage() {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
-  const [sending, setSending] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    tone: "ok" | "error";
+  } | null>(null);
 
   const canSend = subject.trim() !== "" && message.trim() !== "";
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSend) return;
-    setSending(true);
-    // Mock send — no real email.
-    setTimeout(() => {
-      setSending(false);
-      setSubject("");
-      setMessage("");
-      setToast("Message sent — we'll reply by email");
-    }, 700);
+
+    const body = [
+      message.trim(),
+      "",
+      "—",
+      "Sent from the Quoter dashboard support form.",
+    ].join("\n");
+
+    const href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
+      subject.trim(),
+    )}&body=${encodeURIComponent(body)}`;
+
+    // Real send path: open the user's mail client. No fake "Message sent".
+    const opened = window.open(href, "_self");
+    if (opened === null) {
+      // Popup blockers rarely hit mailto:_self, but keep a fallback.
+      window.location.href = href;
+    }
+    setToast({
+      message: "Opening your email app…",
+      tone: "ok",
+    });
   };
 
   return (
@@ -37,7 +53,6 @@ export default function SupportPage() {
       />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
-        {/* Left: contact + FAQ */}
         <div className="space-y-6">
           <div className="glass rounded-2xl p-5 sm:p-6">
             <p className="section-label">Get in touch</p>
@@ -68,14 +83,13 @@ export default function SupportPage() {
           </div>
         </div>
 
-        {/* Right: contact form */}
         <form onSubmit={handleSubmit} className="surface rounded-2xl p-5 sm:p-6">
           <h2 className="font-display text-lg font-semibold text-ink">
             Send us a message
           </h2>
           <p className="mt-1 text-sm text-muted">
-            We&apos;ll reply to {" "}
-            <span className="font-medium text-ink-soft">your account email</span>.
+            Opens your email app with a draft to{" "}
+            <span className="font-medium text-ink-soft">{SUPPORT_EMAIL}</span>.
           </p>
 
           <div className="mt-5 space-y-4">
@@ -116,15 +130,19 @@ export default function SupportPage() {
 
           <button
             type="submit"
-            disabled={!canSend || sending}
+            disabled={!canSend}
             className="btn-primary mt-5 w-full rounded-full px-4 py-2.5 text-sm font-semibold"
           >
-            {sending ? "Sending…" : "Send message"}
+            Open email draft
           </button>
         </form>
       </div>
 
-      <Toast message={toast} onDone={() => setToast(null)} />
+      <Toast
+        message={toast?.message ?? null}
+        tone={toast?.tone}
+        onDone={() => setToast(null)}
+      />
     </>
   );
 }

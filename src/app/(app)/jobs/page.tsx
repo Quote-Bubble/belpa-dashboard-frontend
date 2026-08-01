@@ -7,6 +7,12 @@ import {
   parsePageSize,
   type LeadRow,
 } from "@/lib/leads";
+import {
+  buildLeadListQuery,
+  fetchJobsFilterCounts,
+  parseJobsStatusFilter,
+  parseSearchQuery,
+} from "@/lib/lead-filters";
 import JobsClient from "@/components/JobsClient";
 import PageHeader from "@/components/PageHeader";
 import NotLinkedNotice from "@/components/NotLinkedNotice";
@@ -16,7 +22,12 @@ export const dynamic = "force-dynamic";
 export default async function JobsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; pageSize?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    pageSize?: string;
+    status?: string;
+    q?: string;
+  }>;
 }) {
   const user = await getUser();
   const lookup = await getRoofer();
@@ -52,15 +63,22 @@ export default async function JobsPage({
   let page = parsePage(params.page);
   const from = page * pageSize;
   const to = from + pageSize - 1;
+  const jobsFilter = parseJobsStatusFilter(params.status);
+  const q = parseSearchQuery(params.q);
 
   const supabase = await createClient();
 
-  const { data, error, count } = await supabase
-    .from("leads")
-    .select(LEAD_LIST_COLUMNS, { count: "exact" })
-    .eq("status", "won")
-    .order("received_at", { ascending: false })
-    .range(from, to);
+  const [{ data, error, count }, filterCounts] = await Promise.all([
+    buildLeadListQuery(supabase, LEAD_LIST_COLUMNS, {
+      status: "all",
+      jobsStatus: jobsFilter,
+      q,
+      wonOnly: true,
+    })
+      .order("received_at", { ascending: false })
+      .range(from, to),
+    fetchJobsFilterCounts(supabase, { q }),
+  ]);
 
   if (error) {
     return (
@@ -91,6 +109,9 @@ export default async function JobsPage({
       page={page}
       pageSize={pageSize}
       totalCount={totalCount}
+      jobsFilter={jobsFilter}
+      searchQuery={q}
+      filterCounts={filterCounts}
     />
   );
 }

@@ -4,7 +4,9 @@ import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 
+import Toast from "@/components/Toast";
 import { createRoofer } from "@/lib/admin-actions";
+import type { ActionResult } from "@/lib/action-result";
 
 const field =
   "field w-full px-3 py-2.5 text-sm text-ink outline-none placeholder:text-muted";
@@ -23,8 +25,37 @@ function SubmitButton() {
   );
 }
 
+function isRedirectError(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "digest" in err &&
+    typeof (err as { digest?: unknown }).digest === "string" &&
+    String((err as { digest: string }).digest).startsWith("NEXT_REDIRECT")
+  );
+}
+
 export default function AddRoofer() {
   const [open, setOpen] = useState(false);
+  const [toast, setToast] = useState<{
+    message: string;
+    tone: "ok" | "error";
+  } | null>(null);
+
+  const handleAction = async (formData: FormData) => {
+    try {
+      const result: ActionResult = await createRoofer(formData);
+      if (!result.ok) {
+        setToast({ message: result.error, tone: "error" });
+      }
+    } catch (err) {
+      if (isRedirectError(err)) throw err;
+      setToast({
+        message: "Couldn’t create that roofer. Please try again.",
+        tone: "error",
+      });
+    }
+  };
 
   return (
     <div className="surface mb-6 overflow-hidden rounded-2xl">
@@ -82,7 +113,7 @@ export default function AddRoofer() {
             className="overflow-hidden"
           >
             <form
-              action={createRoofer}
+              action={handleAction}
               className="grid gap-3 border-t border-line px-5 py-5 sm:grid-cols-2"
             >
               <div className="sm:col-span-2">
@@ -145,6 +176,12 @@ export default function AddRoofer() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <Toast
+        message={toast?.message ?? null}
+        tone={toast?.tone}
+        onDone={() => setToast(null)}
+      />
     </div>
   );
 }

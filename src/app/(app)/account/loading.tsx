@@ -56,11 +56,8 @@ export default function AccountLoading() {
         </div>
       </div>
 
-      {/* Static notice — not data-dependent, shown for real */}
-      <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-        <strong className="font-semibold">Not live yet.</strong> These rates save
-        to your account, but the quote widget still prices from its built-in rate
-        card. Wiring it to use your numbers is separate work.
+      <div className="mb-6 rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-900">
+        <strong className="font-semibold">These rates power your quote bubble.</strong>
       </div>
 
       <div className="space-y-5">
