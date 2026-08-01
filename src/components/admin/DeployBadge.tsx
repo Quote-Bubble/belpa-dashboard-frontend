@@ -1,7 +1,7 @@
 import type { DeployStatus } from "@/lib/types";
 
 const MAP: Record<DeployStatus, { label: string; className: string }> = {
-  prospect: { label: "Prospect", className: "bg-black/[0.05] text-ink-soft" },
+  prospect: { label: "To set up", className: "bg-black/[0.05] text-ink-soft" },
   sent: { label: "Sent", className: "bg-amber-100 text-amber-800" },
   live: { label: "Live", className: "bg-green-100 text-green-700" },
 };

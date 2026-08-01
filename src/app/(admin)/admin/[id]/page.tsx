@@ -55,10 +55,13 @@ export default async function RooferDetailPage({
             <span className="font-mono">/{roofer.slug}</span> · Added {added}
           </p>
         </div>
-        <DeployStatusControl id={roofer.id} status={roofer.deploy_status} />
+        <div className="flex flex-col items-start gap-1.5 sm:items-end">
+          <span className="text-xs font-medium text-muted">Deploy status</span>
+          <DeployStatusControl id={roofer.id} status={roofer.deploy_status} />
+        </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+      <div className="grid items-start gap-6 lg:grid-cols-[1.5fr_1fr]">
         {/* Install — one tabbed snippet instead of three stacked blocks */}
         <section className="surface rounded-2xl p-5">
           <h2 className="mb-4 text-sm font-semibold text-ink">Install</h2>
