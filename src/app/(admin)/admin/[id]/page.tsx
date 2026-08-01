@@ -61,9 +61,9 @@ export default async function RooferDetailPage({
         </div>
       </div>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[1.5fr_1fr]">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         {/* Install — one tabbed snippet instead of three stacked blocks */}
-        <section className="surface rounded-2xl p-5">
+        <section className="surface min-w-0 rounded-2xl p-5">
           <h2 className="mb-4 text-sm font-semibold text-ink">Install</h2>
           <InstallSnippets
             button={buttonSnippet(roofer.slug)}
@@ -73,7 +73,7 @@ export default async function RooferDetailPage({
         </section>
 
         {/* Details */}
-        <section className="surface h-fit rounded-2xl p-5">
+        <section className="surface h-fit min-w-0 rounded-2xl p-5">
           <h2 className="mb-4 text-sm font-semibold text-ink">Details</h2>
           <form
             action={updateRoofer.bind(null, roofer.id)}

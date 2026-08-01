@@ -129,8 +129,9 @@ export type RooferProfile = {
   name: string;
 };
 
-/** Where a roofer sits in the deploy pipeline (admin ops console). */
-export type DeployStatus = "prospect" | "sent" | "live";
+/** Whether the roofer's widget is set up yet (admin ops console). "prospect" is
+ *  the stored value for "to set up". */
+export type DeployStatus = "prospect" | "live";
 
 /** A roofer row as seen in the admin console (full ops fields). */
 export type RooferAdminRow = {

@@ -5,11 +5,9 @@ import { useTransition } from "react";
 import { setDeployStatus } from "@/lib/admin-actions";
 import type { DeployStatus } from "@/lib/types";
 
-// Deploy pipeline in plain terms: added but not deployed → snippet handed over,
-// awaiting go-live → widget confirmed live on their site.
+// We set the widget up ourselves, so it's binary: still to do, or live.
 const OPTIONS: { value: DeployStatus; label: string }[] = [
   { value: "prospect", label: "To set up" },
-  { value: "sent", label: "Sent" },
   { value: "live", label: "Live" },
 ];
 
