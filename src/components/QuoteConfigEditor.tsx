@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
 
 import {
   SERVICE_CATALOG,
@@ -31,6 +32,37 @@ const ACCESS_OPTIONS: { value: AccessMode; label: string }[] = [
 type SectionId = "coverings" | "extras" | "access" | "rates";
 type OpenSection = SectionId | null;
 
+const EASE = [0.22, 1, 0.36, 1] as const;
+const springSoft = { type: "spring" as const, stiffness: 420, damping: 32 };
+const expandTransition = { duration: 0.32, ease: EASE };
+
+function Expand({
+  open,
+  children,
+  className = "",
+}: {
+  open: boolean;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <AnimatePresence initial={false}>
+      {open ? (
+        <motion.div
+          key="expand"
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={expandTransition}
+          className={`overflow-hidden ${className}`}
+        >
+          {children}
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
+  );
+}
+
 function IosSwitch({
   checked,
   onChange,
@@ -50,20 +82,24 @@ function IosSwitch({
         e.stopPropagation();
         onChange(!checked);
       }}
-      className={[
-        "relative h-[31px] w-[51px] shrink-0 rounded-full transition-colors duration-200 ease-out",
-        checked ? "bg-brand-600" : "bg-[#e9e9eb]",
-      ].join(" ")}
     >
-      <span
+      <motion.span
         aria-hidden
-        className={[
-          "pointer-events-none absolute top-[2px] left-[2px] h-[27px] w-[27px] rounded-full bg-white",
-          "shadow-[0_3px_8px_rgba(0,0,0,0.15),0_1px_1px_rgba(0,0,0,0.06)]",
-          "transition-transform duration-200 ease-out",
-          checked ? "translate-x-[20px]" : "translate-x-0",
-        ].join(" ")}
-      />
+        className="relative block h-[31px] w-[51px] shrink-0 rounded-full"
+        initial={false}
+        animate={{
+          backgroundColor: checked ? "#1f57f0" : "#e9e9eb",
+        }}
+        transition={{ duration: 0.2, ease: EASE }}
+      >
+        <motion.span
+          aria-hidden
+          className="absolute top-[2px] left-[2px] h-[27px] w-[27px] rounded-full bg-white shadow-[0_3px_8px_rgba(0,0,0,0.15),0_1px_1px_rgba(0,0,0,0.06)]"
+          initial={false}
+          animate={{ x: checked ? 20 : 0 }}
+          transition={springSoft}
+        />
+      </motion.span>
     </button>
   );
 }
@@ -194,29 +230,38 @@ function AccordionRow({
 }) {
   return (
     <div className="border-b border-line last:border-b-0">
-      <button
+      <motion.button
         type="button"
         onClick={onToggle}
+        whileTap={{ scale: 0.995 }}
         className="flex w-full items-center gap-3.5 px-5 py-4 text-left transition-colors hover:bg-black/[0.015] sm:px-6 sm:py-[1.125rem]"
         aria-expanded={open}
       >
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600">
+        <motion.span
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600"
+          animate={{
+            backgroundColor: open
+              ? "rgba(47, 107, 255, 0.16)"
+              : "rgba(47, 107, 255, 0.08)",
+            scale: open ? 1.04 : 1,
+          }}
+          transition={springSoft}
+        >
           {icon}
-        </span>
+        </motion.span>
         <span className="min-w-0 flex-1">
           <span className="block text-[15px] font-semibold text-ink">
             {title}
           </span>
           <span className="mt-0.5 block text-[13px] text-muted">{subtitle}</span>
         </span>
-        <svg
+        <motion.svg
           width="14"
           height="14"
           viewBox="0 0 12 12"
-          className={[
-            "shrink-0 text-muted transition-transform",
-            open ? "rotate-180" : "",
-          ].join(" ")}
+          className="shrink-0 text-muted"
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={springSoft}
           aria-hidden
         >
           <path
@@ -226,13 +271,19 @@ function AccordionRow({
             fill="none"
             strokeLinecap="round"
           />
-        </svg>
-      </button>
-      {open ? (
+        </motion.svg>
+      </motion.button>
+      <Expand open={open}>
         <div className="border-t border-line bg-[#fafbfc] px-5 py-5 sm:px-6">
-          {children}
+          <motion.div
+            initial={{ y: -6, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.28, ease: EASE, delay: 0.04 }}
+          >
+            {children}
+          </motion.div>
         </div>
-      ) : null}
+      </Expand>
     </div>
   );
 }
@@ -276,38 +327,60 @@ function AccessEditor({
                 })
               }
               className={[
-                "rounded-lg px-2 py-2.5 text-[13px] font-semibold transition-all",
-                active
-                  ? "bg-white text-ink shadow-sm"
-                  : "text-muted hover:text-ink",
+                "relative rounded-lg px-2 py-2.5 text-[13px] font-semibold transition-colors",
+                active ? "text-ink" : "text-muted hover:text-ink",
               ].join(" ")}
             >
-              {o.label}
+              {active ? (
+                <motion.span
+                  layoutId="access-pill"
+                  className="absolute inset-0 rounded-lg bg-white shadow-sm"
+                  transition={springSoft}
+                />
+              ) : null}
+              <span className="relative z-10">{o.label}</span>
             </button>
           );
         })}
       </div>
-      {value.mode !== "none" ? (
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-[15px] font-medium text-ink">
-              {value.mode === "scaffold_weeks" ? "Per week" : "Access rate"}
-            </p>
-            <p className="text-[13px] text-muted">
-              {value.mode === "scaffold_weeks"
-                ? "Storeys map to weeks × this rate"
-                : "Added as a single line on the quote"}
-            </p>
-          </div>
-          <MoneyField
-            value={value.rateExVat}
-            onChange={(n) => onChange({ ...value, rateExVat: n })}
-            suffix={value.mode === "scaffold_weeks" ? "/wk" : ""}
-          />
-        </div>
-      ) : (
-        <p className="text-[13px] text-muted">No access line on quotes.</p>
-      )}
+      <AnimatePresence mode="wait" initial={false}>
+        {value.mode !== "none" ? (
+          <motion.div
+            key="rate"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.22, ease: EASE }}
+            className="flex flex-wrap items-center justify-between gap-3"
+          >
+            <div>
+              <p className="text-[15px] font-medium text-ink">
+                {value.mode === "scaffold_weeks" ? "Per week" : "Access rate"}
+              </p>
+              <p className="text-[13px] text-muted">
+                {value.mode === "scaffold_weeks"
+                  ? "Storeys map to weeks × this rate"
+                  : "Added as a single line on the quote"}
+              </p>
+            </div>
+            <MoneyField
+              value={value.rateExVat}
+              onChange={(n) => onChange({ ...value, rateExVat: n })}
+              suffix={value.mode === "scaffold_weeks" ? "/wk" : ""}
+            />
+          </motion.div>
+        ) : (
+          <motion.p
+            key="none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="text-[13px] text-muted"
+          >
+            No access line on quotes.
+          </motion.p>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -322,11 +395,14 @@ function MaterialRow({
   onRate: (rateExVat: number) => void;
 }) {
   return (
-    <div
+    <motion.div
+      layout
       className={[
         "flex items-center justify-between gap-3 border-b border-line px-3 py-2.5 last:border-b-0",
         material.enabled ? "bg-white" : "bg-black/[0.015]",
       ].join(" ")}
+      animate={{ opacity: material.enabled ? 1 : 0.72 }}
+      transition={{ duration: 0.2, ease: EASE }}
     >
       <div className="flex min-w-0 items-center gap-2.5">
         <IosSwitch
@@ -343,13 +419,21 @@ function MaterialRow({
           {material.label}
         </span>
       </div>
-      <MoneyField
-        value={material.rateExVat}
-        disabled={!material.enabled}
-        onChange={onRate}
-        suffix="/m²"
-      />
-    </div>
+      <motion.div
+        animate={{
+          opacity: material.enabled ? 1 : 0.45,
+          scale: material.enabled ? 1 : 0.98,
+        }}
+        transition={{ duration: 0.18, ease: EASE }}
+      >
+        <MoneyField
+          value={material.rateExVat}
+          disabled={!material.enabled}
+          onChange={onRate}
+          suffix="/m²"
+        />
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -372,109 +456,134 @@ function MaterialList({
     onChange(materials.map((x) => (x.key === key ? { ...x, ...patch } : x)));
   };
 
-  if (!editing) {
-    return (
-      <button
-        type="button"
-        onClick={() => setEditing(true)}
-        className="flex w-full items-center justify-between gap-3 rounded-xl border border-line bg-white px-4 py-3.5 text-left transition-colors hover:border-brand-300 hover:bg-brand-50/40"
-      >
-        <div className="min-w-0">
-          <p className="text-[14px] font-semibold text-ink">
-            {enabled.length === 0
-              ? "No materials on"
-              : `${enabled.length} material${enabled.length === 1 ? "" : "s"} priced`}
-          </p>
-          <p className="mt-0.5 truncate text-[12px] text-muted">
-            {enabled.length === 0
-              ? "Tap to choose what they offer"
-              : enabled.map((m) => m.label).join(" · ")}
-          </p>
-        </div>
-        <span className="shrink-0 text-[13px] font-semibold text-brand-600">
-          Edit
-        </span>
-      </button>
-    );
-  }
-
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-[12px] font-medium text-muted">
-          On for this bubble
-        </p>
-        <button
+    <AnimatePresence mode="wait" initial={false}>
+      {!editing ? (
+        <motion.button
+          key="summary"
           type="button"
-          onClick={() => {
-            setEditing(false);
-            setShowOff(false);
-          }}
-          className="text-[12px] font-semibold text-brand-600"
+          onClick={() => setEditing(true)}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.2, ease: EASE }}
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
+          className="flex w-full items-center justify-between gap-3 rounded-xl border border-line bg-white px-4 py-3.5 text-left hover:border-brand-300 hover:bg-brand-50/40"
         >
-          Done
-        </button>
-      </div>
-
-      {enabled.length === 0 ? (
-        <p className="text-[13px] text-muted">
-          Nothing on yet — turn materials on below.
-        </p>
+          <div className="min-w-0">
+            <p className="text-[14px] font-semibold text-ink">
+              {enabled.length === 0
+                ? "No materials on"
+                : `${enabled.length} material${enabled.length === 1 ? "" : "s"} priced`}
+            </p>
+            <p className="mt-0.5 truncate text-[12px] text-muted">
+              {enabled.length === 0
+                ? "Tap to choose what they offer"
+                : enabled.map((m) => m.label).join(" · ")}
+            </p>
+          </div>
+          <span className="shrink-0 text-[13px] font-semibold text-brand-600">
+            Edit
+          </span>
+        </motion.button>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-line">
-          {enabled.map((m) => (
-            <MaterialRow
-              key={m.key}
-              material={m}
-              onToggle={(on) => updateAtKey(m.key, { enabled: on })}
-              onRate={(rateExVat) => updateAtKey(m.key, { rateExVat })}
-            />
-          ))}
-        </div>
-      )}
-
-      {disabled.length > 0 ? (
-        <div>
-          <button
-            type="button"
-            onClick={() => setShowOff((v) => !v)}
-            className="flex w-full items-center justify-between rounded-xl border border-dashed border-line bg-white px-3.5 py-2.5 text-left text-[13px] font-semibold text-muted hover:border-ink/20 hover:text-ink"
-          >
-            <span>
-              {showOff ? "Hide" : "Show"} {disabled.length} material
-              {disabled.length === 1 ? "" : "s"} not offered
-            </span>
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 12 12"
-              className={showOff ? "rotate-180" : ""}
-              aria-hidden
+        <motion.div
+          key="editor"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.25, ease: EASE }}
+          className="space-y-3"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[12px] font-medium text-muted">
+              On for this bubble
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setEditing(false);
+                setShowOff(false);
+              }}
+              className="text-[12px] font-semibold text-brand-600"
             >
-              <path
-                d="M2.5 4.5 L6 8 L9.5 4.5"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                fill="none"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
-          {showOff ? (
-            <div className="mt-2 overflow-hidden rounded-xl border border-line">
-              {disabled.map((m) => (
-                <MaterialRow
+              Done
+            </button>
+          </div>
+
+          {enabled.length === 0 ? (
+            <p className="text-[13px] text-muted">
+              Nothing on yet — turn materials on below.
+            </p>
+          ) : (
+            <div className="overflow-hidden rounded-xl border border-line">
+              {enabled.map((m, i) => (
+                <motion.div
                   key={m.key}
-                  material={m}
-                  onToggle={(on) => updateAtKey(m.key, { enabled: on })}
-                  onRate={(rateExVat) => updateAtKey(m.key, { rateExVat })}
-                />
+                  initial={{ opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{
+                    duration: 0.22,
+                    ease: EASE,
+                    delay: i * 0.03,
+                  }}
+                >
+                  <MaterialRow
+                    material={m}
+                    onToggle={(on) => updateAtKey(m.key, { enabled: on })}
+                    onRate={(rateExVat) => updateAtKey(m.key, { rateExVat })}
+                  />
+                </motion.div>
               ))}
             </div>
+          )}
+
+          {disabled.length > 0 ? (
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowOff((v) => !v)}
+                className="flex w-full items-center justify-between rounded-xl border border-dashed border-line bg-white px-3.5 py-2.5 text-left text-[13px] font-semibold text-muted hover:border-ink/20 hover:text-ink"
+              >
+                <span>
+                  {showOff ? "Hide" : "Show"} {disabled.length} material
+                  {disabled.length === 1 ? "" : "s"} not offered
+                </span>
+                <motion.svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  animate={{ rotate: showOff ? 180 : 0 }}
+                  transition={springSoft}
+                  aria-hidden
+                >
+                  <path
+                    d="M2.5 4.5 L6 8 L9.5 4.5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    fill="none"
+                    strokeLinecap="round"
+                  />
+                </motion.svg>
+              </button>
+              <Expand open={showOff}>
+                <div className="mt-2 overflow-hidden rounded-xl border border-line">
+                  {disabled.map((m) => (
+                    <MaterialRow
+                      key={m.key}
+                      material={m}
+                      onToggle={(on) => updateAtKey(m.key, { enabled: on })}
+                      onRate={(rateExVat) => updateAtKey(m.key, { rateExVat })}
+                    />
+                  ))}
+                </div>
+              </Expand>
+            </div>
           ) : null}
-        </div>
-      ) : null}
-    </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -504,11 +613,29 @@ function ToggleMoneyCard({
           {hint ? <p className="text-[11px] text-muted">{hint}</p> : null}
         </div>
       </div>
-      {checked ? (
-        <MoneyField value={value} onChange={onRate} suffix={suffix} />
-      ) : (
-        <span className="text-[12px] text-muted">Off</span>
-      )}
+      <AnimatePresence mode="wait" initial={false}>
+        {checked ? (
+          <motion.div
+            key="rate"
+            initial={{ opacity: 0, scale: 0.96, x: 6 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            exit={{ opacity: 0, scale: 0.96, x: 6 }}
+            transition={{ duration: 0.18, ease: EASE }}
+          >
+            <MoneyField value={value} onChange={onRate} suffix={suffix} />
+          </motion.div>
+        ) : (
+          <motion.span
+            key="off"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="text-[12px] text-muted"
+          >
+            Off
+          </motion.span>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -607,11 +734,12 @@ function ExtrasEditor({
               {showOff ? "Hide" : "Show"} {offToggles.length} extra
               {offToggles.length === 1 ? "" : "s"} turned off
             </span>
-            <svg
+            <motion.svg
               width="12"
               height="12"
               viewBox="0 0 12 12"
-              className={showOff ? "rotate-180" : ""}
+              animate={{ rotate: showOff ? 180 : 0 }}
+              transition={springSoft}
               aria-hidden
             >
               <path
@@ -621,9 +749,9 @@ function ExtrasEditor({
                 fill="none"
                 strokeLinecap="round"
               />
-            </svg>
+            </motion.svg>
           </button>
-          {showOff ? (
+          <Expand open={showOff}>
             <div className="mt-2 overflow-hidden rounded-xl border border-line">
               {offToggles.map((t) => (
                 <ToggleMoneyCard
@@ -638,7 +766,7 @@ function ExtrasEditor({
                 />
               ))}
             </div>
-          ) : null}
+          </Expand>
         </div>
       ) : null}
     </div>
@@ -770,23 +898,35 @@ export default function QuoteConfigEditor({
   );
 
   const serviceBody = !openEnabled ? (
-    <div className="flex flex-col items-start gap-3 px-5 py-8 sm:px-6">
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.28, ease: EASE }}
+      className="flex flex-col items-start gap-3 px-5 py-8 sm:px-6"
+    >
       <p className="text-sm text-muted">
         This job won&apos;t appear in their quote bubble until you turn it on.
       </p>
-      <button
+      <motion.button
         type="button"
         onClick={() => toggleService(openService)}
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
         className="rounded-full bg-brand-600 px-4 py-2 text-sm font-semibold text-white"
       >
         Turn on {openMeta.label}
-      </button>
-    </div>
+      </motion.button>
+    </motion.div>
   ) : !openMeta.priced ? (
-    <div className="px-5 py-8 text-sm leading-relaxed text-muted sm:px-6">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.25, ease: EASE }}
+      className="px-5 py-8 text-sm leading-relaxed text-muted sm:px-6"
+    >
       Homeowners who pick this leave details for a call-back. No instant
       estimate.
-    </div>
+    </motion.div>
   ) : (
     <>
       {openService === "full_replacement" &&
@@ -849,260 +989,336 @@ export default function QuoteConfigEditor({
   );
 
   return (
-    <div className="-mx-1 sm:-mx-0">
-      {/*
-        Flex + items-stretch makes both columns the same height.
-        Gap between editor and company stays. Buttons sit below so
-        Services bottom lines up with Company settings bottom.
-      */}
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-stretch">
-        <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(10,11,13,0.04)] lg:w-[340px]">
-          <div className="border-b border-line px-5 py-5">
-            <h2 className="text-lg font-semibold tracking-tight text-ink">
-              Services
-            </h2>
-            <p className="mt-1 text-sm text-muted">
-              Turn on the services this company offers.
-            </p>
-          </div>
-          <ul>
-            {SERVICE_CATALOG.map((s) => {
-              const enabled = config.enabledServices.includes(s.key);
-              const active = openService === s.key;
-              return (
-                <li key={s.key}>
-                  <div
-                    className={[
-                      "relative flex items-center gap-3 border-b border-line px-4 py-3.5 last:border-b-0",
-                      active ? "bg-brand-50/70" : "hover:bg-black/[0.015]",
-                    ].join(" ")}
+    <MotionConfig reducedMotion="user">
+      <div className="-mx-1 sm:-mx-0">
+        {/*
+          Flex + items-stretch makes both columns the same height.
+          Gap between editor and company stays. Buttons sit below so
+          Services bottom lines up with Company settings bottom.
+        */}
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-stretch">
+          <motion.aside
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: EASE }}
+            className="flex w-full shrink-0 flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(10,11,13,0.04)] lg:w-[340px]"
+          >
+            <div className="border-b border-line px-5 py-5">
+              <h2 className="text-lg font-semibold tracking-tight text-ink">
+                Services
+              </h2>
+              <p className="mt-1 text-sm text-muted">
+                Turn on the services this company offers.
+              </p>
+            </div>
+            <ul>
+              {SERVICE_CATALOG.map((s, i) => {
+                const enabled = config.enabledServices.includes(s.key);
+                const active = openService === s.key;
+                return (
+                  <motion.li
+                    key={s.key}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{
+                      duration: 0.32,
+                      ease: EASE,
+                      delay: 0.05 + i * 0.04,
+                    }}
                   >
-                    {active ? (
-                      <span
-                        aria-hidden
-                        className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-brand-600"
-                      />
-                    ) : null}
-                    <button
-                      type="button"
-                      onClick={() => selectService(s.key)}
-                      className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                    <motion.div
+                      className={[
+                        "relative flex items-center gap-3 border-b border-line px-4 py-3.5 last:border-b-0",
+                        active ? "bg-brand-50/70" : "hover:bg-black/[0.015]",
+                      ].join(" ")}
+                      animate={{
+                        backgroundColor: active
+                          ? "rgba(47, 107, 255, 0.07)"
+                          : "rgba(255, 255, 255, 0)",
+                      }}
+                      transition={{ duration: 0.25, ease: EASE }}
                     >
-                      <ServiceIcon service={s.key} />
-                      <span className="min-w-0">
-                        <span className="block truncate text-[14px] font-semibold text-ink">
-                          {s.label}
-                        </span>
-                        {!s.priced ? (
-                          <span className="mt-0.5 block text-[11px] text-muted">
-                            Callback only
+                      {active ? (
+                        <motion.span
+                          layoutId="service-rail"
+                          aria-hidden
+                          className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-brand-600"
+                          transition={springSoft}
+                        />
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => selectService(s.key)}
+                        className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                      >
+                        <ServiceIcon service={s.key} />
+                        <span className="min-w-0">
+                          <span className="block truncate text-[14px] font-semibold text-ink">
+                            {s.label}
                           </span>
-                        ) : null}
-                      </span>
-                    </button>
-                    <IosSwitch
-                      checked={enabled}
-                      label={`${enabled ? "Disable" : "Enable"} ${s.label}`}
-                      onChange={() => toggleService(s.key)}
-                    />
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-          <div className="min-h-0 flex-1" aria-hidden />
-        </aside>
+                          {!s.priced ? (
+                            <span className="mt-0.5 block text-[11px] text-muted">
+                              Callback only
+                            </span>
+                          ) : null}
+                        </span>
+                      </button>
+                      <IosSwitch
+                        checked={enabled}
+                        label={`${enabled ? "Disable" : "Enable"} ${s.label}`}
+                        onChange={() => toggleService(s.key)}
+                      />
+                    </motion.div>
+                  </motion.li>
+                );
+              })}
+            </ul>
+            <div className="min-h-0 flex-1" aria-hidden />
+          </motion.aside>
 
-        <div className="flex min-w-0 flex-1 flex-col gap-5">
-          <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(10,11,13,0.04)]">
-            <div className="border-b border-line px-5 py-5 sm:px-6">
-              <div className="flex items-center gap-3.5">
-                <ServiceIcon service={openService} large />
+          <div className="flex min-w-0 flex-1 flex-col gap-5">
+            <motion.section
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.42, ease: EASE, delay: 0.08 }}
+              className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(10,11,13,0.04)]"
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={openService}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.28, ease: EASE }}
+                  className="flex min-h-0 flex-1 flex-col"
+                >
+                  <div className="border-b border-line px-5 py-5 sm:px-6">
+                    <div className="flex items-center gap-3.5">
+                      <motion.div
+                        key={`${openService}-icon`}
+                        initial={{ scale: 0.88, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={springSoft}
+                      >
+                        <ServiceIcon service={openService} large />
+                      </motion.div>
+                      <div className="min-w-0">
+                        <h2 className="text-xl font-semibold tracking-tight text-ink">
+                          {openMeta.label}
+                        </h2>
+                        <p className="mt-1 text-sm text-muted">
+                          {openEnabled
+                            ? openMeta.priced
+                              ? openMeta.description
+                              : "Callback only — no rates to set"
+                            : "Off for this bubble"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {serviceBody}
+                  <div className="min-h-0 flex-1" aria-hidden />
+                </motion.div>
+              </AnimatePresence>
+            </motion.section>
+
+            <motion.section
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.42, ease: EASE, delay: 0.16 }}
+              className="shrink-0 overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(10,11,13,0.04)]"
+            >
+              <motion.button
+                type="button"
+                onClick={() => setCompanyOpen((v) => !v)}
+                whileTap={{ scale: 0.995 }}
+                className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left sm:px-6"
+                aria-expanded={companyOpen}
+              >
                 <div className="min-w-0">
-                  <h2 className="text-xl font-semibold tracking-tight text-ink">
-                    {openMeta.label}
-                  </h2>
-                  <p className="mt-1 text-sm text-muted">
-                    {openEnabled
-                      ? openMeta.priced
-                        ? openMeta.description
-                        : "Callback only — no rates to set"
-                      : "Off for this bubble"}
+                  <h3 className="text-base font-semibold text-ink">
+                    Company settings
+                  </h3>
+                  <p className="mt-0.5 text-[13px] text-muted">
+                    VAT, quote range
+                    {showOrigins ? ", embed sites" : ""}
                   </p>
                 </div>
-              </div>
-            </div>
-            {serviceBody}
-            <div className="min-h-0 flex-1" aria-hidden />
-          </section>
-
-          <section className="shrink-0 overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(10,11,13,0.04)]">
-            <button
-              type="button"
-              onClick={() => setCompanyOpen((v) => !v)}
-              className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left sm:px-6"
-              aria-expanded={companyOpen}
-            >
-              <div className="min-w-0">
-                <h3 className="text-base font-semibold text-ink">
-                  Company settings
-                </h3>
-                <p className="mt-0.5 text-[13px] text-muted">
-                  VAT, quote range
-                  {showOrigins ? ", embed sites" : ""}
-                </p>
-              </div>
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 12 12"
-                className={[
-                  "shrink-0 text-muted transition-transform",
-                  companyOpen ? "rotate-180" : "",
-                ].join(" ")}
-                aria-hidden
-              >
-                <path
-                  d="M2.5 4.5 L6 8 L9.5 4.5"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  fill="none"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
-            {companyOpen ? (
-              <div className="grid gap-4 border-t border-line px-5 py-5 sm:px-6 lg:grid-cols-[1fr_200px]">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between gap-3 rounded-xl border border-line px-3.5 py-3">
-                    <div>
-                      <p className="text-[14px] font-medium text-ink">
-                        VAT registered
-                      </p>
-                      <p className="text-[12px] text-muted">
-                        Quotes shown ex VAT
-                      </p>
-                    </div>
-                    <IosSwitch
-                      checked={config.vatRegistered}
-                      label="VAT registered"
-                      onChange={(vatRegistered) =>
-                        setConfig((c) => ({ ...c, vatRegistered }))
-                      }
-                    />
-                  </div>
-                  <div className="rounded-xl border border-line px-3.5 py-3">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
+                <motion.svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 12 12"
+                  className="shrink-0 text-muted"
+                  animate={{ rotate: companyOpen ? 180 : 0 }}
+                  transition={springSoft}
+                  aria-hidden
+                >
+                  <path
+                    d="M2.5 4.5 L6 8 L9.5 4.5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    fill="none"
+                    strokeLinecap="round"
+                  />
+                </motion.svg>
+              </motion.button>
+              <Expand open={companyOpen}>
+                <div className="grid gap-4 border-t border-line px-5 py-5 sm:px-6 lg:grid-cols-[1fr_200px]">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-3 rounded-xl border border-line px-3.5 py-3">
                       <div>
                         <p className="text-[14px] font-medium text-ink">
-                          Quote range width
+                          VAT registered
                         </p>
                         <p className="text-[12px] text-muted">
-                          Optional · how wide the £ range is
+                          Quotes shown ex VAT
                         </p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          className="h-10 w-20 rounded-xl border border-line px-3 text-[15px] tabular-nums text-ink outline-none focus:border-brand-400"
-                          placeholder="Auto"
-                          value={
-                            config.confidenceWidth == null
-                              ? ""
-                              : String(config.confidenceWidth)
-                          }
-                          onChange={(e) => {
-                            const v = e.target.value.trim();
-                            if (v === "") {
-                              setConfig((c) => ({
-                                ...c,
-                                confidenceWidth: null,
-                              }));
-                              return;
-                            }
-                            const n = Number(v);
-                            if (Number.isFinite(n) && n >= 0 && n <= 0.5) {
-                              setConfig((c) => ({
-                                ...c,
-                                confidenceWidth: n,
-                              }));
-                            }
-                          }}
-                        />
-                        <span className="text-[13px] font-medium text-muted">
-                          {config.confidenceWidth != null
-                            ? `±${Math.round(config.confidenceWidth * 100)}%`
-                            : "±%"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  {showOrigins ? (
-                    <div className="rounded-xl border border-line px-3.5 py-3">
-                      <p className="text-[14px] font-medium text-ink">
-                        Allowed embed sites
-                      </p>
-                      <p className="mb-2 text-[12px] text-muted">
-                        One per line · blank = anywhere
-                      </p>
-                      <textarea
-                        rows={2}
-                        className="w-full rounded-xl border border-line px-3 py-2 text-sm text-ink outline-none focus:border-brand-400"
-                        placeholder="https://ridgewayroofing.co.uk"
-                        value={originsText}
-                        onChange={(e) => setOriginsText(e.target.value)}
+                      <IosSwitch
+                        checked={config.vatRegistered}
+                        label="VAT registered"
+                        onChange={(vatRegistered) =>
+                          setConfig((c) => ({ ...c, vatRegistered }))
+                        }
                       />
                     </div>
-                  ) : null}
+                    <div className="rounded-xl border border-line px-3.5 py-3">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p className="text-[14px] font-medium text-ink">
+                            Quote range width
+                          </p>
+                          <p className="text-[12px] text-muted">
+                            Optional · how wide the £ range is
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            className="h-10 w-20 rounded-xl border border-line px-3 text-[15px] tabular-nums text-ink outline-none focus:border-brand-400"
+                            placeholder="Auto"
+                            value={
+                              config.confidenceWidth == null
+                                ? ""
+                                : String(config.confidenceWidth)
+                            }
+                            onChange={(e) => {
+                              const v = e.target.value.trim();
+                              if (v === "") {
+                                setConfig((c) => ({
+                                  ...c,
+                                  confidenceWidth: null,
+                                }));
+                                return;
+                              }
+                              const n = Number(v);
+                              if (Number.isFinite(n) && n >= 0 && n <= 0.5) {
+                                setConfig((c) => ({
+                                  ...c,
+                                  confidenceWidth: n,
+                                }));
+                              }
+                            }}
+                          />
+                          <span className="text-[13px] font-medium text-muted">
+                            {config.confidenceWidth != null
+                              ? `±${Math.round(config.confidenceWidth * 100)}%`
+                              : "±%"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    {showOrigins ? (
+                      <div className="rounded-xl border border-line px-3.5 py-3">
+                        <p className="text-[14px] font-medium text-ink">
+                          Allowed embed sites
+                        </p>
+                        <p className="mb-2 text-[12px] text-muted">
+                          One per line · blank = anywhere
+                        </p>
+                        <textarea
+                          rows={2}
+                          className="w-full rounded-xl border border-line px-3 py-2 text-sm text-ink outline-none focus:border-brand-400"
+                          placeholder="https://ridgewayroofing.co.uk"
+                          value={originsText}
+                          onChange={(e) => setOriginsText(e.target.value)}
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="rounded-xl border border-line bg-[#f7f8fa] px-3.5 py-3.5">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">
+                      Pricing status
+                    </p>
+                    <p className="mt-2 text-[13px] leading-snug text-ink-soft">
+                      {completeness.enabledPriced === 0
+                        ? "Enable a priced service to get started."
+                        : completeness.ready
+                          ? "All enabled services have rates set."
+                          : `${missingCount} service${missingCount === 1 ? "" : "s"} still need rates.`}
+                    </p>
+                  </div>
                 </div>
-                <div className="rounded-xl border border-line bg-[#f7f8fa] px-3.5 py-3.5">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">
-                    Pricing status
-                  </p>
-                  <p className="mt-2 text-[13px] leading-snug text-ink-soft">
-                    {completeness.enabledPriced === 0
-                      ? "Enable a priced service to get started."
-                      : completeness.ready
-                        ? "All enabled services have rates set."
-                        : `${missingCount} service${missingCount === 1 ? "" : "s"} still need rates.`}
-                  </p>
-                </div>
-              </div>
-            ) : null}
-          </section>
+              </Expand>
+            </motion.section>
+          </div>
         </div>
-      </div>
 
-      <div className="mt-5 flex justify-end gap-2">
-        {previewUrl ? (
-          <a
-            href={previewUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-4 py-2.5 text-[13px] font-semibold text-brand-600 hover:bg-brand-50"
-          >
-            Preview
-            <ExternalIcon />
-          </a>
-        ) : null}
-        <button
-          type="button"
-          disabled={saving || !dirty}
-          onClick={() => void handleSave()}
-          className="inline-flex items-center gap-2 rounded-full bg-brand-600 px-4 py-2.5 text-[13px] font-semibold text-white disabled:opacity-45"
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: EASE, delay: 0.22 }}
+          className="mt-5 flex justify-end gap-2"
         >
-          <SaveIcon />
-          {saving ? "Saving…" : dirty ? "Save" : "Saved"}
-        </button>
-      </div>
+          {previewUrl ? (
+            <motion.a
+              href={previewUrl}
+              target="_blank"
+              rel="noreferrer"
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.98 }}
+              className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-4 py-2.5 text-[13px] font-semibold text-brand-600 hover:bg-brand-50"
+            >
+              Preview
+              <ExternalIcon />
+            </motion.a>
+          ) : null}
+          <motion.button
+            type="button"
+            disabled={saving || !dirty}
+            onClick={() => void handleSave()}
+            whileHover={dirty && !saving ? { y: -1, scale: 1.02 } : undefined}
+            whileTap={dirty && !saving ? { scale: 0.98 } : undefined}
+            animate={{
+              opacity: dirty || saving ? 1 : 0.45,
+              scale: dirty ? 1 : 0.98,
+            }}
+            transition={springSoft}
+            className="inline-flex items-center gap-2 rounded-full bg-brand-600 px-4 py-2.5 text-[13px] font-semibold text-white disabled:pointer-events-none"
+          >
+            <SaveIcon />
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span
+                key={saving ? "saving" : dirty ? "save" : "saved"}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.16, ease: EASE }}
+              >
+                {saving ? "Saving…" : dirty ? "Save" : "Saved"}
+              </motion.span>
+            </AnimatePresence>
+          </motion.button>
+        </motion.div>
 
-      <Toast
-        message={toast?.message ?? null}
-        tone={toast?.tone}
-        onDone={() => setToast(null)}
-      />
-    </div>
+        <Toast
+          message={toast?.message ?? null}
+          tone={toast?.tone}
+          onDone={() => setToast(null)}
+        />
+      </div>
+    </MotionConfig>
   );
 }
 
