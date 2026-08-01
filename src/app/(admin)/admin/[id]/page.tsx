@@ -8,6 +8,7 @@ import RooferHubTabs, {
 } from "@/components/admin/RooferHubTabs";
 import RooferMoreMenu from "@/components/admin/RooferMoreMenu";
 import RooferPanel from "@/components/admin/RooferPanel";
+import PricingPageClient from "@/components/PricingPageClient";
 import QuotesClient from "@/components/QuotesClient";
 import JobsClient from "@/components/JobsClient";
 import { createClient } from "@/lib/supabase/server";
@@ -43,7 +44,7 @@ import type { RooferAdminRow } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 function parseTab(raw: string | undefined): RooferHubTab {
-  if (raw === "jobs" || raw === "setup") return raw;
+  if (raw === "jobs" || raw === "pricing" || raw === "setup") return raw;
   return "quotes";
 }
 
@@ -95,6 +96,7 @@ export default async function RooferDetailPage({
 
   let quotesBody: ReactNode = null;
   let jobsBody: ReactNode = null;
+  let pricingBody: ReactNode = null;
   let setupBody: ReactNode = null;
 
   if (tab === "quotes" || tab === "jobs") {
@@ -186,6 +188,18 @@ export default async function RooferDetailPage({
     }
   }
 
+  if (tab === "pricing") {
+    pricingBody = (
+      <PricingPageClient
+        rooferId={roofer.id}
+        initial={quoteConfig}
+        allowedOrigins={roofer.allowed_origins ?? []}
+        showOrigins
+        previewUrl={hostedLink(roofer.slug)}
+      />
+    );
+  }
+
   if (tab === "setup") {
     const { data: memberRows } = await supabase.rpc("admin_roofer_members", {
       p_roofer_id: roofer.id,
@@ -214,8 +228,6 @@ export default async function RooferDetailPage({
             contactPhone: roofer.contact_phone ?? "",
           }}
           members={members}
-          quoteConfig={quoteConfig}
-          allowedOrigins={roofer.allowed_origins ?? []}
           updateAction={updateRoofer.bind(null, roofer.id)}
           linkAction={linkRooferLogin.bind(null, roofer.id)}
         />
@@ -259,6 +271,7 @@ export default async function RooferDetailPage({
 
       {tab === "quotes" && quotesBody}
       {tab === "jobs" && jobsBody}
+      {tab === "pricing" && pricingBody}
       {tab === "setup" && setupBody}
     </div>
   );

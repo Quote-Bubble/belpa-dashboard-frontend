@@ -1,10 +1,11 @@
 import Link from "next/link";
 
-export type RooferHubTab = "quotes" | "jobs" | "setup";
+export type RooferHubTab = "quotes" | "jobs" | "pricing" | "setup";
 
 const TABS: { id: RooferHubTab; label: string }[] = [
   { id: "quotes", label: "Quotes" },
   { id: "jobs", label: "Jobs" },
+  { id: "pricing", label: "Pricing" },
   { id: "setup", label: "Setup" },
 ];
 

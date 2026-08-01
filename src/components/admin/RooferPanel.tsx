@@ -4,17 +4,15 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import InstallSnippets from "@/components/admin/InstallSnippets";
-import QuoteConfigEditor from "@/components/QuoteConfigEditor";
 import Toast from "@/components/Toast";
 import type { ActionResult } from "@/lib/action-result";
 import { unlinkRooferLogin } from "@/lib/admin-actions";
-import type { QuoteConfig } from "@/lib/quote-config";
 
 const field =
   "field w-full px-3 py-2.5 text-sm text-ink outline-none placeholder:text-muted";
 const label = "mb-1.5 block text-xs font-medium text-ink-soft";
 
-type Tab = "details" | "pricing" | "install" | "access";
+type Tab = "details" | "install" | "access";
 
 type Props = {
   rooferId: string;
@@ -32,28 +30,24 @@ type Props = {
     contactPhone: string;
   };
   members: { email: string }[];
-  quoteConfig: QuoteConfig;
-  allowedOrigins: string[];
   updateAction: (formData: FormData) => Promise<ActionResult>;
   linkAction: (formData: FormData) => Promise<ActionResult>;
 };
 
 /**
- * Setup panel: profile, pricing onboarding, install snippets, logins.
- * Destructive actions live in the page-header ⋯ menu.
+ * Setup panel: profile, install snippets, logins.
+ * Pricing lives on its own hub tab as a full page.
  */
 export default function RooferPanel({
   rooferId,
   install,
   details,
   members,
-  quoteConfig,
-  allowedOrigins,
   updateAction,
   linkAction,
 }: Props) {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("pricing");
+  const [tab, setTab] = useState<Tab>("details");
   const [toast, setToast] = useState<{
     message: string;
     tone: "ok" | "error";
@@ -62,7 +56,6 @@ export default function RooferPanel({
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "details", label: "Details" },
-    { id: "pricing", label: "Pricing" },
     { id: "install", label: "Install" },
     {
       id: "access",
@@ -103,7 +96,7 @@ export default function RooferPanel({
         })}
       </div>
 
-      <div className={tab === "pricing" ? "p-3 sm:p-4" : "p-4 sm:p-5"}>
+      <div className="p-4 sm:p-5">
         {tab === "details" && (
           <form
             action={async (fd) => showResult(await updateAction(fd))}
@@ -118,6 +111,7 @@ export default function RooferPanel({
                 name="name"
                 defaultValue={details.name}
                 className={field}
+                required
               />
             </div>
             <div className="sm:col-span-2">
@@ -128,13 +122,13 @@ export default function RooferPanel({
                 id="website"
                 name="website"
                 defaultValue={details.website}
-                placeholder="https://…"
                 className={field}
+                placeholder="https://"
               />
             </div>
             <div>
               <label className={label} htmlFor="contact_name">
-                Contact
+                Contact name
               </label>
               <input
                 id="contact_name"
@@ -145,7 +139,7 @@ export default function RooferPanel({
             </div>
             <div>
               <label className={label} htmlFor="contact_phone">
-                Phone
+                Contact phone
               </label>
               <input
                 id="contact_phone"
@@ -154,7 +148,7 @@ export default function RooferPanel({
                 className={field}
               />
             </div>
-            <div className="flex justify-end pt-1 sm:col-span-2">
+            <div className="sm:col-span-2 flex justify-end pt-1">
               <button
                 type="submit"
                 className="btn-primary rounded-full px-5 py-2 text-sm font-semibold"
@@ -163,16 +157,6 @@ export default function RooferPanel({
               </button>
             </div>
           </form>
-        )}
-
-        {tab === "pricing" && (
-          <QuoteConfigEditor
-            rooferId={rooferId}
-            initial={quoteConfig}
-            allowedOrigins={allowedOrigins}
-            showOrigins
-            onSaved={() => router.refresh()}
-          />
         )}
 
         {tab === "install" && (
