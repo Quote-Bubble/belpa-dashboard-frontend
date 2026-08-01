@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import DeployStatusControl from "@/components/admin/DeployStatusControl";
 import DeleteRooferButton from "@/components/admin/DeleteRooferButton";
-import InstallSnippets from "@/components/admin/InstallSnippets";
+import RooferPanel from "@/components/admin/RooferPanel";
 import { createClient } from "@/lib/supabase/server";
 import { linkRooferLogin, updateRoofer } from "@/lib/admin-actions";
 import {
@@ -14,10 +14,6 @@ import {
   widgetSnippet,
 } from "@/lib/embed-snippets";
 import type { RooferAdminRow } from "@/lib/types";
-
-const field =
-  "field w-full px-3 py-2.5 text-sm text-ink outline-none placeholder:text-muted";
-const label = "mb-1.5 block text-xs font-medium text-ink-soft";
 
 export default async function RooferDetailPage({
   params,
@@ -48,7 +44,7 @@ export default async function RooferDetailPage({
   });
 
   return (
-    <div>
+    <div className="mx-auto max-w-3xl">
       <Link
         href="/admin"
         className="mb-4 inline-flex items-center gap-1 text-sm text-muted hover:text-ink"
@@ -72,130 +68,31 @@ export default async function RooferDetailPage({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-        {/* Install — one tabbed snippet instead of three stacked blocks */}
-        <section className="surface min-w-0 rounded-2xl p-5">
-          <h2 className="mb-4 text-sm font-semibold text-ink">Install</h2>
-          <InstallSnippets
-            slug={roofer.slug}
-            button={buttonSnippet(roofer.slug)}
-            widget={widgetSnippet(roofer.slug)}
-            link={hostedLink(roofer.slug)}
-            preview={{
-              button: previewButton(roofer.slug),
-              widget: previewWidget(roofer.slug),
-              link: hostedLink(roofer.slug),
-            }}
-          />
-        </section>
+      <RooferPanel
+        install={{
+          slug: roofer.slug,
+          button: buttonSnippet(roofer.slug),
+          widget: widgetSnippet(roofer.slug),
+          link: hostedLink(roofer.slug),
+          preview: {
+            button: previewButton(roofer.slug),
+            widget: previewWidget(roofer.slug),
+            link: hostedLink(roofer.slug),
+          },
+        }}
+        details={{
+          name: roofer.name,
+          website: roofer.website ?? "",
+          contactName: roofer.contact_name ?? "",
+          contactPhone: roofer.contact_phone ?? "",
+        }}
+        members={members}
+        updateAction={updateRoofer.bind(null, roofer.id)}
+        linkAction={linkRooferLogin.bind(null, roofer.id)}
+      />
 
-        {/* Details */}
-        <section className="surface h-fit min-w-0 rounded-2xl p-5">
-          <h2 className="mb-4 text-sm font-semibold text-ink">Details</h2>
-          <form
-            action={updateRoofer.bind(null, roofer.id)}
-            className="grid gap-3 sm:grid-cols-2"
-          >
-            <div className="sm:col-span-2">
-              <label className={label} htmlFor="name">
-                Company name
-              </label>
-              <input
-                id="name"
-                name="name"
-                defaultValue={roofer.name}
-                className={field}
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <label className={label} htmlFor="website">
-                Website
-              </label>
-              <input
-                id="website"
-                name="website"
-                defaultValue={roofer.website ?? ""}
-                placeholder="https://…"
-                className={field}
-              />
-            </div>
-            <div>
-              <label className={label} htmlFor="contact_name">
-                Contact
-              </label>
-              <input
-                id="contact_name"
-                name="contact_name"
-                defaultValue={roofer.contact_name ?? ""}
-                className={field}
-              />
-            </div>
-            <div>
-              <label className={label} htmlFor="contact_phone">
-                Phone
-              </label>
-              <input
-                id="contact_phone"
-                name="contact_phone"
-                defaultValue={roofer.contact_phone ?? ""}
-                className={field}
-              />
-            </div>
-            <div className="flex justify-end pt-1 sm:col-span-2">
-              <button
-                type="submit"
-                className="btn-primary rounded-full px-5 py-2 text-sm font-semibold"
-              >
-                Save
-              </button>
-            </div>
-          </form>
-        </section>
-      </div>
-
-      {/* Access — link the roofer's login so they see their leads */}
-      <section className="surface mt-6 rounded-2xl p-5">
-        <h2 className="mb-1 text-sm font-semibold text-ink">Access</h2>
-        <p className="mb-3 text-sm text-ink-soft">
-          Link the roofer’s login (the email they signed up with) so they see
-          their own leads.
-        </p>
-        {members.length > 0 ? (
-          <ul className="mb-3 flex flex-wrap gap-2">
-            {members.map((m) => (
-              <li
-                key={m.email}
-                className="rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700"
-              >
-                {m.email}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mb-3 text-xs text-muted">No logins linked yet.</p>
-        )}
-        <form
-          action={linkRooferLogin.bind(null, roofer.id)}
-          className="flex flex-col gap-2 sm:flex-row"
-        >
-          <input
-            name="email"
-            type="email"
-            required
-            placeholder="roofer@email.co.uk"
-            className={`${field} sm:max-w-xs`}
-          />
-          <button
-            type="submit"
-            className="btn-ghost rounded-full px-4 py-2.5 text-sm font-semibold"
-          >
-            Link login
-          </button>
-        </form>
-      </section>
-
-      {/* Delete — slim inline row, not a giant card */}
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line/80 px-4 py-3">
+      {/* Delete — quiet footer */}
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 px-1">
         <p className="text-xs text-muted">
           Deleting removes their leads and pricing too.
         </p>

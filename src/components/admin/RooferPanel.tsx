@@ -1,0 +1,192 @@
+"use client";
+
+import { useState } from "react";
+
+import InstallSnippets from "@/components/admin/InstallSnippets";
+
+const field =
+  "field w-full px-3 py-2.5 text-sm text-ink outline-none placeholder:text-muted";
+const label = "mb-1.5 block text-xs font-medium text-ink-soft";
+
+type Tab = "install" | "details" | "access";
+
+type Props = {
+  install: {
+    slug: string;
+    button: string;
+    widget: string;
+    link: string;
+    preview: { button: string; widget: string; link: string };
+  };
+  details: {
+    name: string;
+    website: string;
+    contactName: string;
+    contactPhone: string;
+  };
+  members: { email: string }[];
+  updateAction: (formData: FormData) => void | Promise<void>;
+  linkAction: (formData: FormData) => void | Promise<void>;
+};
+
+/**
+ * One card, three tabs. Keeps the roofer detail focused — you see only the
+ * panel you need (grab a snippet, edit details, or link a login) instead of
+ * everything at once.
+ */
+export default function RooferPanel({
+  install,
+  details,
+  members,
+  updateAction,
+  linkAction,
+}: Props) {
+  const [tab, setTab] = useState<Tab>("details");
+
+  const tabs: { id: Tab; label: string }[] = [
+    { id: "details", label: "Details" },
+    { id: "install", label: "Install" },
+    {
+      id: "access",
+      label: members.length ? `Access · ${members.length}` : "Access",
+    },
+  ];
+
+  return (
+    <section className="surface overflow-hidden rounded-2xl">
+      {/* Tab bar */}
+      <div className="flex gap-1 border-b border-line px-3 pt-2">
+        {tabs.map((t) => {
+          const active = tab === t.id;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className={[
+                "relative px-3.5 py-3 text-sm font-semibold transition-colors",
+                active ? "text-ink" : "text-muted hover:text-ink",
+              ].join(" ")}
+            >
+              {t.label}
+              {active && (
+                <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-brand-600" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="p-5">
+        {tab === "install" && (
+          <InstallSnippets
+            slug={install.slug}
+            button={install.button}
+            widget={install.widget}
+            link={install.link}
+            preview={install.preview}
+          />
+        )}
+
+        {tab === "details" && (
+          <form action={updateAction} className="grid gap-3 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <label className={label} htmlFor="name">
+                Company name
+              </label>
+              <input
+                id="name"
+                name="name"
+                defaultValue={details.name}
+                className={field}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className={label} htmlFor="website">
+                Website
+              </label>
+              <input
+                id="website"
+                name="website"
+                defaultValue={details.website}
+                placeholder="https://…"
+                className={field}
+              />
+            </div>
+            <div>
+              <label className={label} htmlFor="contact_name">
+                Contact
+              </label>
+              <input
+                id="contact_name"
+                name="contact_name"
+                defaultValue={details.contactName}
+                className={field}
+              />
+            </div>
+            <div>
+              <label className={label} htmlFor="contact_phone">
+                Phone
+              </label>
+              <input
+                id="contact_phone"
+                name="contact_phone"
+                defaultValue={details.contactPhone}
+                className={field}
+              />
+            </div>
+            <div className="flex justify-end pt-1 sm:col-span-2">
+              <button
+                type="submit"
+                className="btn-primary rounded-full px-5 py-2 text-sm font-semibold"
+              >
+                Save
+              </button>
+            </div>
+          </form>
+        )}
+
+        {tab === "access" && (
+          <div>
+            <p className="mb-3 max-w-prose text-sm text-ink-soft">
+              Link the roofer’s login (the email they signed up with) so they
+              see their own leads.
+            </p>
+            {members.length > 0 ? (
+              <ul className="mb-3 flex flex-wrap gap-2">
+                {members.map((m) => (
+                  <li
+                    key={m.email}
+                    className="rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700"
+                  >
+                    {m.email}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mb-3 text-xs text-muted">No logins linked yet.</p>
+            )}
+            <form
+              action={linkAction}
+              className="flex flex-col gap-2 sm:flex-row"
+            >
+              <input
+                name="email"
+                type="email"
+                required
+                placeholder="roofer@email.co.uk"
+                className={`${field} sm:flex-1`}
+              />
+              <button
+                type="submit"
+                className="btn-ghost shrink-0 rounded-full px-4 py-2.5 text-sm font-semibold"
+              >
+                Link login
+              </button>
+            </form>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
