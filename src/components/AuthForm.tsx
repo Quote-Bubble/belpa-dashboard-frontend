@@ -48,7 +48,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
   };
 
   return (
-    <div className="auth-card glass w-full max-w-sm rounded-2xl p-7 shadow-[var(--shadow-float)]">
+    <div className="glass w-full max-w-sm rounded-2xl p-7 shadow-[var(--shadow-float)]">
       <div className="mb-6 text-center">
         <p className="font-display text-2xl font-semibold tracking-tight text-ink">
           Quoter

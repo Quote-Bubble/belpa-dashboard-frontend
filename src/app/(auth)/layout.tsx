@@ -19,9 +19,9 @@ export default function AuthLayout({
       {/* Faint dot texture */}
       <div className="dot-grid pointer-events-none absolute inset-0 -z-20 opacity-60" aria-hidden />
 
-      {/* Giant wordmark, grounded at the bottom, evaporating upward */}
+      {/* Giant dissolving wordmark, bottom */}
       <div
-        className="auth-echo pointer-events-none absolute inset-0 -z-20 overflow-hidden"
+        className="auth-echo pointer-events-none absolute inset-x-0 bottom-0 -z-20 overflow-hidden"
         aria-hidden
       >
         <span className="auth-echo-word">Quoter</span>
