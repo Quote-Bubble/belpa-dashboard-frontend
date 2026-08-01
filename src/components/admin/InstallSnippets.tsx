@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { QRCodeCanvas } from "qrcode.react";
 
 type Method = "button" | "widget" | "link";
 
@@ -17,16 +18,19 @@ const TABS: { value: Method; label: string }[] = [
 ];
 
 export default function InstallSnippets({
+  slug,
   button,
   widget,
   link,
 }: {
+  slug: string;
   button: string;
   widget: string;
   link: string;
 }) {
   const [tab, setTab] = useState<Method>("button");
   const [copied, setCopied] = useState(false);
+  const qrRef = useRef<HTMLDivElement>(null);
 
   const code = tab === "button" ? button : tab === "widget" ? widget : link;
 
@@ -38,6 +42,15 @@ export default function InstallSnippets({
     } catch {
       /* selectable below */
     }
+  };
+
+  const downloadQr = () => {
+    const canvas = qrRef.current?.querySelector("canvas");
+    if (!canvas) return;
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/png");
+    a.download = `quoter-${slug}-qr.png`;
+    a.click();
   };
 
   return (
@@ -87,6 +100,37 @@ export default function InstallSnippets({
       <pre className="mt-2 overflow-x-auto rounded-xl bg-[#0f172a] px-4 py-3 text-[12.5px] leading-relaxed text-[#e2e8f0]">
         <code>{code}</code>
       </pre>
+
+      {tab === "link" && (
+        <div
+          ref={qrRef}
+          className="mt-3 flex items-center gap-4 rounded-xl border border-line bg-white p-4"
+        >
+          <QRCodeCanvas
+            value={link}
+            size={320}
+            marginSize={2}
+            bgColor="#ffffff"
+            fgColor="#0a0b0d"
+            level="M"
+            className="h-[104px] w-[104px] shrink-0 rounded-lg"
+          />
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-ink">QR code</p>
+            <p className="mb-2 text-xs text-muted">
+              For a van, flyers, or a Google Business Profile — scans straight to
+              their quote page.
+            </p>
+            <button
+              type="button"
+              onClick={downloadQr}
+              className="btn-ghost rounded-full px-3 py-1.5 text-xs font-semibold"
+            >
+              Download PNG
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

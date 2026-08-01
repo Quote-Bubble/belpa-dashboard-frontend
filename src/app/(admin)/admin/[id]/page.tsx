@@ -66,6 +66,7 @@ export default async function RooferDetailPage({
         <section className="surface min-w-0 rounded-2xl p-5">
           <h2 className="mb-4 text-sm font-semibold text-ink">Install</h2>
           <InstallSnippets
+            slug={roofer.slug}
             button={buttonSnippet(roofer.slug)}
             widget={widgetSnippet(roofer.slug)}
             link={hostedLink(roofer.slug)}
