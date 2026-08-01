@@ -4,9 +4,7 @@ import { notFound } from "next/navigation";
 import DeployStatusControl from "@/components/admin/DeployStatusControl";
 import DeleteRooferButton from "@/components/admin/DeleteRooferButton";
 import InstallSnippets from "@/components/admin/InstallSnippets";
-import AdminPricingEditor from "@/components/admin/AdminPricingEditor";
 import { createClient } from "@/lib/supabase/server";
-import { getPricing } from "@/lib/pricing";
 import { linkRooferLogin, updateRoofer } from "@/lib/admin-actions";
 import {
   buttonSnippet,
@@ -43,8 +41,6 @@ export default async function RooferDetailPage({
     p_roofer_id: roofer.id,
   });
   const members = (memberRows ?? []) as { email: string }[];
-
-  const pricing = await getPricing(roofer.id);
   const added = new Date(roofer.created_at).toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
@@ -156,16 +152,6 @@ export default async function RooferDetailPage({
           </form>
         </section>
       </div>
-
-      {/* Pricing — their own rates drive their widget's quotes */}
-      <section className="surface mt-6 rounded-2xl p-5">
-        <h2 className="mb-1 text-sm font-semibold text-ink">Pricing</h2>
-        <p className="mb-4 text-sm text-ink-soft">
-          Set this roofer’s own rates — their widget prices quotes from these
-          instead of the defaults. Leave as-is to keep the standard model.
-        </p>
-        <AdminPricingEditor rooferId={roofer.id} initial={pricing} />
-      </section>
 
       {/* Access — link the roofer's login so they see their leads */}
       <section className="surface mt-6 rounded-2xl p-5">
