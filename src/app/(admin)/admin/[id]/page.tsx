@@ -6,6 +6,7 @@ import DeployStatusControl from "@/components/admin/DeployStatusControl";
 import RooferHubTabs, {
   type RooferHubTab,
 } from "@/components/admin/RooferHubTabs";
+import RooferMoreMenu from "@/components/admin/RooferMoreMenu";
 import RooferPanel from "@/components/admin/RooferPanel";
 import QuotesClient from "@/components/QuotesClient";
 import JobsClient from "@/components/JobsClient";
@@ -148,7 +149,6 @@ export default async function RooferDetailPage({
     setupBody = (
       <div className="mx-auto max-w-3xl">
         <RooferPanel
-          rooferId={roofer.id}
           install={{
             slug: roofer.slug,
             button: buttonSnippet(roofer.slug),
@@ -187,7 +187,10 @@ export default async function RooferDetailPage({
         <h1 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
           {roofer.name}
         </h1>
-        <DeployStatusControl id={roofer.id} status={roofer.deploy_status} />
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <DeployStatusControl id={roofer.id} status={roofer.deploy_status} />
+          <RooferMoreMenu id={roofer.id} name={roofer.name} />
+        </div>
       </div>
 
       <RooferHubTabs

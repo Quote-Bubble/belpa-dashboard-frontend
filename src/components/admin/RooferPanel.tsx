@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import InstallSnippets from "@/components/admin/InstallSnippets";
-import RooferMoreMenu from "@/components/admin/RooferMoreMenu";
 
 const field =
   "field w-full px-3 py-2.5 text-sm text-ink outline-none placeholder:text-muted";
@@ -12,7 +11,6 @@ const label = "mb-1.5 block text-xs font-medium text-ink-soft";
 type Tab = "details" | "install" | "access";
 
 type Props = {
-  rooferId: string;
   install: {
     slug: string;
     button: string;
@@ -32,11 +30,10 @@ type Props = {
 };
 
 /**
- * Setup panel: profile, install snippets, logins — with destructive actions
- * tucked into the ⋯ menu.
+ * Setup panel: profile, install snippets, logins.
+ * Destructive actions live in the page-header ⋯ menu.
  */
 export default function RooferPanel({
-  rooferId,
   install,
   details,
   members,
@@ -56,31 +53,26 @@ export default function RooferPanel({
 
   return (
     <section className="surface overflow-hidden rounded-2xl">
-      <div className="flex items-end justify-between gap-2 border-b border-line px-2 pt-1.5 sm:px-3">
-        <div className="flex min-w-0 gap-0.5 overflow-x-auto">
-          {tabs.map((t) => {
-            const active = tab === t.id;
-            return (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setTab(t.id)}
-                className={[
-                  "relative shrink-0 px-3 py-3 text-sm font-semibold transition-colors",
-                  active ? "text-ink" : "text-muted hover:text-ink",
-                ].join(" ")}
-              >
-                {t.label}
-                {active && (
-                  <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-brand-600" />
-                )}
-              </button>
-            );
-          })}
-        </div>
-        <div className="mb-1.5 shrink-0">
-          <RooferMoreMenu id={rooferId} name={details.name} />
-        </div>
+      <div className="flex gap-0.5 overflow-x-auto border-b border-line px-2 pt-1.5 sm:px-3">
+        {tabs.map((t) => {
+          const active = tab === t.id;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className={[
+                "relative shrink-0 px-3 py-3 text-sm font-semibold transition-colors",
+                active ? "text-ink" : "text-muted hover:text-ink",
+              ].join(" ")}
+            >
+              {t.label}
+              {active && (
+                <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-brand-600" />
+              )}
+            </button>
+          );
+        })}
       </div>
 
       <div className="p-4 sm:p-5">
