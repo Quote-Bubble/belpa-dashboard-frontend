@@ -28,12 +28,7 @@ export default async function AdminFleetPage() {
 
   return (
     <div>
-      <PageHeader
-        title="Roofers"
-        subtitle={`${rows.length} on Quoter · ${
-          rows.filter((r) => r.deploy_status === "live").length
-        } live`}
-      />
+      <PageHeader title="Roofers" />
 
       <AddRoofer />
 

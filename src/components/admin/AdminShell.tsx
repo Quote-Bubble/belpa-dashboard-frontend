@@ -54,9 +54,11 @@ const NAV: NavItem[] = [
 
 function AdminNav({
   email,
+  rooferCount,
   onNavigate,
 }: {
   email: string | null;
+  rooferCount: number;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
@@ -115,7 +117,20 @@ function AdminNav({
               <span className={active ? "text-brand-600" : "text-muted"}>
                 {item.icon}
               </span>
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {item.href === "/admin" ? (
+                <span
+                  className={[
+                    "min-w-[1.4rem] rounded-full px-1.5 py-0.5 text-center text-[11px] font-semibold tabular-nums leading-none",
+                    active
+                      ? "bg-brand-600 text-white"
+                      : "bg-black/[0.06] text-ink-soft",
+                  ].join(" ")}
+                  aria-label={`${rooferCount} roofers`}
+                >
+                  {rooferCount}
+                </span>
+              ) : null}
             </Link>
           );
         })}
@@ -154,9 +169,11 @@ function AdminNav({
 export default function AdminShell({
   children,
   email,
+  rooferCount,
 }: {
   children: React.ReactNode;
   email: string | null;
+  rooferCount: number;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -220,7 +237,11 @@ export default function AdminShell({
               exit={{ x: "-100%" }}
               transition={{ type: "spring", stiffness: 380, damping: 38 }}
             >
-              <AdminNav email={email} onNavigate={() => setMobileOpen(false)} />
+              <AdminNav
+                email={email}
+                rooferCount={rooferCount}
+                onNavigate={() => setMobileOpen(false)}
+              />
             </motion.div>
           </div>
         )}
@@ -228,7 +249,7 @@ export default function AdminShell({
 
       <div className="flex">
         <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 border-r border-white/50 bg-[#fafafb]/45 [backdrop-filter:blur(44px)_saturate(1.6)] md:block">
-          <AdminNav email={email} />
+          <AdminNav email={email} rooferCount={rooferCount} />
         </aside>
         <main className="min-w-0 flex-1 px-5 py-6 sm:px-8 sm:py-8 xl:px-10">
           <div className="mx-auto max-w-[1400px]">{children}</div>
