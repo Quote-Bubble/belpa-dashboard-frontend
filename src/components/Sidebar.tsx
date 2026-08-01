@@ -75,23 +75,14 @@ const REST_NAV: NavItem[] = [
   },
 ];
 
-const adminIcon = (
-  <svg {...iconProps} aria-hidden>
-    <path d="M12 3l7 3v5c0 4.3-3 8.2-7 9-4-0.8-7-4.7-7-9V6l7-3Z" />
-    <path d="M9.5 12l1.8 1.8 3.2-3.4" />
-  </svg>
-);
-
 export default function Sidebar({
   onNavigate,
   userEmail,
   roofer,
-  isAdmin = false,
 }: {
   onNavigate?: () => void;
   userEmail?: string | null;
   roofer: RooferProfile | null;
-  isAdmin?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -104,14 +95,8 @@ export default function Sidebar({
       : { href: "/quotes", label: "Quotes", icon: quotesIcon };
 
   // /analytics is mode-aware (AnalyticsClient renders the Jobs lens when mode is
-  // "jobs"), so keep the nav item in both modes. Admin is operator-only.
-  const nav = [
-    inbox,
-    ...REST_NAV,
-    ...(isAdmin
-      ? [{ href: "/admin", label: "Admin", icon: adminIcon }]
-      : []),
-  ];
+  // "jobs"), so keep the nav item in both modes.
+  const nav = [inbox, ...REST_NAV];
   const homeHref = inboxPathForMode(mode);
 
   const handleSignOut = async () => {

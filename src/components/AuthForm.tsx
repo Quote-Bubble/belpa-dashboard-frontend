@@ -40,9 +40,17 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
         email,
         password,
       });
+      if (error) {
+        setLoading(false);
+        return setError(error.message);
+      }
+      // Operators land in the admin area; roofers in their dashboard.
+      const { data: adminRow } = await supabase
+        .from("admins")
+        .select("user_id")
+        .maybeSingle();
       setLoading(false);
-      if (error) return setError(error.message);
-      router.push("/quotes");
+      router.push(adminRow ? "/admin" : "/quotes");
       router.refresh();
     }
   };

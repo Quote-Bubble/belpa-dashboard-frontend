@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import PageHeader from "@/components/PageHeader";
 import DeployStatusControl from "@/components/admin/DeployStatusControl";
+import DeleteRooferButton from "@/components/admin/DeleteRooferButton";
 import SnippetBlock from "@/components/admin/SnippetBlock";
 import { createClient } from "@/lib/supabase/server";
 import { updateRoofer } from "@/lib/admin-actions";
@@ -132,6 +133,15 @@ export default async function RooferDetailPage({
           </form>
         </section>
       </div>
+
+      {/* Danger zone */}
+      <section className="mt-6 rounded-2xl border border-red-200 bg-red-50/40 p-5">
+        <h2 className="mb-1 text-sm font-semibold text-red-700">Danger zone</h2>
+        <p className="mb-3 text-sm text-ink-soft">
+          Removing a roofer deletes their leads and pricing too.
+        </p>
+        <DeleteRooferButton id={roofer.id} name={roofer.name} />
+      </section>
     </div>
   );
 }

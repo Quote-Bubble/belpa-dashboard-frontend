@@ -12,12 +12,10 @@ export default function DashboardShell({
   children,
   userEmail,
   roofer,
-  isAdmin = false,
 }: {
   children: React.ReactNode;
   userEmail?: string | null;
   roofer: RooferProfile | null;
-  isAdmin?: boolean;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -83,7 +81,6 @@ export default function DashboardShell({
                 <Sidebar
                   userEmail={userEmail}
                   roofer={roofer}
-                  isAdmin={isAdmin}
                   onNavigate={() => setMobileOpen(false)}
                 />
               </motion.div>
@@ -94,7 +91,7 @@ export default function DashboardShell({
         <div className="flex">
           {/* Desktop sidebar */}
           <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 border-r border-white/50 bg-[#fafafb]/45 [backdrop-filter:blur(44px)_saturate(1.6)] md:block">
-            <Sidebar userEmail={userEmail} roofer={roofer} isAdmin={isAdmin} />
+            <Sidebar userEmail={userEmail} roofer={roofer} />
           </aside>
 
           {/* Main content */}

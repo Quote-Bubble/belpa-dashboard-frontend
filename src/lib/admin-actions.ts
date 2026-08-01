@@ -79,6 +79,18 @@ export async function setDeployStatus(id: string, status: DeployStatus) {
   revalidatePath(`/admin/${id}`);
 }
 
+/**
+ * Delete a roofer. Cascades to their members, pricing and leads (FK on delete
+ * cascade), so this is destructive — the UI confirms first.
+ */
+export async function deleteRoofer(id: string) {
+  if (!(await isAdmin())) return;
+  const supabase = await createClient();
+  await supabase.from("roofers").delete().eq("id", id);
+  revalidatePath("/admin");
+  redirect("/admin");
+}
+
 /** Edit a roofer's identity + contact details. */
 export async function updateRoofer(id: string, formData: FormData) {
   if (!(await isAdmin())) return;
