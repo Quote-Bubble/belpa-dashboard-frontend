@@ -317,6 +317,47 @@ function AccessEditor({
   );
 }
 
+function MaterialRow({
+  material,
+  onToggle,
+  onRate,
+}: {
+  material: ReplacementServiceConfig["materials"][number];
+  onToggle: (enabled: boolean) => void;
+  onRate: (rateExVat: number) => void;
+}) {
+  return (
+    <div
+      className={[
+        "flex items-center justify-between gap-3 border-b border-line px-3 py-2.5 last:border-b-0",
+        material.enabled ? "bg-white" : "bg-black/[0.015]",
+      ].join(" ")}
+    >
+      <div className="flex min-w-0 items-center gap-2.5">
+        <IosSwitch
+          checked={material.enabled}
+          label={`${material.enabled ? "Disable" : "Enable"} ${material.label}`}
+          onChange={onToggle}
+        />
+        <span
+          className={[
+            "truncate text-[14px] font-medium",
+            material.enabled ? "text-ink" : "text-muted",
+          ].join(" ")}
+        >
+          {material.label}
+        </span>
+      </div>
+      <MoneyField
+        value={material.rateExVat}
+        disabled={!material.enabled}
+        onChange={onRate}
+        suffix="/m²"
+      />
+    </div>
+  );
+}
+
 function MaterialList({
   materials,
   onChange,
@@ -324,49 +365,120 @@ function MaterialList({
   materials: ReplacementServiceConfig["materials"];
   onChange: (m: ReplacementServiceConfig["materials"]) => void;
 }) {
-  return (
-    <div className="space-y-2">
-      {materials.map((m, i) => (
-        <div
-          key={m.key}
-          className={[
-            "flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-white px-4 py-3.5",
-            m.enabled ? "border-line" : "border-transparent bg-black/[0.02]",
-          ].join(" ")}
-        >
-          <div className="flex min-w-0 items-center gap-3">
-            <IosSwitch
-              checked={m.enabled}
-              label={`${m.enabled ? "Disable" : "Enable"} ${m.label}`}
-              onChange={(enabled) => {
-                onChange(
-                  materials.map((x, j) => (j === i ? { ...x, enabled } : x)),
-                );
-              }}
-            />
-            <span
-              className={[
-                "text-[15px] font-medium",
-                m.enabled ? "text-ink" : "text-muted",
-              ].join(" ")}
-            >
-              {m.label}
-            </span>
-          </div>
-          <MoneyField
-            value={m.rateExVat}
-            disabled={!m.enabled}
-            onChange={(rateExVat) => {
-              onChange(
-                materials.map((x, j) =>
-                  j === i ? { ...x, rateExVat } : x,
-                ),
-              );
-            }}
-            suffix="/m²"
-          />
+  const [editing, setEditing] = useState(false);
+  const [showOff, setShowOff] = useState(false);
+  const enabled = materials.filter((m) => m.enabled);
+  const disabled = materials.filter((m) => !m.enabled);
+
+  const updateAtKey = (
+    key: string,
+    patch: Partial<ReplacementServiceConfig["materials"][number]>,
+  ) => {
+    onChange(materials.map((x) => (x.key === key ? { ...x, ...patch } : x)));
+  };
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        onClick={() => setEditing(true)}
+        className="flex w-full items-center justify-between gap-3 rounded-xl border border-line bg-white px-4 py-3.5 text-left transition-colors hover:border-brand-300 hover:bg-brand-50/40"
+      >
+        <div className="min-w-0">
+          <p className="text-[14px] font-semibold text-ink">
+            {enabled.length === 0
+              ? "No materials on"
+              : `${enabled.length} material${enabled.length === 1 ? "" : "s"} priced`}
+          </p>
+          <p className="mt-0.5 truncate text-[12px] text-muted">
+            {enabled.length === 0
+              ? "Tap to choose what they offer"
+              : enabled.map((m) => m.label).join(" · ")}
+          </p>
         </div>
-      ))}
+        <span className="shrink-0 text-[13px] font-semibold text-brand-600">
+          Edit
+        </span>
+      </button>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[12px] font-medium text-muted">
+          On for this bubble
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            setEditing(false);
+            setShowOff(false);
+          }}
+          className="text-[12px] font-semibold text-brand-600"
+        >
+          Done
+        </button>
+      </div>
+
+      {enabled.length === 0 ? (
+        <p className="text-[13px] text-muted">
+          Nothing on yet — turn materials on below.
+        </p>
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-line">
+          {enabled.map((m) => (
+            <MaterialRow
+              key={m.key}
+              material={m}
+              onToggle={(on) => updateAtKey(m.key, { enabled: on })}
+              onRate={(rateExVat) => updateAtKey(m.key, { rateExVat })}
+            />
+          ))}
+        </div>
+      )}
+
+      {disabled.length > 0 ? (
+        <div>
+          <button
+            type="button"
+            onClick={() => setShowOff((v) => !v)}
+            className="flex w-full items-center justify-between rounded-xl border border-dashed border-line bg-white px-3.5 py-2.5 text-left text-[13px] font-semibold text-muted hover:border-ink/20 hover:text-ink"
+          >
+            <span>
+              {showOff ? "Hide" : "Show"} {disabled.length} material
+              {disabled.length === 1 ? "" : "s"} not offered
+            </span>
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 12 12"
+              className={showOff ? "rotate-180" : ""}
+              aria-hidden
+            >
+              <path
+                d="M2.5 4.5 L6 8 L9.5 4.5"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                fill="none"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+          {showOff ? (
+            <div className="mt-2 overflow-hidden rounded-xl border border-line">
+              {disabled.map((m) => (
+                <MaterialRow
+                  key={m.key}
+                  material={m}
+                  onToggle={(on) => updateAtKey(m.key, { enabled: on })}
+                  onRate={(rateExVat) => updateAtKey(m.key, { rateExVat })}
+                />
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -389,19 +501,151 @@ function ToggleMoneyCard({
   suffix?: string;
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-white px-4 py-3.5">
-      <div className="flex min-w-0 items-center gap-3">
+    <div className="flex items-center justify-between gap-3 border-b border-line bg-white px-3 py-2.5 last:border-b-0">
+      <div className="flex min-w-0 items-center gap-2.5">
         <IosSwitch checked={checked} onChange={onToggle} label={label} />
-        <div>
-          <p className="text-[15px] font-medium text-ink">{label}</p>
-          {hint ? <p className="text-[12px] text-muted">{hint}</p> : null}
+        <div className="min-w-0">
+          <p className="truncate text-[14px] font-medium text-ink">{label}</p>
+          {hint ? <p className="text-[11px] text-muted">{hint}</p> : null}
         </div>
       </div>
       {checked ? (
         <MoneyField value={value} onChange={onRate} suffix={suffix} />
       ) : (
-        <span className="text-[13px] text-muted">Off</span>
+        <span className="text-[12px] text-muted">Off</span>
       )}
+    </div>
+  );
+}
+
+function ExtrasEditor({
+  value,
+  onChange,
+}: {
+  value: ReplacementServiceConfig;
+  onChange: (v: ReplacementServiceConfig) => void;
+}) {
+  const [showOff, setShowOff] = useState(false);
+  const toggles = [
+    {
+      key: "skip" as const,
+      checked: value.includeSkip,
+      label: "Skip hire",
+      value: value.skipHireExVat,
+      suffix: undefined as string | undefined,
+    },
+    {
+      key: "gutters" as const,
+      checked: value.includeGutters,
+      label: "Gutters",
+      hint: "When length is measured",
+      value: value.gutterPerMExVat,
+      suffix: "/m",
+    },
+    {
+      key: "chimney" as const,
+      checked: value.includeChimneyAllowance,
+      label: "Chimney flashing",
+      value: value.chimneyAllowanceExVat,
+      suffix: "/each",
+    },
+  ];
+  const onToggles = toggles.filter((t) => t.checked);
+  const offToggles = toggles.filter((t) => !t.checked);
+
+  const applyToggle = (
+    key: "skip" | "gutters" | "chimney",
+    checked: boolean,
+  ) => {
+    if (key === "skip") onChange({ ...value, includeSkip: checked });
+    if (key === "gutters") onChange({ ...value, includeGutters: checked });
+    if (key === "chimney")
+      onChange({ ...value, includeChimneyAllowance: checked });
+  };
+  const applyRate = (
+    key: "skip" | "gutters" | "chimney",
+    rate: number,
+  ) => {
+    if (key === "skip") onChange({ ...value, skipHireExVat: rate });
+    if (key === "gutters") onChange({ ...value, gutterPerMExVat: rate });
+    if (key === "chimney") onChange({ ...value, chimneyAllowanceExVat: rate });
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="overflow-hidden rounded-xl border border-line">
+        <div className="flex items-center justify-between gap-3 border-b border-line bg-white px-3 py-2.5">
+          <div>
+            <p className="text-[14px] font-medium text-ink">Strip-off</p>
+            <p className="text-[11px] text-muted">Per square metre</p>
+          </div>
+          <MoneyField
+            value={value.stripOffPerM2}
+            onChange={(stripOffPerM2) =>
+              onChange({ ...value, stripOffPerM2 })
+            }
+            suffix="/m²"
+          />
+        </div>
+        {onToggles.map((t) => (
+          <ToggleMoneyCard
+            key={t.key}
+            checked={t.checked}
+            onToggle={(v) => applyToggle(t.key, v)}
+            label={t.label}
+            hint={"hint" in t ? t.hint : undefined}
+            value={t.value}
+            onRate={(n) => applyRate(t.key, n)}
+            suffix={t.suffix}
+          />
+        ))}
+      </div>
+
+      {offToggles.length > 0 ? (
+        <div>
+          <button
+            type="button"
+            onClick={() => setShowOff((v) => !v)}
+            className="flex w-full items-center justify-between rounded-xl border border-dashed border-line bg-white px-3.5 py-2.5 text-left text-[13px] font-semibold text-muted hover:border-ink/20 hover:text-ink"
+          >
+            <span>
+              {showOff ? "Hide" : "Show"} {offToggles.length} extra
+              {offToggles.length === 1 ? "" : "s"} turned off
+            </span>
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 12 12"
+              className={showOff ? "rotate-180" : ""}
+              aria-hidden
+            >
+              <path
+                d="M2.5 4.5 L6 8 L9.5 4.5"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                fill="none"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+          {showOff ? (
+            <div className="mt-2 overflow-hidden rounded-xl border border-line">
+              {offToggles.map((t) => (
+                <ToggleMoneyCard
+                  key={t.key}
+                  checked={t.checked}
+                  onToggle={(v) => applyToggle(t.key, v)}
+                  label={t.label}
+                  hint={"hint" in t ? t.hint : undefined}
+                  value={t.value}
+                  onRate={(n) => applyRate(t.key, n)}
+                  suffix={t.suffix}
+                />
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -435,7 +679,8 @@ export default function QuoteConfigEditor({
   );
   const [openService, setOpenService] =
     useState<ServiceKey>("full_replacement");
-  const [openSection, setOpenSection] = useState<OpenSection>("coverings");
+  const [openSection, setOpenSection] = useState<OpenSection>(null);
+  const [companyOpen, setCompanyOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
@@ -453,9 +698,7 @@ export default function QuoteConfigEditor({
 
   const selectService = (key: ServiceKey) => {
     setOpenService(key);
-    setOpenSection(
-      key === "gutters_fascias_soffits" ? "rates" : "coverings",
-    );
+    setOpenSection(null);
   };
 
   const toggleService = (key: ServiceKey) => {
@@ -581,12 +824,14 @@ export default function QuoteConfigEditor({
                     >
                       <ServiceIcon service={s.key} />
                       <span className="min-w-0">
-                        <span className="block truncate text-[15px] font-semibold text-ink">
+                        <span className="block truncate text-[14px] font-semibold text-ink">
                           {s.label}
                         </span>
-                        <span className="mt-0.5 block truncate text-[12px] text-muted">
-                          {s.priced ? s.description : "Callback only"}
-                        </span>
+                        {!s.priced ? (
+                          <span className="mt-0.5 block text-[11px] text-muted">
+                            Callback only
+                          </span>
+                        ) : null}
                       </span>
                     </button>
                     <IosSwitch
@@ -723,123 +968,153 @@ export default function QuoteConfigEditor({
           </section>
 
           <section className="overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(10,11,13,0.04)]">
-            <div className="border-b border-line px-5 py-4 sm:px-6">
-              <h3 className="text-base font-semibold text-ink">
-                Company settings
-              </h3>
-            </div>
-            <div className="grid gap-5 px-5 py-5 sm:px-6 lg:grid-cols-[1fr_220px]">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between gap-3 rounded-2xl border border-line px-4 py-3.5">
-                  <div>
-                    <p className="text-[15px] font-medium text-ink">
-                      VAT registered
-                    </p>
-                    <p className="text-[13px] text-muted">
-                      Quotes shown ex VAT
-                    </p>
-                  </div>
-                  <IosSwitch
-                    checked={config.vatRegistered}
-                    label="VAT registered"
-                    onChange={(vatRegistered) =>
-                      setConfig((c) => ({ ...c, vatRegistered }))
-                    }
+            <button
+              type="button"
+              onClick={() => setCompanyOpen((v) => !v)}
+              className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left sm:px-6"
+              aria-expanded={companyOpen}
+            >
+              <div className="min-w-0">
+                <h3 className="text-base font-semibold text-ink">
+                  Company settings
+                </h3>
+                <p className="mt-0.5 text-[13px] text-muted">
+                  VAT, quote range
+                  {showOrigins ? ", embed sites" : ""}
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-2">
+                <span
+                  className={[
+                    "rounded-full px-2.5 py-1 text-[12px] font-bold tabular-nums",
+                    completeness.ready
+                      ? "bg-emerald-100 text-emerald-800"
+                      : "bg-amber-100 text-amber-900",
+                  ].join(" ")}
+                >
+                  {completeness.enabledPriced === 0
+                    ? "—"
+                    : `${completeness.completePriced}/${completeness.enabledPriced}`}
+                </span>
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  className={[
+                    "text-muted transition-transform",
+                    companyOpen ? "rotate-180" : "",
+                  ].join(" ")}
+                  aria-hidden
+                >
+                  <path
+                    d="M2.5 4.5 L6 8 L9.5 4.5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    fill="none"
+                    strokeLinecap="round"
                   />
-                </div>
-                <div className="rounded-2xl border border-line px-4 py-3.5">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
+                </svg>
+              </span>
+            </button>
+            {companyOpen ? (
+              <div className="grid gap-4 border-t border-line px-5 py-5 sm:px-6 lg:grid-cols-[1fr_200px]">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-line px-3.5 py-3">
                     <div>
-                      <p className="text-[15px] font-medium text-ink">
-                        Quote range width
+                      <p className="text-[14px] font-medium text-ink">
+                        VAT registered
                       </p>
-                      <p className="text-[13px] text-muted">
-                        Optional · how wide the £ range is
+                      <p className="text-[12px] text-muted">
+                        Quotes shown ex VAT
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        className="h-10 w-20 rounded-xl border border-line px-3 text-[15px] tabular-nums text-ink outline-none focus:border-brand-400"
-                        placeholder="Auto"
-                        value={
-                          config.confidenceWidth == null
-                            ? ""
-                            : String(config.confidenceWidth)
-                        }
-                        onChange={(e) => {
-                          const v = e.target.value.trim();
-                          if (v === "") {
-                            setConfig((c) => ({
-                              ...c,
-                              confidenceWidth: null,
-                            }));
-                            return;
-                          }
-                          const n = Number(v);
-                          if (Number.isFinite(n) && n >= 0 && n <= 0.5) {
-                            setConfig((c) => ({
-                              ...c,
-                              confidenceWidth: n,
-                            }));
-                          }
-                        }}
-                      />
-                      <span className="text-[13px] font-medium text-muted">
-                        {config.confidenceWidth != null
-                          ? `±${Math.round(config.confidenceWidth * 100)}%`
-                          : "±%"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                {showOrigins ? (
-                  <div className="rounded-2xl border border-line px-4 py-3.5">
-                    <p className="text-[15px] font-medium text-ink">
-                      Allowed embed sites
-                    </p>
-                    <p className="mb-2 text-[13px] text-muted">
-                      One per line · blank = anywhere
-                    </p>
-                    <textarea
-                      rows={3}
-                      className="w-full rounded-xl border border-line px-3 py-2.5 text-sm text-ink outline-none focus:border-brand-400"
-                      placeholder="https://ridgewayroofing.co.uk"
-                      value={originsText}
-                      onChange={(e) => setOriginsText(e.target.value)}
+                    <IosSwitch
+                      checked={config.vatRegistered}
+                      label="VAT registered"
+                      onChange={(vatRegistered) =>
+                        setConfig((c) => ({ ...c, vatRegistered }))
+                      }
                     />
                   </div>
-                ) : null}
-              </div>
-
-              <div className="rounded-2xl border border-line bg-[#f7f8fa] px-4 py-4">
-                <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">
-                  Pricing status
-                </p>
-                <div className="mt-3">
-                  <span
-                    className={[
-                      "inline-flex rounded-full px-2.5 py-1 text-[13px] font-bold tabular-nums",
-                      completeness.ready
-                        ? "bg-emerald-100 text-emerald-800"
-                        : "bg-amber-100 text-amber-900",
-                    ].join(" ")}
-                  >
-                    {completeness.enabledPriced === 0
-                      ? "—"
-                      : `${completeness.completePriced} / ${completeness.enabledPriced}`}
-                  </span>
+                  <div className="rounded-xl border border-line px-3.5 py-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="text-[14px] font-medium text-ink">
+                          Quote range width
+                        </p>
+                        <p className="text-[12px] text-muted">
+                          Optional · how wide the £ range is
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          className="h-10 w-20 rounded-xl border border-line px-3 text-[15px] tabular-nums text-ink outline-none focus:border-brand-400"
+                          placeholder="Auto"
+                          value={
+                            config.confidenceWidth == null
+                              ? ""
+                              : String(config.confidenceWidth)
+                          }
+                          onChange={(e) => {
+                            const v = e.target.value.trim();
+                            if (v === "") {
+                              setConfig((c) => ({
+                                ...c,
+                                confidenceWidth: null,
+                              }));
+                              return;
+                            }
+                            const n = Number(v);
+                            if (Number.isFinite(n) && n >= 0 && n <= 0.5) {
+                              setConfig((c) => ({
+                                ...c,
+                                confidenceWidth: n,
+                              }));
+                            }
+                          }}
+                        />
+                        <span className="text-[13px] font-medium text-muted">
+                          {config.confidenceWidth != null
+                            ? `±${Math.round(config.confidenceWidth * 100)}%`
+                            : "±%"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  {showOrigins ? (
+                    <div className="rounded-xl border border-line px-3.5 py-3">
+                      <p className="text-[14px] font-medium text-ink">
+                        Allowed embed sites
+                      </p>
+                      <p className="mb-2 text-[12px] text-muted">
+                        One per line · blank = anywhere
+                      </p>
+                      <textarea
+                        rows={2}
+                        className="w-full rounded-xl border border-line px-3 py-2 text-sm text-ink outline-none focus:border-brand-400"
+                        placeholder="https://ridgewayroofing.co.uk"
+                        value={originsText}
+                        onChange={(e) => setOriginsText(e.target.value)}
+                      />
+                    </div>
+                  ) : null}
                 </div>
-                <p className="mt-2 text-[13px] leading-snug text-ink-soft">
-                  {completeness.enabledPriced === 0
-                    ? "Enable a priced service to get started."
-                    : completeness.ready
-                      ? "All enabled services have rates set."
-                      : `${missingCount} service${missingCount === 1 ? "" : "s"} still need rates.`}
-                </p>
+                <div className="rounded-xl border border-line bg-[#f7f8fa] px-3.5 py-3.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">
+                    Pricing status
+                  </p>
+                  <p className="mt-2 text-[13px] leading-snug text-ink-soft">
+                    {completeness.enabledPriced === 0
+                      ? "Enable a priced service to get started."
+                      : completeness.ready
+                        ? "All enabled services have rates set."
+                        : `${missingCount} service${missingCount === 1 ? "" : "s"} still need rates.`}
+                  </p>
+                </div>
               </div>
-            </div>
+            ) : null}
           </section>
         </div>
       </div>
@@ -960,53 +1235,7 @@ function ReplacementSections({
         subtitle="Strip-off, skip hire, gutters, chimney"
         badge={`${extrasOn} extras`}
       >
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-white px-4 py-3.5">
-            <div>
-              <p className="text-[15px] font-medium text-ink">Strip-off</p>
-              <p className="text-[12px] text-muted">Per square metre</p>
-            </div>
-            <MoneyField
-              value={value.stripOffPerM2}
-              onChange={(stripOffPerM2) =>
-                onChange({ ...value, stripOffPerM2 })
-              }
-              suffix="/m²"
-            />
-          </div>
-          <ToggleMoneyCard
-            checked={value.includeSkip}
-            onToggle={(includeSkip) => onChange({ ...value, includeSkip })}
-            label="Skip hire"
-            value={value.skipHireExVat}
-            onRate={(skipHireExVat) => onChange({ ...value, skipHireExVat })}
-          />
-          <ToggleMoneyCard
-            checked={value.includeGutters}
-            onToggle={(includeGutters) =>
-              onChange({ ...value, includeGutters })
-            }
-            label="Gutters"
-            hint="When length is measured"
-            value={value.gutterPerMExVat}
-            onRate={(gutterPerMExVat) =>
-              onChange({ ...value, gutterPerMExVat })
-            }
-            suffix="/m"
-          />
-          <ToggleMoneyCard
-            checked={value.includeChimneyAllowance}
-            onToggle={(includeChimneyAllowance) =>
-              onChange({ ...value, includeChimneyAllowance })
-            }
-            label="Chimney flashing"
-            value={value.chimneyAllowanceExVat}
-            onRate={(chimneyAllowanceExVat) =>
-              onChange({ ...value, chimneyAllowanceExVat })
-            }
-            suffix="/each"
-          />
-        </div>
+        <ExtrasEditor value={value} onChange={onChange} />
       </AccordionRow>
       <AccordionRow
         open={openSection === "access"}
