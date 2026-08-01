@@ -128,3 +128,18 @@ export type RooferProfile = {
   slug: string;
   name: string;
 };
+
+/** Where a roofer sits in the deploy pipeline (admin ops console). */
+export type DeployStatus = "prospect" | "sent" | "live";
+
+/** A roofer row as seen in the admin console (full ops fields). */
+export type RooferAdminRow = {
+  id: string;
+  slug: string;
+  name: string;
+  website: string | null;
+  contact_name: string | null;
+  contact_phone: string | null;
+  deploy_status: DeployStatus;
+  created_at: string;
+};
