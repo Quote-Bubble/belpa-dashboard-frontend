@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
 
 import {
   SERVICE_CATALOG,
@@ -21,46 +20,26 @@ import {
 import Toast from "@/components/Toast";
 import { createClient } from "@/lib/supabase/client";
 
-const ACCESS_OPTIONS: {
-  value: AccessMode;
-  label: string;
-  hint: string;
-}[] = [
-  {
-    value: "scaffold_weeks",
-    label: "Scaffold",
-    hint: "Storeys → weeks × £/week",
-  },
-  {
-    value: "fixed_access",
-    label: "Fixed allowance",
-    hint: "One access figure",
-  },
-  {
-    value: "mewp_day",
-    label: "MEWP",
-    hint: "Cherry picker day rate",
-  },
-  {
-    value: "tower",
-    label: "Tower",
-    hint: "Adjustable height kit",
-  },
-  { value: "none", label: "None", hint: "No access line" },
+const ACCESS_OPTIONS: { value: AccessMode; label: string }[] = [
+  { value: "scaffold_weeks", label: "Scaffold" },
+  { value: "fixed_access", label: "Fixed £" },
+  { value: "mewp_day", label: "MEWP" },
+  { value: "tower", label: "Tower" },
+  { value: "none", label: "None" },
 ];
 
-function MoneyField({
+function MoneyInput({
   value,
   onChange,
   suffix,
   disabled,
-  large,
+  className = "",
 }: {
   value: number;
   onChange: (n: number) => void;
   suffix?: string;
   disabled?: boolean;
-  large?: boolean;
+  className?: string;
 }) {
   const [raw, setRaw] = useState(String(value));
   useEffect(() => {
@@ -68,16 +47,14 @@ function MoneyField({
   }, [value]);
 
   return (
-    <div
+    <label
       className={[
-        "group flex items-center gap-1.5 rounded-xl border border-line bg-white px-3 transition-[border-color,box-shadow]",
-        large ? "py-3" : "py-2",
-        disabled
-          ? "opacity-40"
-          : "focus-within:border-brand-400 focus-within:shadow-[0_0_0_3px_rgba(47,107,255,0.12)]",
+        "inline-flex h-9 items-center gap-1 rounded-lg border border-line bg-white px-2.5",
+        disabled ? "opacity-40" : "focus-within:border-brand-400",
+        className,
       ].join(" ")}
     >
-      <span className="text-sm font-medium text-muted">£</span>
+      <span className="text-xs text-muted">£</span>
       <input
         type="text"
         inputMode="decimal"
@@ -93,116 +70,43 @@ function MoneyField({
           setRaw(String(n));
           if (n !== value) onChange(n);
         }}
-        className={[
-          "w-full min-w-0 bg-transparent font-semibold tabular-nums text-ink outline-none",
-          large ? "text-lg" : "text-sm",
-        ].join(" ")}
+        className="w-full min-w-0 bg-transparent text-sm font-medium tabular-nums text-ink outline-none"
       />
-      {suffix && (
-        <span className="shrink-0 text-xs font-medium text-muted">{suffix}</span>
-      )}
-    </div>
+      {suffix ? (
+        <span className="shrink-0 text-[11px] text-muted">{suffix}</span>
+      ) : null}
+    </label>
   );
 }
 
-function Switch({
+function TinySwitch({
   checked,
   onChange,
   label,
-  hint,
 }: {
   checked: boolean;
   onChange: (v: boolean) => void;
   label: string;
-  hint?: string;
 }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
+      aria-label={label}
       onClick={() => onChange(!checked)}
-      className="flex w-full items-center justify-between gap-3 rounded-xl px-1 py-1 text-left"
+      className={[
+        "relative h-5 w-9 shrink-0 rounded-full transition-colors",
+        checked ? "bg-brand-600" : "bg-black/[0.12]",
+      ].join(" ")}
     >
-      <span className="min-w-0">
-        <span className="block text-sm font-semibold text-ink">{label}</span>
-        {hint && <span className="mt-0.5 block text-xs text-muted">{hint}</span>}
-      </span>
       <span
         className={[
-          "relative h-7 w-12 shrink-0 rounded-full transition-colors duration-200",
-          checked ? "bg-brand-600" : "bg-black/[0.08]",
+          "absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform",
+          checked ? "translate-x-4" : "translate-x-0.5",
         ].join(" ")}
-      >
-        <span
-          className={[
-            "absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-sm transition-transform duration-200",
-            checked ? "translate-x-[22px]" : "translate-x-0.5",
-          ].join(" ")}
-        />
-      </span>
+      />
     </button>
-  );
-}
-
-function ProgressRing({
-  complete,
-  total,
-}: {
-  complete: number;
-  total: number;
-}) {
-  const pct = total === 0 ? 0 : Math.round((complete / total) * 100);
-  const r = 22;
-  const c = 2 * Math.PI * r;
-  const offset = c - (pct / 100) * c;
-  const ready = total > 0 && complete === total;
-
-  return (
-    <div className="flex items-center gap-3">
-      <div className="relative grid h-14 w-14 place-items-center">
-        <svg width="56" height="56" className="-rotate-90" aria-hidden>
-          <circle
-            cx="28"
-            cy="28"
-            r={r}
-            fill="none"
-            stroke="rgba(10,11,13,0.06)"
-            strokeWidth="5"
-          />
-          <motion.circle
-            cx="28"
-            cy="28"
-            r={r}
-            fill="none"
-            stroke={ready ? "#128a4d" : "#2f6bff"}
-            strokeWidth="5"
-            strokeLinecap="round"
-            strokeDasharray={c}
-            initial={false}
-            animate={{ strokeDashoffset: offset }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-          />
-        </svg>
-        <span className="absolute font-display text-sm font-semibold tabular-nums text-ink">
-          {total === 0 ? "—" : `${complete}/${total}`}
-        </span>
-      </div>
-      <div>
-        <p className="text-sm font-semibold text-ink">
-          {ready
-            ? "Ready for live"
-            : total === 0
-              ? "Pick a service"
-              : "Still setting rates"}
-        </p>
-        <p className="text-xs text-muted">
-          {ready
-            ? "Bubble can go live with these numbers"
-            : "Walk through each enabled service"}
-        </p>
-      </div>
-    </div>
   );
 }
 
@@ -214,22 +118,20 @@ function AccessEditor({
   onChange: (a: AccessPolicy) => void;
 }) {
   return (
-    <div className="space-y-3">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-          How they get on the roof
-        </p>
-        <p className="mt-1 text-sm text-ink-soft">
-          Scaffold, tower, MEWP — or no access charge at all.
-        </p>
-      </div>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div
+        className="inline-flex flex-wrap rounded-lg border border-line bg-black/[0.02] p-0.5"
+        role="radiogroup"
+        aria-label="Access"
+      >
         {ACCESS_OPTIONS.map((o) => {
           const active = value.mode === o.value;
           return (
             <button
               key={o.value}
               type="button"
+              role="radio"
+              aria-checked={active}
               onClick={() =>
                 onChange({
                   mode: o.value,
@@ -247,40 +149,32 @@ function AccessEditor({
                 })
               }
               className={[
-                "rounded-2xl border px-3 py-3 text-left transition-all duration-200",
+                "rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
                 active
-                  ? "border-brand-500 bg-gradient-to-b from-brand-50 to-white shadow-[0_8px_24px_-12px_rgba(31,87,240,0.45)]"
-                  : "border-line bg-white hover:border-ink/15",
+                  ? "bg-white text-ink shadow-sm"
+                  : "text-muted hover:text-ink",
               ].join(" ")}
             >
-              <span className="block text-sm font-semibold text-ink">
-                {o.label}
-              </span>
-              <span className="mt-0.5 block text-[11px] leading-snug text-muted">
-                {o.hint}
-              </span>
+              {o.label}
             </button>
           );
         })}
       </div>
-      {value.mode !== "none" && (
-        <div className="max-w-[220px]">
-          <label className="mb-1.5 block text-xs font-medium text-ink-soft">
-            {value.mode === "scaffold_weeks" ? "Per week" : "Access rate"}
-          </label>
-          <MoneyField
-            large
-            value={value.rateExVat}
-            onChange={(n) => onChange({ ...value, rateExVat: n })}
-            suffix={value.mode === "scaffold_weeks" ? "/wk" : ""}
-          />
-        </div>
+      {value.mode !== "none" ? (
+        <MoneyInput
+          className="w-[140px]"
+          value={value.rateExVat}
+          onChange={(n) => onChange({ ...value, rateExVat: n })}
+          suffix={value.mode === "scaffold_weeks" ? "/wk" : ""}
+        />
+      ) : (
+        <span className="text-xs text-muted">No access line on quotes</span>
       )}
     </div>
   );
 }
 
-function MaterialRows({
+function MaterialTable({
   materials,
   onChange,
 }: {
@@ -288,60 +182,102 @@ function MaterialRows({
   onChange: (m: ReplacementServiceConfig["materials"]) => void;
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-line bg-white">
-      {materials.map((m, i) => (
-        <div
-          key={m.key}
-          className={[
-            "flex flex-wrap items-center justify-between gap-3 px-4 py-3.5",
-            i > 0 ? "border-t border-line" : "",
-            m.enabled ? "" : "bg-black/[0.015]",
-          ].join(" ")}
-        >
-          <Switch
-            checked={m.enabled}
-            label={m.label}
-            hint={m.enabled ? "Shown in the bubble" : "Hidden for this company"}
-            onChange={(enabled) => {
-              onChange(
-                materials.map((x, j) => (j === i ? { ...x, enabled } : x)),
-              );
-            }}
-          />
-          <div className="w-40">
-            <MoneyField
-              value={m.rateExVat}
-              disabled={!m.enabled}
-              onChange={(rateExVat) => {
-                onChange(
-                  materials.map((x, j) =>
-                    j === i ? { ...x, rateExVat } : x,
-                  ),
-                );
-              }}
-              suffix="/m²"
-            />
-          </div>
-        </div>
-      ))}
+    <div className="overflow-hidden rounded-lg border border-line">
+      <table className="w-full text-left text-sm">
+        <thead>
+          <tr className="border-b border-line bg-black/[0.02] text-[11px] font-medium uppercase tracking-wide text-muted">
+            <th className="px-3 py-2 font-medium">Material</th>
+            <th className="w-16 px-2 py-2 text-center font-medium">Offer</th>
+            <th className="w-36 px-3 py-2 text-right font-medium">£ / m²</th>
+          </tr>
+        </thead>
+        <tbody>
+          {materials.map((m, i) => (
+            <tr
+              key={m.key}
+              className={[
+                i > 0 ? "border-t border-line" : "",
+                m.enabled ? "" : "text-muted",
+              ].join(" ")}
+            >
+              <td className="px-3 py-2 font-medium text-ink">{m.label}</td>
+              <td className="px-2 py-2 text-center">
+                <div className="flex justify-center">
+                  <TinySwitch
+                    checked={m.enabled}
+                    label={`${m.enabled ? "Disable" : "Enable"} ${m.label}`}
+                    onChange={(enabled) => {
+                      onChange(
+                        materials.map((x, j) =>
+                          j === i ? { ...x, enabled } : x,
+                        ),
+                      );
+                    }}
+                  />
+                </div>
+              </td>
+              <td className="px-3 py-2">
+                <div className="flex justify-end">
+                  <MoneyInput
+                    className="w-[7.5rem]"
+                    value={m.rateExVat}
+                    disabled={!m.enabled}
+                    onChange={(rateExVat) => {
+                      onChange(
+                        materials.map((x, j) =>
+                          j === i ? { ...x, rateExVat } : x,
+                        ),
+                      );
+                    }}
+                  />
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
 
-function SectionCard({
-  title,
-  children,
+function ExtraRow({
+  checked,
+  onToggle,
+  label,
+  value,
+  onRate,
+  suffix,
 }: {
-  title: string;
-  children: React.ReactNode;
+  checked: boolean;
+  onToggle: (v: boolean) => void;
+  label: string;
+  value: number;
+  onRate: (n: number) => void;
+  suffix?: string;
 }) {
   return (
-    <section className="space-y-3">
-      <h4 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-        {title}
-      </h4>
-      {children}
-    </section>
+    <div className="flex items-center justify-between gap-3 py-1.5">
+      <label className="flex min-w-0 cursor-pointer items-center gap-2.5">
+        <TinySwitch checked={checked} onChange={onToggle} label={label} />
+        <span className="text-sm text-ink">{label}</span>
+      </label>
+      {checked ? (
+        <MoneyInput
+          className="w-[7.5rem]"
+          value={value}
+          onChange={onRate}
+          suffix={suffix}
+        />
+      ) : (
+        <span className="text-xs text-muted">Off</span>
+      )}
+    </div>
+  );
+}
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="mb-2 text-xs font-medium text-muted">{children}</p>
   );
 }
 
@@ -353,93 +289,69 @@ function ReplacementEditor({
   onChange: (v: ReplacementServiceConfig) => void;
 }) {
   return (
-    <div className="space-y-7">
-      <SectionCard title="Coverings">
-        <MaterialRows
+    <div className="space-y-5">
+      <div>
+        <FieldLabel>Coverings</FieldLabel>
+        <MaterialTable
           materials={value.materials}
           onChange={(materials) => onChange({ ...value, materials })}
         />
-      </SectionCard>
+      </div>
 
-      <SectionCard title="Job extras">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-ink-soft">
-              Strip-off
-            </label>
-            <MoneyField
-              value={value.stripOffPerM2}
-              onChange={(stripOffPerM2) =>
-                onChange({ ...value, stripOffPerM2 })
-              }
-              suffix="/m²"
-            />
-          </div>
-          <div className="rounded-2xl border border-line bg-white px-3 py-2">
-            <Switch
-              checked={value.includeSkip}
-              label="Skip hire"
-              onChange={(includeSkip) => onChange({ ...value, includeSkip })}
-            />
-            {value.includeSkip && (
-              <div className="mt-2 pb-1">
-                <MoneyField
-                  value={value.skipHireExVat}
-                  onChange={(skipHireExVat) =>
-                    onChange({ ...value, skipHireExVat })
-                  }
-                />
-              </div>
-            )}
-          </div>
-          <div className="rounded-2xl border border-line bg-white px-3 py-2">
-            <Switch
-              checked={value.includeGutters}
-              label="Auto-price gutters"
-              hint="When length is measured"
-              onChange={(includeGutters) =>
-                onChange({ ...value, includeGutters })
-              }
-            />
-            {value.includeGutters && (
-              <div className="mt-2 pb-1">
-                <MoneyField
-                  value={value.gutterPerMExVat}
-                  onChange={(gutterPerMExVat) =>
-                    onChange({ ...value, gutterPerMExVat })
-                  }
-                  suffix="/m"
-                />
-              </div>
-            )}
-          </div>
-          <div className="rounded-2xl border border-line bg-white px-3 py-2">
-            <Switch
-              checked={value.includeChimneyAllowance}
-              label="Chimney flashing"
-              onChange={(includeChimneyAllowance) =>
-                onChange({ ...value, includeChimneyAllowance })
-              }
-            />
-            {value.includeChimneyAllowance && (
-              <div className="mt-2 pb-1">
-                <MoneyField
-                  value={value.chimneyAllowanceExVat}
-                  onChange={(chimneyAllowanceExVat) =>
-                    onChange({ ...value, chimneyAllowanceExVat })
-                  }
-                  suffix="/each"
-                />
-              </div>
-            )}
-          </div>
+      <div className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
+        <div>
+          <FieldLabel>Strip-off</FieldLabel>
+          <MoneyInput
+            className="w-full max-w-[10rem]"
+            value={value.stripOffPerM2}
+            onChange={(stripOffPerM2) =>
+              onChange({ ...value, stripOffPerM2 })
+            }
+            suffix="/m²"
+          />
         </div>
-      </SectionCard>
+        <div className="space-y-0.5">
+          <ExtraRow
+            checked={value.includeSkip}
+            onToggle={(includeSkip) => onChange({ ...value, includeSkip })}
+            label="Skip hire"
+            value={value.skipHireExVat}
+            onRate={(skipHireExVat) => onChange({ ...value, skipHireExVat })}
+          />
+          <ExtraRow
+            checked={value.includeGutters}
+            onToggle={(includeGutters) =>
+              onChange({ ...value, includeGutters })
+            }
+            label="Gutters (when measured)"
+            value={value.gutterPerMExVat}
+            onRate={(gutterPerMExVat) =>
+              onChange({ ...value, gutterPerMExVat })
+            }
+            suffix="/m"
+          />
+          <ExtraRow
+            checked={value.includeChimneyAllowance}
+            onToggle={(includeChimneyAllowance) =>
+              onChange({ ...value, includeChimneyAllowance })
+            }
+            label="Chimney flashing"
+            value={value.chimneyAllowanceExVat}
+            onRate={(chimneyAllowanceExVat) =>
+              onChange({ ...value, chimneyAllowanceExVat })
+            }
+            suffix="/each"
+          />
+        </div>
+      </div>
 
-      <AccessEditor
-        value={value.access}
-        onChange={(access) => onChange({ ...value, access })}
-      />
+      <div>
+        <FieldLabel>Access</FieldLabel>
+        <AccessEditor
+          value={value.access}
+          onChange={(access) => onChange({ ...value, access })}
+        />
+      </div>
     </div>
   );
 }
@@ -452,17 +364,21 @@ function RepairEditor({
   onChange: (v: RepairServiceConfig) => void;
 }) {
   return (
-    <div className="space-y-7">
-      <SectionCard title="Repair coverings">
-        <MaterialRows
+    <div className="space-y-5">
+      <div>
+        <FieldLabel>Coverings</FieldLabel>
+        <MaterialTable
           materials={value.materials}
           onChange={(materials) => onChange({ ...value, materials })}
         />
-      </SectionCard>
-      <AccessEditor
-        value={value.access}
-        onChange={(access) => onChange({ ...value, access })}
-      />
+      </div>
+      <div>
+        <FieldLabel>Access</FieldLabel>
+        <AccessEditor
+          value={value.access}
+          onChange={(access) => onChange({ ...value, access })}
+        />
+      </div>
     </div>
   );
 }
@@ -475,41 +391,38 @@ function RooflineEditor({
   onChange: (v: RooflineServiceConfig) => void;
 }) {
   return (
-    <div className="space-y-7">
-      <SectionCard title="Linear rates">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-ink-soft">
-              Gutters
-            </label>
-            <MoneyField
-              large
-              value={value.gutterPerMExVat}
-              onChange={(gutterPerMExVat) =>
-                onChange({ ...value, gutterPerMExVat })
-              }
-              suffix="/m"
-            />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-ink-soft">
-              Fascias & soffits
-            </label>
-            <MoneyField
-              large
-              value={value.fasciaSoffitPerMExVat}
-              onChange={(fasciaSoffitPerMExVat) =>
-                onChange({ ...value, fasciaSoffitPerMExVat })
-              }
-              suffix="/m"
-            />
-          </div>
+    <div className="space-y-5">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <FieldLabel>Gutters</FieldLabel>
+          <MoneyInput
+            className="w-full max-w-[12rem]"
+            value={value.gutterPerMExVat}
+            onChange={(gutterPerMExVat) =>
+              onChange({ ...value, gutterPerMExVat })
+            }
+            suffix="/m"
+          />
         </div>
-      </SectionCard>
-      <AccessEditor
-        value={value.access}
-        onChange={(access) => onChange({ ...value, access })}
-      />
+        <div>
+          <FieldLabel>Fascias & soffits</FieldLabel>
+          <MoneyInput
+            className="w-full max-w-[12rem]"
+            value={value.fasciaSoffitPerMExVat}
+            onChange={(fasciaSoffitPerMExVat) =>
+              onChange({ ...value, fasciaSoffitPerMExVat })
+            }
+            suffix="/m"
+          />
+        </div>
+      </div>
+      <div>
+        <FieldLabel>Access</FieldLabel>
+        <AccessEditor
+          value={value.access}
+          onChange={(access) => onChange({ ...value, access })}
+        />
+      </div>
     </div>
   );
 }
@@ -529,7 +442,9 @@ export default function QuoteConfigEditor({
 }) {
   const [config, setConfig] = useState<QuoteConfig>(initial);
   const [originsText, setOriginsText] = useState(initialOrigins.join("\n"));
-  const [openService, setOpenService] = useState<ServiceKey>("full_replacement");
+  const [openService, setOpenService] =
+    useState<ServiceKey>("full_replacement");
+  const [showMore, setShowMore] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
@@ -601,7 +516,7 @@ export default function QuoteConfigEditor({
       return;
     }
     setToast({
-      message: "Pricing saved — their bubble uses these numbers.",
+      message: "Saved — their bubble uses these rates.",
       tone: "ok",
     });
     onSaved?.();
@@ -609,274 +524,190 @@ export default function QuoteConfigEditor({
 
   const openMeta = SERVICE_CATALOG.find((s) => s.key === openService)!;
   const openEnabled = config.enabledServices.includes(openService);
+  const status =
+    completeness.enabledPriced === 0
+      ? "Turn on at least one priced service"
+      : completeness.ready
+        ? `${completeness.completePriced} services priced`
+        : `${completeness.completePriced}/${completeness.enabledPriced} priced`;
 
   return (
-    <div className="relative">
-      {/* Atmosphere */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -inset-x-4 -top-4 h-56 rounded-[28px] opacity-90"
-        style={{
-          background:
-            "radial-gradient(80% 120% at 10% 0%, rgba(47,107,255,0.14), transparent 55%), radial-gradient(60% 80% at 90% 20%, rgba(18,138,77,0.08), transparent 50%)",
-        }}
-      />
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <div>
+          <h2 className="text-base font-semibold text-ink">Pricing</h2>
+          <p className="mt-0.5 text-sm text-muted">
+            Choose services, then set rates for the one you&apos;re on.
+          </p>
+        </div>
+        <p
+          className={[
+            "text-xs font-medium",
+            completeness.ready ? "text-emerald-700" : "text-muted",
+          ].join(" ")}
+        >
+          {status}
+        </p>
+      </div>
 
-      <div className="relative space-y-6">
-        {/* Hero */}
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-          <div className="max-w-xl">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-600">
-              Call playbook
-            </p>
-            <h2 className="font-display mt-1.5 text-2xl font-semibold tracking-tight text-ink sm:text-[1.75rem]">
-              Build their bubble
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-              Flip on the jobs they actually do, then set the rates for each
-              one. Every company gets a unique quote flow.
-            </p>
+      {!completeness.ready && completeness.warnings.length > 0 ? (
+        <p className="text-xs text-amber-800">
+          Still needed: {completeness.warnings.slice(0, 2).join(" · ")}
+        </p>
+      ) : null}
+
+      {/* Service picker — compact chips */}
+      <div className="flex flex-wrap gap-1.5">
+        {SERVICE_CATALOG.map((s) => {
+          const enabled = config.enabledServices.includes(s.key);
+          const active = openService === s.key;
+          return (
+            <div
+              key={s.key}
+              className={[
+                "inline-flex items-center gap-1.5 rounded-full border pl-3 pr-1.5 py-1",
+                active
+                  ? "border-brand-500 bg-brand-50 text-ink"
+                  : "border-line bg-white text-ink-soft hover:border-ink/20",
+                !enabled && !active ? "opacity-55" : "",
+              ].join(" ")}
+            >
+              <button
+                type="button"
+                onClick={() => setOpenService(s.key)}
+                className="text-left text-sm font-medium"
+              >
+                {s.label}
+              </button>
+              <TinySwitch
+                checked={enabled}
+                label={`${enabled ? "Disable" : "Enable"} ${s.label}`}
+                onChange={() => toggleService(s.key)}
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Active service body */}
+      <div className="rounded-xl border border-line bg-white">
+        <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
+          <div className="min-w-0">
+            <h3 className="truncate text-sm font-semibold text-ink">
+              {openMeta.label}
+            </h3>
+            {!openMeta.priced ? (
+              <p className="text-xs text-muted">Callback only — no rates</p>
+            ) : null}
           </div>
-          <ProgressRing
-            complete={completeness.completePriced}
-            total={completeness.enabledPriced}
-          />
+          {!openEnabled ? (
+            <button
+              type="button"
+              onClick={() => toggleService(openService)}
+              className="shrink-0 text-xs font-semibold text-brand-600 hover:text-brand-700"
+            >
+              Turn on
+            </button>
+          ) : null}
         </div>
 
-        {!completeness.ready && completeness.warnings.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="rounded-2xl border border-amber-200/80 bg-amber-50/90 px-4 py-3 text-sm text-amber-950"
+        <div className="px-4 py-4">
+          {!openEnabled ? (
+            <p className="text-sm text-muted">
+              Off — won&apos;t show in their bubble.
+            </p>
+          ) : (
+            <>
+              {openService === "full_replacement" &&
+                config.services.full_replacement && (
+                  <ReplacementEditor
+                    value={config.services.full_replacement}
+                    onChange={(full_replacement) =>
+                      setConfig((c) => ({
+                        ...c,
+                        services: { ...c.services, full_replacement },
+                      }))
+                    }
+                  />
+                )}
+              {openService === "flat_roof_replacement" &&
+                config.services.flat_roof_replacement && (
+                  <ReplacementEditor
+                    value={config.services.flat_roof_replacement}
+                    onChange={(flat_roof_replacement) =>
+                      setConfig((c) => ({
+                        ...c,
+                        services: { ...c.services, flat_roof_replacement },
+                      }))
+                    }
+                  />
+                )}
+              {openService === "tile_or_slate_repair" &&
+                config.services.tile_or_slate_repair && (
+                  <RepairEditor
+                    value={config.services.tile_or_slate_repair}
+                    onChange={(tile_or_slate_repair) =>
+                      setConfig((c) => ({
+                        ...c,
+                        services: { ...c.services, tile_or_slate_repair },
+                      }))
+                    }
+                  />
+                )}
+              {openService === "gutters_fascias_soffits" &&
+                config.services.gutters_fascias_soffits && (
+                  <RooflineEditor
+                    value={config.services.gutters_fascias_soffits}
+                    onChange={(gutters_fascias_soffits) =>
+                      setConfig((c) => ({
+                        ...c,
+                        services: { ...c.services, gutters_fascias_soffits },
+                      }))
+                    }
+                  />
+                )}
+              {!openMeta.priced ? (
+                <p className="text-sm text-muted">
+                  Homeowners who pick this leave details for a call-back. No
+                  instant estimate.
+                </p>
+              ) : null}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Footer: save + collapsed company options */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <button
+            type="button"
+            onClick={() => setShowMore((v) => !v)}
+            className="text-xs font-medium text-muted hover:text-ink"
           >
-            <p className="font-semibold">On this call, still to finish</p>
-            <ul className="mt-1.5 space-y-0.5 text-amber-900/90">
-              {completeness.warnings.slice(0, 3).map((w) => (
-                <li key={w}>— {w}</li>
-              ))}
-            </ul>
-          </motion.div>
-        )}
-
-        {/* Split: services rail + editor */}
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)] lg:gap-5">
-          <aside className="space-y-2">
-            <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
-              Services
-            </p>
-            <div className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
-              {SERVICE_CATALOG.map((s, idx) => {
-                const enabled = config.enabledServices.includes(s.key);
-                const active = openService === s.key;
-                return (
-                  <motion.div
-                    key={s.key}
-                    layout
-                    className={[
-                      "min-w-[220px] rounded-2xl border p-3 transition-colors lg:min-w-0",
-                      active
-                        ? "border-brand-500 bg-white shadow-[var(--shadow-soft)]"
-                        : "border-transparent bg-white/60 hover:border-line hover:bg-white",
-                      !enabled ? "opacity-70" : "",
-                    ].join(" ")}
-                  >
-                    <div className="flex items-start gap-2.5">
-                      <button
-                        type="button"
-                        onClick={() => setOpenService(s.key)}
-                        className="min-w-0 flex-1 text-left"
-                      >
-                        <span className="flex items-center gap-2">
-                          <span
-                            className={[
-                              "grid h-6 w-6 shrink-0 place-items-center rounded-lg text-[11px] font-bold",
-                              active
-                                ? "bg-brand-600 text-white"
-                                : "bg-black/[0.05] text-muted",
-                            ].join(" ")}
-                          >
-                            {idx + 1}
-                          </span>
-                          <span className="truncate text-sm font-semibold text-ink">
-                            {s.label}
-                          </span>
-                        </span>
-                        <span className="mt-1 block pl-8 text-xs leading-snug text-muted">
-                          {s.priced ? s.description : "Callback only"}
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={enabled}
-                        aria-label={`${enabled ? "Disable" : "Enable"} ${s.label}`}
-                        onClick={() => toggleService(s.key)}
-                        className={[
-                          "relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors",
-                          enabled ? "bg-brand-600" : "bg-black/[0.1]",
-                        ].join(" ")}
-                      >
-                        <span
-                          className={[
-                            "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform",
-                            enabled ? "translate-x-5" : "translate-x-0.5",
-                          ].join(" ")}
-                        />
-                      </button>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </aside>
-
-          <div className="overflow-hidden rounded-[24px] border border-line/80 bg-white shadow-[var(--shadow-soft)]">
-            <div className="border-b border-line bg-gradient-to-r from-brand-50/80 via-white to-white px-5 py-4 sm:px-6">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={openService}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-600">
-                    {openEnabled ? "Editing" : "Off for this bubble"}
-                  </p>
-                  <h3 className="font-display mt-1 text-xl font-semibold tracking-tight text-ink">
-                    {openMeta.label}
-                  </h3>
-                  <p className="mt-1 text-sm text-ink-soft">
-                    {openEnabled
-                      ? openMeta.priced
-                        ? "Set only what this service needs — leave the rest alone."
-                        : "No rates. Homeowners who pick this become a callback lead."
-                      : "Toggle this service on in the list to configure it."}
-                  </p>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-
-            <div className="px-5 py-5 sm:px-6 sm:py-6">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={`${openService}-${openEnabled}`}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  {!openEnabled ? (
-                    <div className="flex flex-col items-start gap-3 rounded-2xl border border-dashed border-line bg-black/[0.015] px-5 py-8">
-                      <p className="text-sm text-ink-soft">
-                        This job won’t appear in their quote bubble until you
-                        turn it on.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => toggleService(openService)}
-                        className="btn-primary rounded-full px-4 py-2 text-sm font-semibold"
-                      >
-                        Enable {openMeta.label}
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      {openService === "full_replacement" &&
-                        config.services.full_replacement && (
-                          <ReplacementEditor
-                            value={config.services.full_replacement}
-                            onChange={(full_replacement) =>
-                              setConfig((c) => ({
-                                ...c,
-                                services: { ...c.services, full_replacement },
-                              }))
-                            }
-                          />
-                        )}
-                      {openService === "flat_roof_replacement" &&
-                        config.services.flat_roof_replacement && (
-                          <ReplacementEditor
-                            value={config.services.flat_roof_replacement}
-                            onChange={(flat_roof_replacement) =>
-                              setConfig((c) => ({
-                                ...c,
-                                services: {
-                                  ...c.services,
-                                  flat_roof_replacement,
-                                },
-                              }))
-                            }
-                          />
-                        )}
-                      {openService === "tile_or_slate_repair" &&
-                        config.services.tile_or_slate_repair && (
-                          <RepairEditor
-                            value={config.services.tile_or_slate_repair}
-                            onChange={(tile_or_slate_repair) =>
-                              setConfig((c) => ({
-                                ...c,
-                                services: {
-                                  ...c.services,
-                                  tile_or_slate_repair,
-                                },
-                              }))
-                            }
-                          />
-                        )}
-                      {openService === "gutters_fascias_soffits" &&
-                        config.services.gutters_fascias_soffits && (
-                          <RooflineEditor
-                            value={config.services.gutters_fascias_soffits}
-                            onChange={(gutters_fascias_soffits) =>
-                              setConfig((c) => ({
-                                ...c,
-                                services: {
-                                  ...c.services,
-                                  gutters_fascias_soffits,
-                                },
-                              }))
-                            }
-                          />
-                        )}
-                      {!openMeta.priced && (
-                        <p className="text-sm leading-relaxed text-ink-soft">
-                          Perfect for leaks and odd jobs — they leave details,
-                          you call back. No instant estimate.
-                        </p>
-                      )}
-                    </>
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          </div>
-        </div>
-
-        {/* Company options + save */}
-        <div className="rounded-[24px] border border-line/80 bg-white/90 p-5 shadow-[var(--shadow-soft)] sm:p-6">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div className="grid flex-1 gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl border border-line px-3 py-2">
-                <Switch
+            {showMore ? "Hide company options" : "Company options"}
+          </button>
+          {showMore ? (
+            <div className="mt-3 max-w-lg space-y-3">
+              <label className="flex items-center justify-between gap-3">
+                <span className="text-sm text-ink">VAT registered</span>
+                <TinySwitch
                   checked={config.vatRegistered}
                   label="VAT registered"
-                  hint="Quotes shown ex VAT"
                   onChange={(vatRegistered) =>
                     setConfig((c) => ({ ...c, vatRegistered }))
                   }
                 />
-              </div>
+              </label>
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-ink-soft">
-                  Confidence band{" "}
-                  <span className="text-muted">(optional)</span>
+                <label className="mb-1 block text-xs text-muted">
+                  Quote range width (optional, e.g. 0.12 = ±12%)
                 </label>
                 <input
                   type="text"
                   inputMode="decimal"
-                  className="field w-full rounded-xl px-3 py-2.5 text-sm text-ink outline-none"
-                  placeholder="e.g. 0.12 for ±12%"
+                  className="field h-9 w-full max-w-[12rem] rounded-lg px-2.5 text-sm outline-none"
+                  placeholder="Default"
                   value={
                     config.confidenceWidth == null
                       ? ""
@@ -895,32 +726,32 @@ export default function QuoteConfigEditor({
                   }}
                 />
               </div>
-              {showOrigins && (
-                <div className="sm:col-span-2">
-                  <label className="mb-1.5 block text-xs font-medium text-ink-soft">
-                    Allowed embed sites{" "}
-                    <span className="text-muted">(one per line; blank = anywhere)</span>
+              {showOrigins ? (
+                <div>
+                  <label className="mb-1 block text-xs text-muted">
+                    Allowed embed sites (one per line; blank = anywhere)
                   </label>
                   <textarea
                     rows={2}
-                    className="field w-full rounded-xl px-3 py-2.5 text-sm text-ink outline-none"
+                    className="field w-full rounded-lg px-2.5 py-2 text-sm outline-none"
                     placeholder="https://ridgewayroofing.co.uk"
                     value={originsText}
                     onChange={(e) => setOriginsText(e.target.value)}
                   />
                 </div>
-              )}
+              ) : null}
             </div>
-            <button
-              type="button"
-              disabled={saving}
-              onClick={() => void handleSave()}
-              className="btn-primary shrink-0 rounded-full px-7 py-3 text-sm font-semibold shadow-[0_12px_28px_-12px_rgba(31,87,240,0.7)] disabled:opacity-60"
-            >
-              {saving ? "Saving…" : "Save bubble pricing"}
-            </button>
-          </div>
+          ) : null}
         </div>
+
+        <button
+          type="button"
+          disabled={saving}
+          onClick={() => void handleSave()}
+          className="btn-primary shrink-0 rounded-lg px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
+        >
+          {saving ? "Saving…" : "Save"}
+        </button>
       </div>
 
       <Toast
