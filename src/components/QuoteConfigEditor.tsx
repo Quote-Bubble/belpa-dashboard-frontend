@@ -850,68 +850,71 @@ export default function QuoteConfigEditor({
 
   return (
     <div className="-mx-1 sm:-mx-0">
-      {/* Two equal-height cards; content vertically centred in each */}
-      <div className="grid items-stretch gap-5 lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)] lg:gap-6">
-        <aside className="flex flex-col justify-center overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(10,11,13,0.04)]">
-          <div className="w-full">
-            <div className="border-b border-line px-5 py-5">
-              <h2 className="text-lg font-semibold tracking-tight text-ink">
-                Services
-              </h2>
-              <p className="mt-1 text-sm text-muted">
-                Turn on the services this company offers.
-              </p>
-            </div>
-            <ul>
-              {SERVICE_CATALOG.map((s) => {
-                const enabled = config.enabledServices.includes(s.key);
-                const active = openService === s.key;
-                return (
-                  <li key={s.key}>
-                    <div
-                      className={[
-                        "relative flex items-center gap-3 border-b border-line px-4 py-3.5 last:border-b-0",
-                        active ? "bg-brand-50/70" : "hover:bg-black/[0.015]",
-                      ].join(" ")}
-                    >
-                      {active ? (
-                        <span
-                          aria-hidden
-                          className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-brand-600"
-                        />
-                      ) : null}
-                      <button
-                        type="button"
-                        onClick={() => selectService(s.key)}
-                        className="flex min-w-0 flex-1 items-center gap-3 text-left"
-                      >
-                        <ServiceIcon service={s.key} />
-                        <span className="min-w-0">
-                          <span className="block truncate text-[14px] font-semibold text-ink">
-                            {s.label}
-                          </span>
-                          {!s.priced ? (
-                            <span className="mt-0.5 block text-[11px] text-muted">
-                              Callback only
-                            </span>
-                          ) : null}
-                        </span>
-                      </button>
-                      <IosSwitch
-                        checked={enabled}
-                        label={`${enabled ? "Disable" : "Enable"} ${s.label}`}
-                        onChange={() => toggleService(s.key)}
-                      />
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
+      {/*
+        Flex + items-stretch makes both columns the same height.
+        Gap between editor and company stays. Buttons sit below so
+        Services bottom lines up with Company settings bottom.
+      */}
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-stretch">
+        <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(10,11,13,0.04)] lg:w-[340px]">
+          <div className="border-b border-line px-5 py-5">
+            <h2 className="text-lg font-semibold tracking-tight text-ink">
+              Services
+            </h2>
+            <p className="mt-1 text-sm text-muted">
+              Turn on the services this company offers.
+            </p>
           </div>
+          <ul>
+            {SERVICE_CATALOG.map((s) => {
+              const enabled = config.enabledServices.includes(s.key);
+              const active = openService === s.key;
+              return (
+                <li key={s.key}>
+                  <div
+                    className={[
+                      "relative flex items-center gap-3 border-b border-line px-4 py-3.5 last:border-b-0",
+                      active ? "bg-brand-50/70" : "hover:bg-black/[0.015]",
+                    ].join(" ")}
+                  >
+                    {active ? (
+                      <span
+                        aria-hidden
+                        className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-brand-600"
+                      />
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => selectService(s.key)}
+                      className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                    >
+                      <ServiceIcon service={s.key} />
+                      <span className="min-w-0">
+                        <span className="block truncate text-[14px] font-semibold text-ink">
+                          {s.label}
+                        </span>
+                        {!s.priced ? (
+                          <span className="mt-0.5 block text-[11px] text-muted">
+                            Callback only
+                          </span>
+                        ) : null}
+                      </span>
+                    </button>
+                    <IosSwitch
+                      checked={enabled}
+                      label={`${enabled ? "Disable" : "Enable"} ${s.label}`}
+                      onChange={() => toggleService(s.key)}
+                    />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+          <div className="min-h-0 flex-1" aria-hidden />
         </aside>
 
-        <section className="flex min-w-0 flex-col justify-center overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(10,11,13,0.04)]">
-          <div className="w-full">
+        <div className="flex min-w-0 flex-1 flex-col gap-5">
+          <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(10,11,13,0.04)]">
             <div className="border-b border-line px-5 py-5 sm:px-6">
               <div className="flex items-center gap-3.5">
                 <ServiceIcon service={openService} large />
@@ -929,169 +932,169 @@ export default function QuoteConfigEditor({
                 </div>
               </div>
             </div>
-
             {serviceBody}
+            <div className="min-h-0 flex-1" aria-hidden />
+          </section>
 
-            <div className="border-t border-line">
-              <button
-                type="button"
-                onClick={() => setCompanyOpen((v) => !v)}
-                className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left sm:px-6"
-                aria-expanded={companyOpen}
+          <section className="shrink-0 overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(10,11,13,0.04)]">
+            <button
+              type="button"
+              onClick={() => setCompanyOpen((v) => !v)}
+              className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left sm:px-6"
+              aria-expanded={companyOpen}
+            >
+              <div className="min-w-0">
+                <h3 className="text-base font-semibold text-ink">
+                  Company settings
+                </h3>
+                <p className="mt-0.5 text-[13px] text-muted">
+                  VAT, quote range
+                  {showOrigins ? ", embed sites" : ""}
+                </p>
+              </div>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 12 12"
+                className={[
+                  "shrink-0 text-muted transition-transform",
+                  companyOpen ? "rotate-180" : "",
+                ].join(" ")}
+                aria-hidden
               >
-                <div className="min-w-0">
-                  <h3 className="text-base font-semibold text-ink">
-                    Company settings
-                  </h3>
-                  <p className="mt-0.5 text-[13px] text-muted">
-                    VAT, quote range
-                    {showOrigins ? ", embed sites" : ""}
-                  </p>
-                </div>
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 12 12"
-                  className={[
-                    "shrink-0 text-muted transition-transform",
-                    companyOpen ? "rotate-180" : "",
-                  ].join(" ")}
-                  aria-hidden
-                >
-                  <path
-                    d="M2.5 4.5 L6 8 L9.5 4.5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    fill="none"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </button>
-              {companyOpen ? (
-                <div className="grid gap-4 border-t border-line px-5 py-5 sm:px-6 lg:grid-cols-[1fr_200px]">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between gap-3 rounded-xl border border-line px-3.5 py-3">
+                <path
+                  d="M2.5 4.5 L6 8 L9.5 4.5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  fill="none"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+            {companyOpen ? (
+              <div className="grid gap-4 border-t border-line px-5 py-5 sm:px-6 lg:grid-cols-[1fr_200px]">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-line px-3.5 py-3">
+                    <div>
+                      <p className="text-[14px] font-medium text-ink">
+                        VAT registered
+                      </p>
+                      <p className="text-[12px] text-muted">
+                        Quotes shown ex VAT
+                      </p>
+                    </div>
+                    <IosSwitch
+                      checked={config.vatRegistered}
+                      label="VAT registered"
+                      onChange={(vatRegistered) =>
+                        setConfig((c) => ({ ...c, vatRegistered }))
+                      }
+                    />
+                  </div>
+                  <div className="rounded-xl border border-line px-3.5 py-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <p className="text-[14px] font-medium text-ink">
-                          VAT registered
+                          Quote range width
                         </p>
                         <p className="text-[12px] text-muted">
-                          Quotes shown ex VAT
+                          Optional · how wide the £ range is
                         </p>
                       </div>
-                      <IosSwitch
-                        checked={config.vatRegistered}
-                        label="VAT registered"
-                        onChange={(vatRegistered) =>
-                          setConfig((c) => ({ ...c, vatRegistered }))
-                        }
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          className="h-10 w-20 rounded-xl border border-line px-3 text-[15px] tabular-nums text-ink outline-none focus:border-brand-400"
+                          placeholder="Auto"
+                          value={
+                            config.confidenceWidth == null
+                              ? ""
+                              : String(config.confidenceWidth)
+                          }
+                          onChange={(e) => {
+                            const v = e.target.value.trim();
+                            if (v === "") {
+                              setConfig((c) => ({
+                                ...c,
+                                confidenceWidth: null,
+                              }));
+                              return;
+                            }
+                            const n = Number(v);
+                            if (Number.isFinite(n) && n >= 0 && n <= 0.5) {
+                              setConfig((c) => ({
+                                ...c,
+                                confidenceWidth: n,
+                              }));
+                            }
+                          }}
+                        />
+                        <span className="text-[13px] font-medium text-muted">
+                          {config.confidenceWidth != null
+                            ? `±${Math.round(config.confidenceWidth * 100)}%`
+                            : "±%"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  {showOrigins ? (
+                    <div className="rounded-xl border border-line px-3.5 py-3">
+                      <p className="text-[14px] font-medium text-ink">
+                        Allowed embed sites
+                      </p>
+                      <p className="mb-2 text-[12px] text-muted">
+                        One per line · blank = anywhere
+                      </p>
+                      <textarea
+                        rows={2}
+                        className="w-full rounded-xl border border-line px-3 py-2 text-sm text-ink outline-none focus:border-brand-400"
+                        placeholder="https://ridgewayroofing.co.uk"
+                        value={originsText}
+                        onChange={(e) => setOriginsText(e.target.value)}
                       />
                     </div>
-                    <div className="rounded-xl border border-line px-3.5 py-3">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <p className="text-[14px] font-medium text-ink">
-                            Quote range width
-                          </p>
-                          <p className="text-[12px] text-muted">
-                            Optional · how wide the £ range is
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            inputMode="decimal"
-                            className="h-10 w-20 rounded-xl border border-line px-3 text-[15px] tabular-nums text-ink outline-none focus:border-brand-400"
-                            placeholder="Auto"
-                            value={
-                              config.confidenceWidth == null
-                                ? ""
-                                : String(config.confidenceWidth)
-                            }
-                            onChange={(e) => {
-                              const v = e.target.value.trim();
-                              if (v === "") {
-                                setConfig((c) => ({
-                                  ...c,
-                                  confidenceWidth: null,
-                                }));
-                                return;
-                              }
-                              const n = Number(v);
-                              if (Number.isFinite(n) && n >= 0 && n <= 0.5) {
-                                setConfig((c) => ({
-                                  ...c,
-                                  confidenceWidth: n,
-                                }));
-                              }
-                            }}
-                          />
-                          <span className="text-[13px] font-medium text-muted">
-                            {config.confidenceWidth != null
-                              ? `±${Math.round(config.confidenceWidth * 100)}%`
-                              : "±%"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    {showOrigins ? (
-                      <div className="rounded-xl border border-line px-3.5 py-3">
-                        <p className="text-[14px] font-medium text-ink">
-                          Allowed embed sites
-                        </p>
-                        <p className="mb-2 text-[12px] text-muted">
-                          One per line · blank = anywhere
-                        </p>
-                        <textarea
-                          rows={2}
-                          className="w-full rounded-xl border border-line px-3 py-2 text-sm text-ink outline-none focus:border-brand-400"
-                          placeholder="https://ridgewayroofing.co.uk"
-                          value={originsText}
-                          onChange={(e) => setOriginsText(e.target.value)}
-                        />
-                      </div>
-                    ) : null}
-                  </div>
-                  <div className="rounded-xl border border-line bg-[#f7f8fa] px-3.5 py-3.5">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">
-                      Pricing status
-                    </p>
-                    <p className="mt-2 text-[13px] leading-snug text-ink-soft">
-                      {completeness.enabledPriced === 0
-                        ? "Enable a priced service to get started."
-                        : completeness.ready
-                          ? "All enabled services have rates set."
-                          : `${missingCount} service${missingCount === 1 ? "" : "s"} still need rates.`}
-                    </p>
-                  </div>
+                  ) : null}
                 </div>
-              ) : null}
-            </div>
+                <div className="rounded-xl border border-line bg-[#f7f8fa] px-3.5 py-3.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">
+                    Pricing status
+                  </p>
+                  <p className="mt-2 text-[13px] leading-snug text-ink-soft">
+                    {completeness.enabledPriced === 0
+                      ? "Enable a priced service to get started."
+                      : completeness.ready
+                        ? "All enabled services have rates set."
+                        : `${missingCount} service${missingCount === 1 ? "" : "s"} still need rates.`}
+                  </p>
+                </div>
+              </div>
+            ) : null}
+          </section>
+        </div>
+      </div>
 
-            <div className="flex justify-end gap-2 border-t border-line px-5 py-4 sm:px-6">
-              {previewUrl ? (
-                <a
-                  href={previewUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-4 py-2.5 text-[13px] font-semibold text-brand-600 hover:bg-brand-50"
-                >
-                  Preview
-                  <ExternalIcon />
-                </a>
-              ) : null}
-              <button
-                type="button"
-                disabled={saving || !dirty}
-                onClick={() => void handleSave()}
-                className="inline-flex items-center gap-2 rounded-full bg-brand-600 px-4 py-2.5 text-[13px] font-semibold text-white disabled:opacity-45"
-              >
-                <SaveIcon />
-                {saving ? "Saving…" : dirty ? "Save" : "Saved"}
-              </button>
-            </div>
-          </div>
-        </section>
+      <div className="mt-5 flex justify-end gap-2">
+        {previewUrl ? (
+          <a
+            href={previewUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-4 py-2.5 text-[13px] font-semibold text-brand-600 hover:bg-brand-50"
+          >
+            Preview
+            <ExternalIcon />
+          </a>
+        ) : null}
+        <button
+          type="button"
+          disabled={saving || !dirty}
+          onClick={() => void handleSave()}
+          className="inline-flex items-center gap-2 rounded-full bg-brand-600 px-4 py-2.5 text-[13px] font-semibold text-white disabled:opacity-45"
+        >
+          <SaveIcon />
+          {saving ? "Saving…" : dirty ? "Save" : "Saved"}
+        </button>
       </div>
 
       <Toast
