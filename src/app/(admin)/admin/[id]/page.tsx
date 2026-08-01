@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 
 import DeployStatusControl from "@/components/admin/DeployStatusControl";
-import DeleteRooferButton from "@/components/admin/DeleteRooferButton";
 import RooferHubTabs, {
   type RooferHubTab,
 } from "@/components/admin/RooferHubTabs";
@@ -149,6 +148,7 @@ export default async function RooferDetailPage({
     setupBody = (
       <div className="mx-auto max-w-3xl">
         <RooferPanel
+          rooferId={roofer.id}
           install={{
             slug: roofer.slug,
             button: buttonSnippet(roofer.slug),
@@ -170,13 +170,6 @@ export default async function RooferDetailPage({
           updateAction={updateRoofer.bind(null, roofer.id)}
           linkAction={linkRooferLogin.bind(null, roofer.id)}
         />
-
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 px-1">
-          <p className="text-xs text-muted">
-            Deleting removes their leads and pricing too.
-          </p>
-          <DeleteRooferButton id={roofer.id} name={roofer.name} />
-        </div>
       </div>
     );
   }
@@ -190,14 +183,11 @@ export default async function RooferDetailPage({
         ← Roofers
       </Link>
 
-      <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
           {roofer.name}
         </h1>
-        <div className="flex flex-col items-start gap-1.5 sm:items-end">
-          <span className="text-xs font-medium text-muted">Deploy status</span>
-          <DeployStatusControl id={roofer.id} status={roofer.deploy_status} />
-        </div>
+        <DeployStatusControl id={roofer.id} status={roofer.deploy_status} />
       </div>
 
       <RooferHubTabs

@@ -6,9 +6,9 @@ import { QRCodeCanvas } from "qrcode.react";
 type Method = "button" | "widget" | "link";
 
 const HINTS: Record<Method, string> = {
-  button: "A button anywhere on their site opens the quote flow fullscreen.",
-  widget: "Drops the quote flow into the page, already expanded.",
-  link: "Share over WhatsApp, in a Google Business Profile, or as a QR — no website needed.",
+  button: "Opens the quote flow fullscreen from a button.",
+  widget: "Embeds the quote flow inline on the page.",
+  link: "Hosted page — WhatsApp, GBP, or QR. No website needed.",
 };
 
 const TABS: { value: Method; label: string }[] = [
@@ -105,16 +105,16 @@ export default function InstallSnippets({
         </div>
       </div>
 
-      <p className="mt-2.5 text-xs text-muted">{HINTS[tab]}</p>
+      <p className="mt-2 text-xs text-muted">{HINTS[tab]}</p>
 
-      <pre className="mt-2 overflow-x-auto rounded-xl bg-[#0f172a] px-4 py-3 text-[12.5px] leading-relaxed text-[#e2e8f0]">
+      <pre className="mt-2 overflow-x-auto rounded-xl bg-[#0f172a] px-3.5 py-2.5 text-[12px] leading-relaxed text-[#e2e8f0]">
         <code>{code}</code>
       </pre>
 
       {tab === "link" && (
         <div
           ref={qrRef}
-          className="mt-3 flex items-center gap-4 rounded-xl border border-line bg-white p-4"
+          className="mt-3 flex items-center gap-3 rounded-xl border border-line bg-white p-3"
         >
           <QRCodeCanvas
             value={link}
@@ -123,18 +123,14 @@ export default function InstallSnippets({
             bgColor="#ffffff"
             fgColor="#0a0b0d"
             level="M"
-            className="h-[104px] w-[104px] shrink-0 rounded-lg"
+            className="h-20 w-20 shrink-0 rounded-lg"
           />
           <div className="min-w-0">
             <p className="text-sm font-semibold text-ink">QR code</p>
-            <p className="mb-2 text-xs text-muted">
-              For a van, flyers, or a Google Business Profile — scans straight to
-              their quote page.
-            </p>
             <button
               type="button"
               onClick={downloadQr}
-              className="btn-ghost rounded-full px-3 py-1.5 text-xs font-semibold"
+              className="mt-1.5 btn-ghost rounded-full px-3 py-1.5 text-xs font-semibold"
             >
               Download PNG
             </button>

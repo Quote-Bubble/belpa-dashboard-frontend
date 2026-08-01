@@ -3,14 +3,16 @@
 import { useState } from "react";
 
 import InstallSnippets from "@/components/admin/InstallSnippets";
+import RooferMoreMenu from "@/components/admin/RooferMoreMenu";
 
 const field =
   "field w-full px-3 py-2.5 text-sm text-ink outline-none placeholder:text-muted";
 const label = "mb-1.5 block text-xs font-medium text-ink-soft";
 
-type Tab = "install" | "details" | "access";
+type Tab = "details" | "install" | "access";
 
 type Props = {
+  rooferId: string;
   install: {
     slug: string;
     button: string;
@@ -30,10 +32,11 @@ type Props = {
 };
 
 /**
- * Setup panel for a roofer workspace: details, install snippets, and login
- * access. Quotes / Jobs live as sibling hub tabs outside this card.
+ * Setup panel: profile, install snippets, logins — with destructive actions
+ * tucked into the ⋯ menu.
  */
 export default function RooferPanel({
+  rooferId,
   install,
   details,
   members,
@@ -53,45 +56,39 @@ export default function RooferPanel({
 
   return (
     <section className="surface overflow-hidden rounded-2xl">
-      {/* Tab bar */}
-      <div className="flex gap-1 border-b border-line px-3 pt-2">
-        {tabs.map((t) => {
-          const active = tab === t.id;
-          return (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setTab(t.id)}
-              className={[
-                "relative px-3.5 py-3 text-sm font-semibold transition-colors",
-                active ? "text-ink" : "text-muted hover:text-ink",
-              ].join(" ")}
-            >
-              {t.label}
-              {active && (
-                <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-brand-600" />
-              )}
-            </button>
-          );
-        })}
+      <div className="flex items-end justify-between gap-2 border-b border-line px-2 pt-1.5 sm:px-3">
+        <div className="flex min-w-0 gap-0.5 overflow-x-auto">
+          {tabs.map((t) => {
+            const active = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setTab(t.id)}
+                className={[
+                  "relative shrink-0 px-3 py-3 text-sm font-semibold transition-colors",
+                  active ? "text-ink" : "text-muted hover:text-ink",
+                ].join(" ")}
+              >
+                {t.label}
+                {active && (
+                  <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-brand-600" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <div className="mb-1.5 shrink-0">
+          <RooferMoreMenu id={rooferId} name={details.name} />
+        </div>
       </div>
 
-      <div className="p-5">
-        {tab === "install" && (
-          <InstallSnippets
-            slug={install.slug}
-            button={install.button}
-            widget={install.widget}
-            link={install.link}
-            preview={install.preview}
-          />
-        )}
-
+      <div className="p-4 sm:p-5">
         {tab === "details" && (
           <form action={updateAction} className="grid gap-3 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <label className={label} htmlFor="name">
-                Company name
+                Company
               </label>
               <input
                 id="name"
@@ -145,14 +142,20 @@ export default function RooferPanel({
           </form>
         )}
 
+        {tab === "install" && (
+          <InstallSnippets
+            slug={install.slug}
+            button={install.button}
+            widget={install.widget}
+            link={install.link}
+            preview={install.preview}
+          />
+        )}
+
         {tab === "access" && (
-          <div>
-            <p className="mb-3 max-w-prose text-sm text-ink-soft">
-              Link the roofer’s login (the email they signed up with) so they
-              see their own leads.
-            </p>
+          <div className="space-y-3">
             {members.length > 0 ? (
-              <ul className="mb-3 flex flex-wrap gap-2">
+              <ul className="flex flex-wrap gap-2">
                 {members.map((m) => (
                   <li
                     key={m.email}
@@ -163,7 +166,7 @@ export default function RooferPanel({
                 ))}
               </ul>
             ) : (
-              <p className="mb-3 text-xs text-muted">No logins linked yet.</p>
+              <p className="text-sm text-muted">No logins linked yet.</p>
             )}
             <form
               action={linkAction}
@@ -178,9 +181,9 @@ export default function RooferPanel({
               />
               <button
                 type="submit"
-                className="btn-ghost shrink-0 rounded-full px-4 py-2.5 text-sm font-semibold"
+                className="btn-primary shrink-0 rounded-full px-4 py-2.5 text-sm font-semibold"
               >
-                Link login
+                Link
               </button>
             </form>
           </div>
