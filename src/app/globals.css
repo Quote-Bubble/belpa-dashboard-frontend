@@ -175,6 +175,175 @@ body {
   background-size: 22px 22px;
 }
 
+/* —— Auth screens (login / signup): "satellite aurora" ——
+   A living brand-blue aurora, faint roof-plan blueprint lines (a nod to what
+   Quoter measures), and a crisp giant wordmark that DISSOLVES into the wash via
+   a gradient text-clip — a sharp mark that fades, not a soft one that looks
+   low-res. */
+.auth-bg {
+  background:
+    radial-gradient(
+      115% 80% at 50% -12%,
+      #ffffff 0%,
+      #eef4ff 34%,
+      rgba(238, 244, 255, 0) 62%
+    ),
+    linear-gradient(180deg, #f3f7ff 0%, #c7d9ff 54%, #8fb2ff 100%);
+}
+
+/* Drifting aurora blobs. The blur lives on the layer, so each blob stays a soft
+   wash of colour — fine to blur, unlike text. */
+.auth-aurora {
+  filter: blur(56px);
+}
+.auth-blob {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.55;
+  will-change: transform;
+}
+.auth-blob-1 {
+  width: 46vw;
+  height: 46vw;
+  left: -6vw;
+  top: -10vw;
+  background: radial-gradient(circle, rgba(122, 168, 255, 0.85), transparent 68%);
+  animation: auth-drift-1 26s ease-in-out infinite;
+}
+.auth-blob-2 {
+  width: 54vw;
+  height: 54vw;
+  right: -12vw;
+  bottom: -16vw;
+  background: radial-gradient(circle, rgba(47, 107, 255, 0.7), transparent 66%);
+  animation: auth-drift-2 32s ease-in-out infinite;
+}
+.auth-blob-3 {
+  width: 40vw;
+  height: 40vw;
+  left: 34vw;
+  top: 22vh;
+  background: radial-gradient(circle, rgba(79, 139, 255, 0.55), transparent 70%);
+  animation: auth-drift-3 30s ease-in-out infinite;
+}
+@keyframes auth-drift-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(6vw, 5vh) scale(1.12); }
+}
+@keyframes auth-drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-5vw, -4vh) scale(1.1); }
+}
+@keyframes auth-drift-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-5vw, 6vh) scale(0.9); }
+}
+
+/* Giant wordmark, grounded at the page bottom, letters bleeding off both edges.
+   The dissolve is FLIPPED — solid at the floor, evaporating UPWARD into the
+   aurora — so it reads as the brand condensing out of the wash. The card floats
+   above and its lower edge grazes the fading crown for depth. */
+.auth-echo {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  /* Tiny lift off the very bottom. */
+  padding-bottom: clamp(0.5rem, 2vh, 1.75rem);
+}
+.auth-echo-word {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(4.5rem, 23vw, 18rem);
+  line-height: 0.78;
+  letter-spacing: -0.05em;
+  /* Seat it right at the bottom edge. */
+  margin-bottom: -0.05em;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.9) 55%,
+    rgba(255, 255, 255, 0.5) 80%,
+    rgba(255, 255, 255, 0.12) 94%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* Soft top glow so the card sits in a luminous pocket. */
+.auth-glow {
+  background: radial-gradient(58% 80% at 50% 0%, rgba(255, 255, 255, 0.7), transparent 72%);
+}
+
+/* —— On-load choreography ——
+   A crescendo: the aurora blooms open, the wordmark rises from below, then the
+   card lands last (the thing you actually use). Offset, single-take, no bounce.
+   The drift keyframes take back over once the intro finishes. */
+@keyframes auth-bloom {
+  from {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes auth-word-rise {
+  from {
+    opacity: 0;
+    transform: translateY(64px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes auth-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.965);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes auth-glow-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.auth-aurora {
+  animation: auth-bloom 1.5s var(--ease-out-soft) both;
+}
+.auth-glow {
+  animation: auth-glow-in 1.6s ease both;
+}
+.auth-echo-word {
+  animation: auth-word-rise 1.15s var(--ease-out-expo) 0.2s both;
+}
+.auth-card {
+  animation: auth-card-in 0.8s var(--ease-out-expo) 0.42s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-blob,
+  .auth-aurora,
+  .auth-glow,
+  .auth-echo-word,
+  .auth-card {
+    animation: none;
+  }
+}
+
 /* Frosted control toolbar (filters + search) — solid tint (no blur) for speed */
 .toolbar {
   background: rgba(250, 250, 251, 0.92);

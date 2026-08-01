@@ -5,19 +5,31 @@ export default function AuthLayout({
 }) {
   return (
     <div className="relative flex min-h-dvh items-center justify-center overflow-hidden px-4">
-      {/* Soft brand backdrop, echoing the app canvas */}
+      {/* Branded aurora wash */}
+      <div className="auth-bg pointer-events-none absolute inset-0 -z-40" aria-hidden />
       <div
-        className="dot-grid pointer-events-none absolute inset-0 -z-10"
+        className="auth-aurora pointer-events-none absolute inset-0 -z-30 overflow-hidden"
         aria-hidden
-      />
+      >
+        <div className="auth-blob auth-blob-1" />
+        <div className="auth-blob auth-blob-2" />
+        <div className="auth-blob auth-blob-3" />
+      </div>
+
+      {/* Faint dot texture */}
+      <div className="dot-grid pointer-events-none absolute inset-0 -z-20 opacity-60" aria-hidden />
+
+      {/* Giant wordmark, grounded at the bottom, evaporating upward */}
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[380px]"
-        style={{
-          background:
-            "radial-gradient(60% 100% at 50% 0%, rgba(79,139,255,0.14), transparent 70%)",
-        }}
+        className="auth-echo pointer-events-none absolute inset-0 -z-20 overflow-hidden"
         aria-hidden
-      />
+      >
+        <span className="auth-echo-word">Quoter</span>
+      </div>
+
+      {/* Soft top glow so the card sits in a luminous pocket */}
+      <div className="auth-glow pointer-events-none absolute inset-x-0 top-0 -z-10 h-[420px]" aria-hidden />
+
       {children}
     </div>
   );
