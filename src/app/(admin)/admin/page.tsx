@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import PageHeader from "@/components/PageHeader";
-import AddRooferForm from "@/components/admin/AddRooferForm";
+import AddRoofer from "@/components/admin/AddRoofer";
 import DeployBadge from "@/components/admin/DeployBadge";
 import { createClient } from "@/lib/supabase/server";
 import type { RooferAdminRow } from "@/lib/types";
@@ -19,7 +19,6 @@ export default async function AdminFleetPage() {
     .order("created_at", { ascending: false });
   const rows = (data ?? []) as RooferAdminRow[];
 
-  // Lead tally per roofer (admins can read all leads).
   const { data: leadRows } = await supabase.from("leads").select("roofer_id");
   const counts = new Map<string, number>();
   (leadRows ?? []).forEach((l) => {
@@ -31,73 +30,80 @@ export default async function AdminFleetPage() {
     <div>
       <PageHeader
         title="Roofers"
-        subtitle={`${rows.length} on Quoter · manage deployment`}
+        subtitle={`${rows.length} on Quoter · ${
+          rows.filter((r) => r.deploy_status === "live").length
+        } live`}
       />
 
-      {/* Provision */}
-      <div className="surface mb-6 rounded-2xl p-5">
-        <p className="mb-3 text-sm font-semibold text-ink">Add a roofer</p>
-        <AddRooferForm />
-      </div>
+      <AddRoofer />
 
-      {/* Fleet */}
       <div className="surface overflow-hidden rounded-2xl">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-sm">
-            <thead>
-              <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
-                <th className="px-5 py-3 font-semibold">Roofer</th>
-                <th className="px-5 py-3 font-semibold">Website</th>
-                <th className="px-5 py-3 font-semibold">Deploy</th>
-                <th className="px-5 py-3 text-right font-semibold">Leads</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr
-                  key={r.id}
-                  className="group border-b border-line/70 last:border-0 hover:bg-black/[0.02]"
-                >
-                  <td className="px-5 py-3">
-                    <Link href={`/admin/${r.id}`} className="block">
-                      <span className="font-semibold text-ink group-hover:text-brand-700">
+        {rows.length === 0 ? (
+          <p className="px-5 py-14 text-center text-sm text-muted">
+            No roofers yet — add your first one above.
+          </p>
+        ) : (
+          <ul className="divide-y divide-line/70">
+            {rows.map((r) => {
+              const leads = counts.get(r.id) ?? 0;
+              return (
+                <li key={r.id}>
+                  <Link
+                    href={`/admin/${r.id}`}
+                    className="group flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-black/[0.02] sm:gap-4 sm:px-5"
+                  >
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-b from-brand-400 to-brand-600 text-sm font-semibold text-white">
+                      {r.name.charAt(0).toUpperCase()}
+                    </span>
+
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-semibold text-ink group-hover:text-brand-700">
                         {r.name}
                       </span>
-                      <span className="block font-mono text-xs text-muted">
+                      <span className="block truncate font-mono text-xs text-muted">
                         /{r.slug}
                       </span>
-                    </Link>
-                  </td>
-                  <td className="px-5 py-3 text-ink-soft">
-                    {r.website ? (
-                      <span className="truncate">
-                        {r.website.replace(/^https?:\/\//, "")}
-                      </span>
-                    ) : (
-                      <span className="text-muted">—</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-3">
+                    </span>
+
+                    <span className="hidden max-w-[200px] truncate text-sm text-ink-soft lg:block">
+                      {r.website ? (
+                        r.website.replace(/^https?:\/\//, "")
+                      ) : (
+                        <span className="text-muted">no site</span>
+                      )}
+                    </span>
+
                     <DeployBadge status={r.deploy_status} />
-                  </td>
-                  <td className="px-5 py-3 text-right tabular-nums text-ink-soft">
-                    {counts.get(r.id) ?? 0}
-                  </td>
-                </tr>
-              ))}
-              {rows.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-5 py-10 text-center text-sm text-muted"
-                  >
-                    No roofers yet — add your first one above.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+
+                    <span className="w-20 shrink-0 text-right text-sm text-ink-soft">
+                      <span className="font-semibold tabular-nums text-ink">
+                        {leads}
+                      </span>{" "}
+                      <span className="hidden text-xs text-muted sm:inline">
+                        lead{leads === 1 ? "" : "s"}
+                      </span>
+                    </span>
+
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="shrink-0 text-line transition-colors group-hover:text-muted"
+                      aria-hidden
+                    >
+                      <path d="M9 6l6 6-6 6" />
+                    </svg>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
     </div>
   );
