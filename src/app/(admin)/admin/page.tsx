@@ -56,13 +56,8 @@ export default async function AdminFleetPage() {
                       {r.name.charAt(0).toUpperCase()}
                     </span>
 
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-semibold text-ink group-hover:text-brand-700">
-                        {r.name}
-                      </span>
-                      <span className="block truncate font-mono text-xs text-muted">
-                        {r.slug}
-                      </span>
+                    <span className="min-w-0 flex-1 truncate font-semibold text-ink group-hover:text-brand-700">
+                      {r.name}
                     </span>
 
                     <span className="hidden max-w-[200px] truncate text-sm text-ink-soft lg:block">
