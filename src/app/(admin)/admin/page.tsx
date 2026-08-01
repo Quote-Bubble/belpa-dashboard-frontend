@@ -61,16 +61,12 @@ export default async function AdminFleetPage() {
                         {r.name}
                       </span>
                       <span className="block truncate font-mono text-xs text-muted">
-                        /{r.slug}
+                        {r.slug}
                       </span>
                     </span>
 
                     <span className="hidden max-w-[200px] truncate text-sm text-ink-soft lg:block">
-                      {r.website ? (
-                        r.website.replace(/^https?:\/\//, "")
-                      ) : (
-                        <span className="text-muted">no site</span>
-                      )}
+                      {r.website ? r.website.replace(/^https?:\/\//, "") : null}
                     </span>
 
                     <DeployBadge status={r.deploy_status} />
