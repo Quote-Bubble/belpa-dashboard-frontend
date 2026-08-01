@@ -19,7 +19,7 @@ export default function DeleteRooferButton({
       <button
         type="button"
         onClick={() => setConfirming(true)}
-        className="rounded-full border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+        className="text-sm font-medium text-red-600 transition-colors hover:text-red-700 hover:underline"
       >
         Delete roofer
       </button>
@@ -32,7 +32,7 @@ export default function DeleteRooferButton({
         Delete <span className="font-semibold text-ink">{name}</span> and all
         their leads? This can’t be undone.
       </p>
-      <div className="flex gap-2">
+      <div className="flex shrink-0 gap-2">
         <button
           type="button"
           onClick={() => setConfirming(false)}
