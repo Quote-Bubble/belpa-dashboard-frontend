@@ -51,7 +51,7 @@ function IosSwitch({
       }}
       className={[
         "relative h-[31px] w-[51px] shrink-0 rounded-full transition-colors duration-200 ease-out",
-        checked ? "bg-[#34c759]" : "bg-[#e9e9eb]",
+        checked ? "bg-brand-600" : "bg-[#e9e9eb]",
       ].join(" ")}
     >
       <span
