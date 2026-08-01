@@ -718,11 +718,6 @@ export default function QuoteConfigEditor({
     selectService(key);
   };
 
-  const discard = () => {
-    setConfig(baseline);
-    setOriginsText(originsBaseline);
-  };
-
   const handleSave = async () => {
     setSaving(true);
     const supabase = createClient();
@@ -775,7 +770,7 @@ export default function QuoteConfigEditor({
   );
 
   return (
-    <div className="-mx-1 pb-28 sm:-mx-0">
+    <div className="-mx-1 sm:-mx-0">
       <div className="grid gap-5 lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)] lg:gap-6">
         {/* Services rail */}
         <aside className="overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(10,11,13,0.04)]">
@@ -837,33 +832,20 @@ export default function QuoteConfigEditor({
         {/* Main column */}
         <div className="space-y-5">
           <section className="overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(10,11,13,0.04)]">
-            <div className="flex flex-wrap items-start justify-between gap-4 border-b border-line px-5 py-5 sm:px-6">
-              <div className="flex min-w-0 items-start gap-3.5">
-                <ServiceIcon service={openService} large />
-                <div className="min-w-0">
-                  <h2 className="text-xl font-semibold tracking-tight text-ink">
-                    {openMeta.label}
-                  </h2>
-                  <p className="mt-1 text-sm text-muted">
-                    {openEnabled
-                      ? openMeta.priced
-                        ? openMeta.description
-                        : "Callback only — no rates to set"
-                      : "Off for this bubble"}
-                  </p>
-                </div>
+            <div className="flex items-start gap-3.5 border-b border-line px-5 py-5 sm:px-6">
+              <ServiceIcon service={openService} large />
+              <div className="min-w-0">
+                <h2 className="text-xl font-semibold tracking-tight text-ink">
+                  {openMeta.label}
+                </h2>
+                <p className="mt-1 text-sm text-muted">
+                  {openEnabled
+                    ? openMeta.priced
+                      ? openMeta.description
+                      : "Callback only — no rates to set"
+                    : "Off for this bubble"}
+                </p>
               </div>
-              {previewUrl ? (
-                <a
-                  href={previewUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3.5 py-2 text-[13px] font-semibold text-brand-600 hover:bg-brand-50"
-                >
-                  View as roofer
-                  <ExternalIcon />
-                </a>
-              ) : null}
             </div>
 
             {!openEnabled ? (
@@ -1088,70 +1070,27 @@ export default function QuoteConfigEditor({
         </div>
       </div>
 
-      {/* Sticky footer action bar */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/95 backdrop-blur-md md:left-64">
-        <div className="mx-auto flex max-w-[1400px] flex-col gap-3 px-5 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-8 xl:px-10">
-          <div className="flex min-w-0 items-start gap-2.5">
-            {!completeness.ready && completeness.enabledPriced > 0 ? (
-              <>
-                <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand-100 text-[11px] font-bold text-brand-700">
-                  i
-                </span>
-                <div>
-                  <p className="text-sm font-semibold text-ink">
-                    You&apos;re not done yet
-                  </p>
-                  <p className="text-[13px] text-muted">
-                    {missingCount} service
-                    {missingCount === 1 ? " is" : "s are"} enabled but missing
-                    rates
-                    {completeness.warnings[0]
-                      ? ` · ${completeness.warnings[0]}`
-                      : ""}
-                  </p>
-                </div>
-              </>
-            ) : (
-              <p className="text-sm text-muted">
-                {dirty
-                  ? "You have unsaved changes."
-                  : completeness.ready
-                    ? "Ready to go live with these rates."
-                    : "Turn on services and set their rates."}
-              </p>
-            )}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {previewUrl ? (
-              <a
-                href={previewUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3.5 py-2 text-[13px] font-semibold text-brand-600 hover:bg-brand-50"
-              >
-                Preview quote bubble
-                <ExternalIcon />
-              </a>
-            ) : null}
-            <button
-              type="button"
-              disabled={!dirty || saving}
-              onClick={discard}
-              className="rounded-full border border-line bg-white px-3.5 py-2 text-[13px] font-semibold text-ink disabled:opacity-40"
-            >
-              Discard changes
-            </button>
-            <button
-              type="button"
-              disabled={saving || !dirty}
-              onClick={() => void handleSave()}
-              className="inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-2 text-[13px] font-semibold text-white shadow-[0_8px_20px_-8px_rgba(31,87,240,0.65)] disabled:opacity-50"
-            >
-              <SaveIcon />
-              {saving ? "Saving…" : "Save pricing"}
-            </button>
-          </div>
-        </div>
+      <div className="pointer-events-none fixed bottom-6 right-5 z-40 flex flex-col items-end gap-2.5 sm:bottom-8 sm:right-8">
+        {previewUrl ? (
+          <a
+            href={previewUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-line bg-white px-4 py-3 text-[14px] font-semibold text-brand-600 shadow-[0_10px_30px_-8px_rgba(10,11,13,0.28)] hover:bg-brand-50"
+          >
+            Preview
+            <ExternalIcon />
+          </a>
+        ) : null}
+        <button
+          type="button"
+          disabled={saving || !dirty}
+          onClick={() => void handleSave()}
+          className="pointer-events-auto inline-flex items-center gap-2 rounded-full bg-brand-600 px-5 py-3 text-[14px] font-semibold text-white shadow-[0_12px_32px_-8px_rgba(31,87,240,0.75)] disabled:opacity-45"
+        >
+          <SaveIcon />
+          {saving ? "Saving…" : dirty ? "Save" : "Saved"}
+        </button>
       </div>
 
       <Toast
