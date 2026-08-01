@@ -771,9 +771,10 @@ export default function QuoteConfigEditor({
 
   return (
     <div className="-mx-1 sm:-mx-0">
-      <div className="grid items-start gap-5 lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)] lg:gap-6">
-        <aside className="overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(10,11,13,0.04)]">
-          <div className="border-b border-line px-5 py-5">
+      {/* Equal-height columns: cards grow via empty fill, content stays top + full-width */}
+      <div className="grid items-stretch gap-5 lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)] lg:gap-6">
+        <aside className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(10,11,13,0.04)]">
+          <div className="shrink-0 border-b border-line px-5 py-5">
             <h2 className="text-lg font-semibold tracking-tight text-ink">
               Services
             </h2>
@@ -781,7 +782,7 @@ export default function QuoteConfigEditor({
               Turn on the services this company offers.
             </p>
           </div>
-          <ul>
+          <ul className="shrink-0">
             {SERVICE_CATALOG.map((s) => {
               const enabled = config.enabledServices.includes(s.key);
               const active = openService === s.key;
@@ -826,117 +827,125 @@ export default function QuoteConfigEditor({
               );
             })}
           </ul>
+          {/* Fills remaining card height — does not stretch rows */}
+          <div className="min-h-0 flex-1" aria-hidden />
         </aside>
 
-        <div className="flex min-w-0 flex-col gap-5">
-          <section className="overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(10,11,13,0.04)]">
-            <div className="flex items-start gap-3.5 border-b border-line px-5 py-5 sm:px-6">
-              <ServiceIcon service={openService} large />
-              <div className="min-w-0">
-                <h2 className="text-xl font-semibold tracking-tight text-ink">
-                  {openMeta.label}
-                </h2>
-                <p className="mt-1 text-sm text-muted">
-                  {openEnabled
-                    ? openMeta.priced
-                      ? openMeta.description
-                      : "Callback only — no rates to set"
-                    : "Off for this bubble"}
-                </p>
+        <div className="flex h-full min-w-0 flex-col gap-5">
+          <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(10,11,13,0.04)]">
+            <div className="shrink-0 border-b border-line px-5 py-5 sm:px-6">
+              <div className="flex items-start gap-3.5">
+                <ServiceIcon service={openService} large />
+                <div className="min-w-0">
+                  <h2 className="text-xl font-semibold tracking-tight text-ink">
+                    {openMeta.label}
+                  </h2>
+                  <p className="mt-1 text-sm text-muted">
+                    {openEnabled
+                      ? openMeta.priced
+                        ? openMeta.description
+                        : "Callback only — no rates to set"
+                      : "Off for this bubble"}
+                  </p>
+                </div>
               </div>
             </div>
 
-            {!openEnabled ? (
-              <div className="flex flex-col items-start gap-3 px-5 py-10 sm:px-6">
-                <p className="text-sm text-muted">
-                  This job won&apos;t appear in their quote bubble until you
-                  turn it on.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => toggleService(openService)}
-                  className="rounded-full bg-brand-600 px-4 py-2 text-sm font-semibold text-white"
-                >
-                  Turn on {openMeta.label}
-                </button>
-              </div>
-            ) : !openMeta.priced ? (
-              <div className="px-5 py-8 text-sm leading-relaxed text-muted sm:px-6">
-                Homeowners who pick this leave details for a call-back. No
-                instant estimate.
-              </div>
-            ) : (
-              <>
-                {openService === "full_replacement" &&
-                  config.services.full_replacement && (
-                    <ReplacementSections
-                      value={config.services.full_replacement}
-                      openSection={openSection}
-                      onSection={toggleSection}
-                      onChange={(full_replacement) =>
-                        setConfig((c) => ({
-                          ...c,
-                          services: { ...c.services, full_replacement },
-                        }))
-                      }
-                    />
-                  )}
-                {openService === "flat_roof_replacement" &&
-                  config.services.flat_roof_replacement && (
-                    <ReplacementSections
-                      value={config.services.flat_roof_replacement}
-                      openSection={openSection}
-                      onSection={toggleSection}
-                      onChange={(flat_roof_replacement) =>
-                        setConfig((c) => ({
-                          ...c,
-                          services: {
-                            ...c.services,
-                            flat_roof_replacement,
-                          },
-                        }))
-                      }
-                    />
-                  )}
-                {openService === "tile_or_slate_repair" &&
-                  config.services.tile_or_slate_repair && (
-                    <RepairSections
-                      value={config.services.tile_or_slate_repair}
-                      openSection={openSection}
-                      onSection={toggleSection}
-                      onChange={(tile_or_slate_repair) =>
-                        setConfig((c) => ({
-                          ...c,
-                          services: {
-                            ...c.services,
-                            tile_or_slate_repair,
-                          },
-                        }))
-                      }
-                    />
-                  )}
-                {openService === "gutters_fascias_soffits" &&
-                  config.services.gutters_fascias_soffits && (
-                    <RooflineSections
-                      value={config.services.gutters_fascias_soffits}
-                      openSection={openSection}
-                      onSection={toggleSection}
-                      onChange={(gutters_fascias_soffits) =>
-                        setConfig((c) => ({
-                          ...c,
-                          services: {
-                            ...c.services,
-                            gutters_fascias_soffits,
-                          },
-                        }))
-                      }
-                    />
-                  )}
-              </>
-            )}
+            <div className="shrink-0">
+              {!openEnabled ? (
+                <div className="flex flex-col items-start gap-3 px-5 py-10 sm:px-6">
+                  <p className="text-sm text-muted">
+                    This job won&apos;t appear in their quote bubble until you
+                    turn it on.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => toggleService(openService)}
+                    className="rounded-full bg-brand-600 px-4 py-2 text-sm font-semibold text-white"
+                  >
+                    Turn on {openMeta.label}
+                  </button>
+                </div>
+              ) : !openMeta.priced ? (
+                <div className="px-5 py-8 text-sm leading-relaxed text-muted sm:px-6">
+                  Homeowners who pick this leave details for a call-back. No
+                  instant estimate.
+                </div>
+              ) : (
+                <>
+                  {openService === "full_replacement" &&
+                    config.services.full_replacement && (
+                      <ReplacementSections
+                        value={config.services.full_replacement}
+                        openSection={openSection}
+                        onSection={toggleSection}
+                        onChange={(full_replacement) =>
+                          setConfig((c) => ({
+                            ...c,
+                            services: { ...c.services, full_replacement },
+                          }))
+                        }
+                      />
+                    )}
+                  {openService === "flat_roof_replacement" &&
+                    config.services.flat_roof_replacement && (
+                      <ReplacementSections
+                        value={config.services.flat_roof_replacement}
+                        openSection={openSection}
+                        onSection={toggleSection}
+                        onChange={(flat_roof_replacement) =>
+                          setConfig((c) => ({
+                            ...c,
+                            services: {
+                              ...c.services,
+                              flat_roof_replacement,
+                            },
+                          }))
+                        }
+                      />
+                    )}
+                  {openService === "tile_or_slate_repair" &&
+                    config.services.tile_or_slate_repair && (
+                      <RepairSections
+                        value={config.services.tile_or_slate_repair}
+                        openSection={openSection}
+                        onSection={toggleSection}
+                        onChange={(tile_or_slate_repair) =>
+                          setConfig((c) => ({
+                            ...c,
+                            services: {
+                              ...c.services,
+                              tile_or_slate_repair,
+                            },
+                          }))
+                        }
+                      />
+                    )}
+                  {openService === "gutters_fascias_soffits" &&
+                    config.services.gutters_fascias_soffits && (
+                      <RooflineSections
+                        value={config.services.gutters_fascias_soffits}
+                        openSection={openSection}
+                        onSection={toggleSection}
+                        onChange={(gutters_fascias_soffits) =>
+                          setConfig((c) => ({
+                            ...c,
+                            services: {
+                              ...c.services,
+                              gutters_fascias_soffits,
+                            },
+                          }))
+                        }
+                      />
+                    )}
+                </>
+              )}
+            </div>
+            {/* Extra card height sits below content, not between rows */}
+            <div className="min-h-0 flex-1" aria-hidden />
           </section>
 
-          <section className="overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(10,11,13,0.04)]">
+          <section className="shrink-0 overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(10,11,13,0.04)]">
             <button
               type="button"
               onClick={() => setCompanyOpen((v) => !v)}
@@ -1072,7 +1081,7 @@ export default function QuoteConfigEditor({
             ) : null}
           </section>
 
-          <div className="flex justify-end gap-2">
+          <div className="flex shrink-0 justify-end gap-2">
             {previewUrl ? (
               <a
                 href={previewUrl}
