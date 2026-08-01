@@ -183,7 +183,6 @@ function AccordionRow({
   icon,
   title,
   subtitle,
-  badge,
   children,
 }: {
   open: boolean;
@@ -191,7 +190,6 @@ function AccordionRow({
   icon: React.ReactNode;
   title: string;
   subtitle: string;
-  badge: string;
   children: React.ReactNode;
 }) {
   return (
@@ -211,27 +209,24 @@ function AccordionRow({
           </span>
           <span className="mt-0.5 block text-[13px] text-muted">{subtitle}</span>
         </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-black/[0.04] px-2.5 py-1 text-[12px] font-semibold text-ink-soft">
-          {badge}
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 12 12"
-            className={[
-              "text-muted transition-transform",
-              open ? "rotate-180" : "",
-            ].join(" ")}
-            aria-hidden
-          >
-            <path
-              d="M2.5 4.5 L6 8 L9.5 4.5"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              fill="none"
-              strokeLinecap="round"
-            />
-          </svg>
-        </span>
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 12 12"
+          className={[
+            "shrink-0 text-muted transition-transform",
+            open ? "rotate-180" : "",
+          ].join(" ")}
+          aria-hidden
+        >
+          <path
+            d="M2.5 4.5 L6 8 L9.5 4.5"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            fill="none"
+            strokeLinecap="round"
+          />
+        </svg>
       </button>
       {open ? (
         <div className="border-t border-line bg-[#fafbfc] px-5 py-5 sm:px-6">
@@ -650,12 +645,6 @@ function ExtrasEditor({
   );
 }
 
-function accessBadge(access: AccessPolicy): string {
-  return (
-    ACCESS_OPTIONS.find((o) => o.value === access.mode)?.label ?? "Access"
-  );
-}
-
 export default function QuoteConfigEditor({
   rooferId,
   initial,
@@ -692,7 +681,6 @@ export default function QuoteConfigEditor({
     JSON.stringify(config) !== JSON.stringify(baseline) ||
     originsText !== originsBaseline;
 
-  const enabledCount = config.enabledServices.length;
   const openMeta = SERVICE_CATALOG.find((s) => s.key === openService)!;
   const openEnabled = config.enabledServices.includes(openService);
 
@@ -844,11 +832,6 @@ export default function QuoteConfigEditor({
               );
             })}
           </ul>
-          <div className="border-t border-line px-5 py-3.5">
-            <p className="text-[13px] font-semibold text-brand-600">
-              {enabledCount} of {SERVICE_CATALOG.length} services enabled
-            </p>
-          </div>
         </aside>
 
         {/* Main column */}
@@ -983,38 +966,24 @@ export default function QuoteConfigEditor({
                   {showOrigins ? ", embed sites" : ""}
                 </p>
               </div>
-              <span className="inline-flex items-center gap-2">
-                <span
-                  className={[
-                    "rounded-full px-2.5 py-1 text-[12px] font-bold tabular-nums",
-                    completeness.ready
-                      ? "bg-emerald-100 text-emerald-800"
-                      : "bg-amber-100 text-amber-900",
-                  ].join(" ")}
-                >
-                  {completeness.enabledPriced === 0
-                    ? "—"
-                    : `${completeness.completePriced}/${completeness.enabledPriced}`}
-                </span>
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 12 12"
-                  className={[
-                    "text-muted transition-transform",
-                    companyOpen ? "rotate-180" : "",
-                  ].join(" ")}
-                  aria-hidden
-                >
-                  <path
-                    d="M2.5 4.5 L6 8 L9.5 4.5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    fill="none"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </span>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 12 12"
+                className={[
+                  "shrink-0 text-muted transition-transform",
+                  companyOpen ? "rotate-180" : "",
+                ].join(" ")}
+                aria-hidden
+              >
+                <path
+                  d="M2.5 4.5 L6 8 L9.5 4.5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  fill="none"
+                  strokeLinecap="round"
+                />
+              </svg>
             </button>
             {companyOpen ? (
               <div className="grid gap-4 border-t border-line px-5 py-5 sm:px-6 lg:grid-cols-[1fr_200px]">
@@ -1205,13 +1174,6 @@ function ReplacementSections({
   openSection: OpenSection;
   onSection: (id: SectionId) => void;
 }) {
-  const enabledMats = value.materials.filter((m) => m.enabled).length;
-  const extrasOn =
-    1 +
-    (value.includeSkip ? 1 : 0) +
-    (value.includeGutters ? 1 : 0) +
-    (value.includeChimneyAllowance ? 1 : 0);
-
   return (
     <>
       <AccordionRow
@@ -1220,7 +1182,6 @@ function ReplacementSections({
         icon={<LayersIcon />}
         title="Coverings"
         subtitle="Choose materials and set your rates"
-        badge={`${enabledMats} material${enabledMats === 1 ? "" : "s"}`}
       >
         <MaterialList
           materials={value.materials}
@@ -1233,7 +1194,6 @@ function ReplacementSections({
         icon={<SparkIcon />}
         title="Extras"
         subtitle="Strip-off, skip hire, gutters, chimney"
-        badge={`${extrasOn} extras`}
       >
         <ExtrasEditor value={value} onChange={onChange} />
       </AccordionRow>
@@ -1243,7 +1203,6 @@ function ReplacementSections({
         icon={<LadderIcon />}
         title="Access"
         subtitle="How they get on the roof"
-        badge={accessBadge(value.access)}
       >
         <AccessEditor
           value={value.access}
@@ -1265,7 +1224,6 @@ function RepairSections({
   openSection: OpenSection;
   onSection: (id: SectionId) => void;
 }) {
-  const enabledMats = value.materials.filter((m) => m.enabled).length;
   return (
     <>
       <AccordionRow
@@ -1274,7 +1232,6 @@ function RepairSections({
         icon={<LayersIcon />}
         title="Coverings"
         subtitle="Choose materials and set your rates"
-        badge={`${enabledMats} material${enabledMats === 1 ? "" : "s"}`}
       >
         <MaterialList
           materials={value.materials}
@@ -1287,7 +1244,6 @@ function RepairSections({
         icon={<LadderIcon />}
         title="Access"
         subtitle="How they get on the roof"
-        badge={accessBadge(value.access)}
       >
         <AccessEditor
           value={value.access}
@@ -1317,7 +1273,6 @@ function RooflineSections({
         icon={<LayersIcon />}
         title="Linear rates"
         subtitle="Gutters, fascias and soffits"
-        badge="2 rates"
       >
         <div className="space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-white px-4 py-3.5">
@@ -1350,7 +1305,6 @@ function RooflineSections({
         icon={<LadderIcon />}
         title="Access"
         subtitle="How they get on the roof"
-        badge={accessBadge(value.access)}
       >
         <AccessEditor
           value={value.access}
