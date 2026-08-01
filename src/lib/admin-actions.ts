@@ -91,6 +91,20 @@ export async function deleteRoofer(id: string) {
   redirect("/admin");
 }
 
+/** Link a roofer's login (by the email they signed up with) so they see their
+ *  leads. Uses an admin-gated security-definer function — no service role. */
+export async function linkRooferLogin(id: string, formData: FormData) {
+  if (!(await isAdmin())) return;
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email) return;
+  const supabase = await createClient();
+  await supabase.rpc("admin_link_user_to_roofer", {
+    p_roofer_id: id,
+    p_email: email,
+  });
+  revalidatePath(`/admin/${id}`);
+}
+
 /** Edit a roofer's identity + contact details. */
 export async function updateRoofer(id: string, formData: FormData) {
   if (!(await isAdmin())) return;

@@ -4,8 +4,10 @@ import { notFound } from "next/navigation";
 import DeployStatusControl from "@/components/admin/DeployStatusControl";
 import DeleteRooferButton from "@/components/admin/DeleteRooferButton";
 import InstallSnippets from "@/components/admin/InstallSnippets";
+import AdminPricingEditor from "@/components/admin/AdminPricingEditor";
 import { createClient } from "@/lib/supabase/server";
-import { updateRoofer } from "@/lib/admin-actions";
+import { getPricing } from "@/lib/pricing";
+import { linkRooferLogin, updateRoofer } from "@/lib/admin-actions";
 import {
   buttonSnippet,
   hostedLink,
@@ -36,6 +38,13 @@ export default async function RooferDetailPage({
 
   if (!data) notFound();
   const roofer = data as RooferAdminRow;
+
+  const { data: memberRows } = await supabase.rpc("admin_roofer_members", {
+    p_roofer_id: roofer.id,
+  });
+  const members = (memberRows ?? []) as { email: string }[];
+
+  const pricing = await getPricing(roofer.id);
   const added = new Date(roofer.created_at).toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
@@ -147,6 +156,57 @@ export default async function RooferDetailPage({
           </form>
         </section>
       </div>
+
+      {/* Pricing — their own rates drive their widget's quotes */}
+      <section className="surface mt-6 rounded-2xl p-5">
+        <h2 className="mb-1 text-sm font-semibold text-ink">Pricing</h2>
+        <p className="mb-4 text-sm text-ink-soft">
+          Set this roofer’s own rates — their widget prices quotes from these
+          instead of the defaults. Leave as-is to keep the standard model.
+        </p>
+        <AdminPricingEditor rooferId={roofer.id} initial={pricing} />
+      </section>
+
+      {/* Access — link the roofer's login so they see their leads */}
+      <section className="surface mt-6 rounded-2xl p-5">
+        <h2 className="mb-1 text-sm font-semibold text-ink">Access</h2>
+        <p className="mb-3 text-sm text-ink-soft">
+          Link the roofer’s login (the email they signed up with) so they see
+          their own leads.
+        </p>
+        {members.length > 0 ? (
+          <ul className="mb-3 flex flex-wrap gap-2">
+            {members.map((m) => (
+              <li
+                key={m.email}
+                className="rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700"
+              >
+                {m.email}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mb-3 text-xs text-muted">No logins linked yet.</p>
+        )}
+        <form
+          action={linkRooferLogin.bind(null, roofer.id)}
+          className="flex flex-col gap-2 sm:flex-row"
+        >
+          <input
+            name="email"
+            type="email"
+            required
+            placeholder="roofer@email.co.uk"
+            className={`${field} sm:max-w-xs`}
+          />
+          <button
+            type="submit"
+            className="btn-ghost rounded-full px-4 py-2.5 text-sm font-semibold"
+          >
+            Link login
+          </button>
+        </form>
+      </section>
 
       {/* Delete — slim inline row, not a giant card */}
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line/80 px-4 py-3">

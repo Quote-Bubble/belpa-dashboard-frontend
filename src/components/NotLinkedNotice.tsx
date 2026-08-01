@@ -6,25 +6,24 @@
  * zero rows. Without this, the dashboard would just look broken/empty.
  */
 export default function NotLinkedNotice({ userId }: { userId: string }) {
+  // userId kept for support diagnostics but no longer shown — linking is by the
+  // email the roofer signed up with, done from the admin console.
+  void userId;
   return (
     <div className="surface rounded-2xl p-6 sm:p-8">
-      <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-amber-50 text-2xl">
-        🔑
+      <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-brand-50 text-2xl">
+        👋
       </div>
       <h2 className="font-display text-xl font-semibold text-ink">
-        Your account isn’t linked to a roofer yet
+        Your dashboard is being set up
       </h2>
       <p className="mt-2 max-w-xl text-sm text-ink-soft">
-        You’re signed in, but this account isn’t a member of any roofing company
-        — so there are no leads to show. Contact support and quote reference{" "}
-        <code className="rounded bg-black/[0.05] px-1 py-0.5 font-mono text-xs">
-          {userId}
-        </code>
-        .
+        You’re all signed in. We’re just connecting your account to your Quoter
+        widget — once that’s done, your leads will land here automatically.
+        Nothing more you need to do.
       </p>
-
       <p className="mt-4 text-sm text-muted">
-        Reload this page once that’s done.
+        Sit tight, or drop us a message if it’s taking a while.
       </p>
     </div>
   );
