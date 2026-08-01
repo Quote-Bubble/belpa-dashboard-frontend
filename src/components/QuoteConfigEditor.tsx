@@ -94,16 +94,20 @@ function TinySwitch({
       role="switch"
       aria-checked={checked}
       aria-label={label}
-      onClick={() => onChange(!checked)}
+      onClick={(e) => {
+        e.stopPropagation();
+        onChange(!checked);
+      }}
       className={[
-        "relative h-5 w-9 shrink-0 rounded-full transition-colors",
+        "relative inline-block h-5 w-9 shrink-0 overflow-hidden rounded-full transition-colors",
         checked ? "bg-brand-600" : "bg-black/[0.12]",
       ].join(" ")}
     >
       <span
+        aria-hidden
         className={[
-          "absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform",
-          checked ? "translate-x-4" : "translate-x-0.5",
+          "pointer-events-none absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-150",
+          checked ? "translate-x-4" : "translate-x-0",
         ].join(" ")}
       />
     </button>
@@ -565,7 +569,7 @@ export default function QuoteConfigEditor({
             <div
               key={s.key}
               className={[
-                "inline-flex items-center gap-1.5 rounded-full border pl-3 pr-1.5 py-1",
+                "inline-flex items-center gap-2 rounded-full border py-1.5 pl-3 pr-2",
                 active
                   ? "border-brand-500 bg-brand-50 text-ink"
                   : "border-line bg-white text-ink-soft hover:border-ink/20",
