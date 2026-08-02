@@ -32,7 +32,9 @@ export default function InstallSnippets({
    *  the hosted page for link. */
   preview: { button: string; widget: string; link: string };
 }) {
-  const [tab, setTab] = useState<Method>("button");
+  // Link-first distribution: every roofer can share immediately; website
+  // embeds are the upsell once they have a site / designer.
+  const [tab, setTab] = useState<Method>("link");
   const [copied, setCopied] = useState(false);
   const qrRef = useRef<HTMLDivElement>(null);
 
