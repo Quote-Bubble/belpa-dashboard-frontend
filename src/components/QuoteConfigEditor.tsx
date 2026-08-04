@@ -4,19 +4,26 @@ import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 
 import {
+  CLEANING_SERVICE_KEYS,
+  ROOFING_SERVICE_KEYS,
   SERVICE_CATALOG,
   assessCompleteness,
   type AccessMode,
   type AccessPolicy,
+  type AreaCleanServiceConfig,
+  type FlatServiceConfig,
   type QuoteConfig,
   type ReplacementServiceConfig,
   type RepairServiceConfig,
   type RooflineServiceConfig,
   type ServiceKey,
+  defaultBiocide,
+  defaultGutterClearing,
   defaultReplacementFlat,
   defaultReplacementPitched,
   defaultRepair,
   defaultRoofline,
+  defaultSoftWash,
 } from "@/lib/quote-config";
 import Toast from "@/components/Toast";
 import { createClient } from "@/lib/supabase/client";
@@ -149,6 +156,65 @@ function MoneyField({
         <span className="shrink-0 text-xs text-muted">{suffix}</span>
       ) : null}
     </label>
+  );
+}
+
+/** Rate editor for an area-priced cleaning service (soft wash / biocide). */
+function CleanAreaSection({
+  value,
+  onChange,
+  rateLabel,
+}: {
+  value: AreaCleanServiceConfig;
+  onChange: (v: AreaCleanServiceConfig) => void;
+  rateLabel: string;
+}) {
+  return (
+    <div className="flex flex-col gap-4 px-5 py-6 sm:px-6">
+      <label className="flex items-center justify-between gap-4">
+        <span className="text-sm text-ink">{rateLabel}</span>
+        <MoneyField
+          value={value.ratePerM2ExVat}
+          suffix="/m²"
+          onChange={(ratePerM2ExVat) => onChange({ ...value, ratePerM2ExVat })}
+        />
+      </label>
+      <label className="flex items-center justify-between gap-4">
+        <span className="text-sm text-ink">Minimum call-out</span>
+        <MoneyField
+          value={value.minCalloutExVat}
+          onChange={(minCalloutExVat) => onChange({ ...value, minCalloutExVat })}
+        />
+      </label>
+      <p className="text-xs leading-relaxed text-muted">
+        Ex-VAT. The homeowner draws their roof and we price the measured area at
+        this rate, never below the minimum.
+      </p>
+    </div>
+  );
+}
+
+/** Rate editor for a flat-price service (gutter clearing). */
+function FlatSection({
+  value,
+  onChange,
+}: {
+  value: FlatServiceConfig;
+  onChange: (v: FlatServiceConfig) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-4 px-5 py-6 sm:px-6">
+      <label className="flex items-center justify-between gap-4">
+        <span className="text-sm text-ink">Flat price</span>
+        <MoneyField
+          value={value.fixedExVat}
+          onChange={(fixedExVat) => onChange({ ...value, fixedExVat })}
+        />
+      </label>
+      <p className="text-xs leading-relaxed text-muted">
+        Ex-VAT. One flat price shown to the homeowner — no measurement needed.
+      </p>
+    </div>
   );
 }
 
@@ -840,6 +906,18 @@ export default function QuoteConfigEditor({
         ) {
           services.gutters_fascias_soffits = defaultRoofline();
         }
+        if (key === "roof_soft_wash" && !services.roof_soft_wash) {
+          services.roof_soft_wash = defaultSoftWash();
+        }
+        if (
+          key === "roof_biocide_treatment" &&
+          !services.roof_biocide_treatment
+        ) {
+          services.roof_biocide_treatment = defaultBiocide();
+        }
+        if (key === "gutter_clearing" && !services.gutter_clearing) {
+          services.gutter_clearing = defaultGutterClearing();
+        }
       }
       return { ...c, enabledServices, services };
     });
@@ -985,6 +1063,42 @@ export default function QuoteConfigEditor({
             }
           />
         )}
+      {openService === "roof_soft_wash" && config.services.roof_soft_wash && (
+        <CleanAreaSection
+          value={config.services.roof_soft_wash}
+          rateLabel="Soft wash rate"
+          onChange={(roof_soft_wash) =>
+            setConfig((c) => ({
+              ...c,
+              services: { ...c.services, roof_soft_wash },
+            }))
+          }
+        />
+      )}
+      {openService === "roof_biocide_treatment" &&
+        config.services.roof_biocide_treatment && (
+          <CleanAreaSection
+            value={config.services.roof_biocide_treatment}
+            rateLabel="Biocide rate"
+            onChange={(roof_biocide_treatment) =>
+              setConfig((c) => ({
+                ...c,
+                services: { ...c.services, roof_biocide_treatment },
+              }))
+            }
+          />
+        )}
+      {openService === "gutter_clearing" && config.services.gutter_clearing && (
+        <FlatSection
+          value={config.services.gutter_clearing}
+          onChange={(gutter_clearing) =>
+            setConfig((c) => ({
+              ...c,
+              services: { ...c.services, gutter_clearing },
+            }))
+          }
+        />
+      )}
     </>
   );
 
@@ -1010,6 +1124,49 @@ export default function QuoteConfigEditor({
               <p className="mt-1 text-sm text-muted">
                 Turn on the services this company offers.
               </p>
+              <div className="mt-3">
+                <p className="mb-1.5 text-xs font-medium text-muted">
+                  Set up as
+                </p>
+                <div className="flex gap-1.5">
+                  {(
+                    [
+                      { label: "Roofing", keys: ROOFING_SERVICE_KEYS },
+                      { label: "Roof cleaning", keys: CLEANING_SERVICE_KEYS },
+                    ] as const
+                  ).map((preset) => {
+                    const active =
+                      preset.keys.every((k) =>
+                        config.enabledServices.includes(k),
+                      ) &&
+                      config.enabledServices.every((k) =>
+                        preset.keys.includes(k),
+                      );
+                    return (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => {
+                          setConfig((c) => ({
+                            ...c,
+                            enabledServices: [...preset.keys],
+                          }));
+                          setOpenService(preset.keys[0]);
+                          setOpenSection(null);
+                        }}
+                        className={[
+                          "rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+                          active
+                            ? "bg-brand-600 text-white"
+                            : "bg-black/[0.04] text-ink-soft hover:bg-black/[0.07]",
+                        ].join(" ")}
+                      >
+                        {preset.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
             <ul>
               {SERVICE_CATALOG.map((s, i) => {
