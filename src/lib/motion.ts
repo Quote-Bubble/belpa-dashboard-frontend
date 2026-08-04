@@ -1,6 +1,6 @@
 import type { Transition, Variants } from "motion/react";
 
-/** Shared with quoter-widget-frontend/lib/motion.ts so the dashboard moves
+/** Shared with belpa-widget-frontend/lib/motion.ts so the dashboard moves
  *  with the same physics as the quote flow. */
 export const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 export const EASE_SOFT = [0.22, 1, 0.36, 1] as const;

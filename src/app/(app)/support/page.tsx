@@ -6,7 +6,7 @@ import PageHeader from "@/components/PageHeader";
 import FaqAccordion from "@/components/FaqAccordion";
 import Toast from "@/components/Toast";
 
-const SUPPORT_EMAIL = "support@quoter.com";
+const SUPPORT_EMAIL = "support@belpa.com";
 
 export default function SupportPage() {
   const [subject, setSubject] = useState("");

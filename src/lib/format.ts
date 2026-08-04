@@ -200,7 +200,7 @@ export function materialLabel(material: string | null | undefined): string {
 }
 
 /* Both of these mirror the wording the customer actually picked in the widget
-   (PROPERTY_TYPE_OPTIONS / STOREY_OPTIONS in quoter-widget-frontend). Falling
+   (PROPERTY_TYPE_OPTIONS / STOREY_OPTIONS in belpa-widget-frontend). Falling
    back to humanise() here loses the hyphen in "Semi-detached", and printing
    the storey band as a digit doesn't match what they were shown. */
 const PROPERTY_TYPE_LABELS: Record<string, string> = {

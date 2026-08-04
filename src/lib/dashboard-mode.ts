@@ -1,6 +1,6 @@
 export type DashboardMode = "quotes" | "jobs";
 
-export const DASHBOARD_MODE_KEY = "quoter.dashboardMode";
+export const DASHBOARD_MODE_KEY = "belpa.dashboardMode";
 
 export function isDashboardMode(value: unknown): value is DashboardMode {
   return value === "quotes" || value === "jobs";

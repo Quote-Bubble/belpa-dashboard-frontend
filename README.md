@@ -1,9 +1,9 @@
-# quoter-dashboard-frontend
+# belpa-dashboard-frontend
 
 Roofer lead dashboard for Belpa. Next.js 16 + Tailwind, reading leads out of
 Supabase under Row Level Security.
 
-Related repos: `quoter-landing`, `quoter-widget-frontend`, `quoter-api-backend`.
+Related repos: `belpa-landing`, `belpa-widget-frontend`, `belpa-api-backend`.
 Database: Supabase project `https://<YOUR_PROJECT_REF>.supabase.co`.
 
 ---
@@ -11,7 +11,7 @@ Database: Supabase project `https://<YOUR_PROJECT_REF>.supabase.co`.
 ## Where this sits
 
 ```
-Widget → POST /api/lead → quoter-api-backend → Supabase `leads`
+Widget → POST /api/lead → belpa-api-backend → Supabase `leads`
                             (service role)          ↑
                                                     │ anon key + user session
                                           This repo ─┘  (RLS scopes the rows)
@@ -41,7 +41,7 @@ and prints the SQL, rather than showing an empty table.
 insert into public.roofer_members (roofer_id, user_id)
 select r.id, '<your-auth-user-uuid>'::uuid
 from public.roofers r
-where r.slug = 'quoter-landing-demo'
+where r.slug = 'belpa-landing-demo'
 on conflict do nothing;
 ```
 
@@ -85,7 +85,7 @@ These are deliberate and surfaced in the UI rather than faked:
   playbook; Account uses the same editor.
 - **Roof markup is partial.** The widget keeps only the largest roof face and
   stores gutter/obstruction *totals*, not positions
-  (`quoter-widget-frontend/lib/quote-flow.ts:532`). So the plan view draws one
+  (`belpa-widget-frontend/lib/quote-flow.ts:532`). So the plan view draws one
   outline, and gutter length / chimney counts appear as figures beside it.
   Replaying the full drawing needs a widget payload change.
 - **No distance or access rating.** Neither is stored anywhere; both were
@@ -93,5 +93,5 @@ These are deliberate and surfaced in the UI rather than faked:
 
 ## Out of scope
 
-Changing `quoter-api-backend` lead persistence, touching the widget, Vercel team
+Changing `belpa-api-backend` lead persistence, touching the widget, Vercel team
 invites, or using the service-role key in this repo.

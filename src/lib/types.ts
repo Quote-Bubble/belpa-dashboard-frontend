@@ -2,7 +2,7 @@
  * Dashboard-facing types.
  *
  * The persisted lead fields mirror the `leads` table (see
- * quoter-backend/lib/leads.ts). Only fields that actually exist on a row are
+ * belpa-backend/lib/leads.ts). Only fields that actually exist on a row are
  * modelled here — if the database doesn't store it, the dashboard doesn't
  * show it.
  */
@@ -50,7 +50,7 @@ export type DashboardLead = {
 // ---------------------------------------------------------------------------
 // leads.payload (jsonb)
 //
-// Mirrors LeadPayload in quoter-backend/lib/types.ts, which is the source of
+// Mirrors LeadPayload in belpa-backend/lib/types.ts, which is the source of
 // truth — the backend stores the widget's payload verbatim. Everything is
 // optional on read: rows written by older widget versions may be missing keys,
 // so treat this as untrusted shape and render "—" rather than inventing values.
@@ -77,7 +77,7 @@ export type LeadPayload = {
     imageryDate?: string | null;
   } | null;
   /** Outline of ONE roof face — the widget keeps only the largest and discards
-   *  the rest (quoter-widget-frontend/lib/quote-flow.ts:532). When the customer
+   *  the rest (belpa-widget-frontend/lib/quote-flow.ts:532). When the customer
    *  never drew, it falls back to a rectangle from the scan bounding box. */
   polygonCoords?: LatLng[] | null;
   /** Centre + zoom of the satellite map the customer drew on. Lets the roof

@@ -55,7 +55,7 @@ export default function InstallSnippets({
     if (!canvas) return;
     const a = document.createElement("a");
     a.href = canvas.toDataURL("image/png");
-    a.download = `quoter-${slug}-qr.png`;
+    a.download = `belpa-${slug}-qr.png`;
     a.click();
   };
 

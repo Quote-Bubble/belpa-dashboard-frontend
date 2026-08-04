@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/client";
 
-const STORAGE_KEY = "quoter:last-seen-new-leads";
+const STORAGE_KEY = "belpa:last-seen-new-leads";
 
 /**
  * Polls for unseen "new" quote requests and shows a nav badge.

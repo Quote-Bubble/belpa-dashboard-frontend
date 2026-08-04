@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Latin-only Inter variable face (matches quoter-landing) */
+/* Latin-only Inter variable face (matches belpa-landing) */
 @font-face {
   font-family: "Inter Variable";
   font-style: normal;
@@ -14,7 +14,7 @@
 @import "@fontsource/poppins/latin-600.css";
 
 /* ---------------------------------------------------------------
-   Belpa design tokens — shared with quoter-landing.
+   Belpa design tokens — shared with belpa-landing.
 ---------------------------------------------------------------- */
 @theme {
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -97,7 +97,7 @@ body {
 }
 
 /* ---------------------------------------------------------------
-   Utility helpers (ported from quoter-landing)
+   Utility helpers (ported from belpa-landing)
 ---------------------------------------------------------------- */
 .font-display {
   font-family: var(--font-display);

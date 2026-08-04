@@ -4,7 +4,7 @@
  * /l and /w are served from).
  *
  * Set NEXT_PUBLIC_WIDGET_ORIGIN to the product domain once DNS is live
- * (e.g. https://quote.getquoter.io). Until then snippets use the Vercel URL.
+ * (e.g. https://quote.getbelpa.io). Until then snippets use the Vercel URL.
  * Prefer /v1/* loader paths so a future breaking change can ship as /v2.
  */
 
@@ -33,7 +33,7 @@ export function previewWidget(slug: string): string {
 
 /** Fullscreen button flow: a button + the launch loader. */
 export function buttonSnippet(slug: string): string {
-  return `<button data-quoter-launch data-roofer="${slug}">Get a free quote</button>
+  return `<button data-belpa-launch data-roofer="${slug}">Get a free quote</button>
 <script src="${LOADER_ROOT}/launch.js" async></script>`;
 }
 
