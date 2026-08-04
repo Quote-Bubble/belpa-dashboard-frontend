@@ -137,6 +137,30 @@ function AdminNav({
       </nav>
 
       <div className="mt-auto">
+        <Link
+          href="/quotes"
+          onClick={onNavigate}
+          className="group mb-2 flex items-center gap-3 rounded-xl bg-brand-50 px-3 py-2.5 text-brand-800 ring-1 ring-brand-100 transition-colors hover:bg-brand-100"
+        >
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/70 text-brand-600">
+            <svg {...iconProps} width={17} height={17} aria-hidden>
+              <path d="M3 10.5 12 4l9 6.5" />
+              <path d="M5 9.5V20h14V9.5" />
+              <path d="M9.5 20v-5h5v5" />
+            </svg>
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold leading-tight">
+              Roofer dashboard
+            </span>
+            <span className="block text-[11px] leading-tight text-brand-700/60">
+              Leads &amp; jobs view
+            </span>
+          </span>
+          <span className="text-brand-500 transition-transform group-hover:translate-x-0.5">
+            →
+          </span>
+        </Link>
         <div className="surface flex items-center gap-3 rounded-xl p-3">
           <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-b from-ink to-black text-sm font-semibold text-white">
             {email?.charAt(0).toUpperCase() ?? "A"}
@@ -146,13 +170,6 @@ function AdminNav({
             <p className="truncate text-xs text-muted">{email ?? ""}</p>
           </div>
         </div>
-        <Link
-          href="/quotes"
-          onClick={onNavigate}
-          className="mt-2 block rounded-xl px-3 py-2 text-sm text-muted transition-colors hover:bg-black/[0.03] hover:text-ink"
-        >
-          View roofer dashboard →
-        </Link>
         <button
           type="button"
           onClick={signOut}

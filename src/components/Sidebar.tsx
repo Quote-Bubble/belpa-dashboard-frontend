@@ -80,10 +80,12 @@ export default function Sidebar({
   onNavigate,
   userEmail,
   roofer,
+  isAdmin = false,
 }: {
   onNavigate?: () => void;
   userEmail?: string | null;
   roofer: RooferProfile | null;
+  isAdmin?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -177,6 +179,31 @@ export default function Sidebar({
 
       {/* Roofer identity */}
       <div className="mt-auto">
+        {isAdmin && (
+          <Link
+            href="/admin"
+            onClick={onNavigate}
+            className="group mb-2 flex items-center gap-3 rounded-xl bg-ink px-3 py-2.5 text-white shadow-sm ring-1 ring-black/5 transition-colors hover:bg-black"
+          >
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/15">
+              <svg {...iconProps} width={17} height={17} aria-hidden>
+                <path d="M12 3 4 6v5c0 4.5 3.2 7.4 8 9 4.8-1.6 8-4.5 8-9V6l-8-3Z" />
+                <path d="m9.2 12 2 2 3.6-3.8" />
+              </svg>
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold leading-tight">
+                Admin console
+              </span>
+              <span className="block text-[11px] leading-tight text-white/55">
+                Manage roofers
+              </span>
+            </span>
+            <span className="text-white/50 transition-transform group-hover:translate-x-0.5">
+              →
+            </span>
+          </Link>
+        )}
         <div className="surface flex items-center gap-3 rounded-xl p-3">
           <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-b from-brand-400 to-brand-600 text-sm font-semibold text-white">
             {roofer?.name.charAt(0) ?? "?"}
