@@ -860,8 +860,11 @@ export default function QuoteConfigEditor({
   const [originsBaseline, setOriginsBaseline] = useState(
     initialOrigins.join("\n"),
   );
-  const [openService, setOpenService] =
-    useState<ServiceKey>("full_replacement");
+  const [openService, setOpenService] = useState<ServiceKey>(
+    CLEANING_SERVICE_KEYS.some((k) => initial.enabledServices.includes(k))
+      ? CLEANING_SERVICE_KEYS[0]
+      : ROOFING_SERVICE_KEYS[0],
+  );
   const [openSection, setOpenSection] = useState<OpenSection>(null);
   const [companyOpen, setCompanyOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -874,6 +877,16 @@ export default function QuoteConfigEditor({
   const dirty =
     JSON.stringify(config) !== JSON.stringify(baseline) ||
     originsText !== originsBaseline;
+
+  // Which niche is this company set up as — only that group's services show.
+  const nicheKeys = CLEANING_SERVICE_KEYS.some((k) =>
+    config.enabledServices.includes(k),
+  )
+    ? CLEANING_SERVICE_KEYS
+    : ROOFING_SERVICE_KEYS;
+  const visibleServices = SERVICE_CATALOG.filter((s) =>
+    nicheKeys.includes(s.key),
+  );
 
   const openMeta = SERVICE_CATALOG.find((s) => s.key === openService)!;
   const openEnabled = config.enabledServices.includes(openService);
@@ -1169,7 +1182,7 @@ export default function QuoteConfigEditor({
               </div>
             </div>
             <ul>
-              {SERVICE_CATALOG.map((s, i) => {
+              {visibleServices.map((s, i) => {
                 const enabled = config.enabledServices.includes(s.key);
                 const active = openService === s.key;
                 return (
