@@ -11,7 +11,7 @@
 /** Origin the widget product is served from. */
 export const WIDGET_ORIGIN =
   process.env.NEXT_PUBLIC_WIDGET_ORIGIN?.replace(/\/+$/, "") ||
-  "https://quoter-widget-frontend.vercel.app";
+  "https://widget.belpa.co.uk";
 
 /** Versioned loader root — bump when the embed contract breaks. */
 const LOADER_ROOT = `${WIDGET_ORIGIN}/v1`;
