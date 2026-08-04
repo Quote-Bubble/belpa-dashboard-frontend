@@ -26,7 +26,7 @@ export default function SupportPage() {
       message.trim(),
       "",
       "—",
-      "Sent from the Quoter dashboard support form.",
+      "Sent from the Belpa dashboard support form.",
     ].join("\n");
 
     const href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(

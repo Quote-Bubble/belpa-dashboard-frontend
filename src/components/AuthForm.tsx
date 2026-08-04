@@ -59,7 +59,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
     <div className="auth-card glass w-full max-w-sm rounded-2xl p-7 shadow-[var(--shadow-float)]">
       <div className="mb-6 text-center">
         <p className="font-display text-2xl font-semibold tracking-tight text-ink">
-          Quoter
+          Belpa
         </p>
         <p className="mt-1 text-sm text-ink-soft">
           {isSignup ? "Create your roofer account" : "Sign in to your dashboard"}
@@ -145,7 +145,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
           </>
         ) : (
           <>
-            New to Quoter?{" "}
+            New to Belpa?{" "}
             <Link href="/signup" className="font-medium text-brand-600">
               Create an account
             </Link>

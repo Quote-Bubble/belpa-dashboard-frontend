@@ -39,7 +39,7 @@ export default function ForgotPasswordPage() {
     <div className="auth-card glass w-full max-w-sm rounded-2xl p-7 shadow-[var(--shadow-float)]">
       <div className="mb-6 text-center">
         <p className="font-display text-2xl font-semibold tracking-tight text-ink">
-          Quoter
+          Belpa
         </p>
         <p className="mt-1 text-sm text-ink-soft">Reset your password</p>
       </div>

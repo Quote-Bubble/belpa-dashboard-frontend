@@ -2,7 +2,7 @@ import PageHeader from "@/components/PageHeader";
 import { getUser } from "@/lib/supabase/server";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "Account — Quoter Admin" };
+export const metadata = { title: "Account — Belpa Admin" };
 
 export default async function AdminAccountPage() {
   const user = await getUser();
@@ -52,7 +52,7 @@ export default async function AdminAccountPage() {
             <p className="truncate text-sm font-semibold text-ink">
               {user?.email}
             </p>
-            <p className="text-xs text-muted">Quoter operator</p>
+            <p className="text-xs text-muted">Belpa operator</p>
           </div>
         </div>
       </div>

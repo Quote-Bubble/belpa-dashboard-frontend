@@ -24,7 +24,7 @@ export default function AuthLayout({
         className="auth-echo pointer-events-none absolute inset-x-0 bottom-0 -z-20 overflow-hidden"
         aria-hidden
       >
-        <span className="auth-echo-word">Quoter</span>
+        <span className="auth-echo-word">Belpa</span>
       </div>
 
       {/* Soft top glow so the card sits in a luminous pocket */}

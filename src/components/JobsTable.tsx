@@ -19,7 +19,7 @@ export type SortKey =
 
 export type SortDir = "asc" | "desc";
 
-/** Jobs lead with where + who up front; the Quoter estimate moves to the detail
+/** Jobs lead with where + who up front; the Belpa estimate moves to the detail
  *  view since the variance chip already carries the accuracy story here. */
 const GRID_TEMPLATE =
   "minmax(200px,1.4fr) minmax(200px,1.5fr) 150px 150px 120px 44px 44px";

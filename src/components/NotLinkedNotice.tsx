@@ -18,7 +18,7 @@ export default function NotLinkedNotice({ userId }: { userId: string }) {
         Your dashboard is being set up
       </h2>
       <p className="mt-2 max-w-xl text-sm text-ink-soft">
-        You’re all signed in. We’re just connecting your account to your Quoter
+        You’re all signed in. We’re just connecting your account to your Belpa
         widget — once that’s done, your leads will land here automatically.
         Nothing more you need to do.
       </p>

@@ -6,7 +6,7 @@ import DeployBadge from "@/components/admin/DeployBadge";
 import { createClient } from "@/lib/supabase/server";
 import type { RooferAdminRow } from "@/lib/types";
 
-export const metadata = { title: "Roofers — Quoter Admin" };
+export const metadata = { title: "Roofers — Belpa Admin" };
 
 export default async function AdminFleetPage() {
   const supabase = await createClient();

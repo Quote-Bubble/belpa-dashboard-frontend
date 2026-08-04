@@ -123,7 +123,7 @@ export default function Sidebar({
         onClick={onNavigate}
         className="font-display px-2 text-2xl font-semibold tracking-tight text-ink"
       >
-        Quoter
+        Belpa
       </Link>
       <p className="mt-1 px-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-600">
         Dashboard

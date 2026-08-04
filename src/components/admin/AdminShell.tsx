@@ -85,7 +85,7 @@ function AdminNav({
         onClick={onNavigate}
         className="font-display px-2 text-2xl font-semibold tracking-tight text-ink"
       >
-        Quoter
+        Belpa
       </Link>
       <p className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-ink px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white ml-2">
         Admin
@@ -210,7 +210,7 @@ export default function AdminShell({
       <header className="glass sticky top-0 z-30 flex items-center justify-between px-4 py-3 md:hidden">
         <span className="flex items-center gap-2">
           <span className="font-display text-xl font-semibold text-ink">
-            Quoter
+            Belpa
           </span>
           <span className="rounded-full bg-ink px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-white">
             Admin

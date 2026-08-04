@@ -1,6 +1,6 @@
 # quoter-dashboard-frontend
 
-Roofer lead dashboard for Quoter. Next.js 16 + Tailwind, reading leads out of
+Roofer lead dashboard for Belpa. Next.js 16 + Tailwind, reading leads out of
 Supabase under Row Level Security.
 
 Related repos: `quoter-landing`, `quoter-widget-frontend`, `quoter-api-backend`.

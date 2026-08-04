@@ -14,7 +14,7 @@
 @import "@fontsource/poppins/latin-600.css";
 
 /* ---------------------------------------------------------------
-   Quoter design tokens — shared with quoter-landing.
+   Belpa design tokens — shared with quoter-landing.
 ---------------------------------------------------------------- */
 @theme {
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -177,7 +177,7 @@ body {
 
 /* —— Auth screens (login / signup): "satellite aurora" ——
    A living brand-blue aurora, faint roof-plan blueprint lines (a nod to what
-   Quoter measures), and a crisp giant wordmark that DISSOLVES into the wash via
+   Belpa measures), and a crisp giant wordmark that DISSOLVES into the wash via
    a gradient text-clip — a sharp mark that fades, not a soft one that looks
    low-res. */
 .auth-bg {

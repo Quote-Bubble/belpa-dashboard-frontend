@@ -6,8 +6,8 @@ type Faq = { q: string; a: string };
 
 const FAQS: Faq[] = [
   {
-    q: "How does Quoter calculate a quote?",
-    a: "When a homeowner enters their address on your website, Quoter measures the roof from satellite imagery and applies the material, labour and access prices you set on the Account page. The estimate that lands here is the range they saw.",
+    q: "How does Belpa calculate a quote?",
+    a: "When a homeowner enters their address on your website, Belpa measures the roof from satellite imagery and applies the material, labour and access prices you set on the Account page. The estimate that lands here is the range they saw.",
   },
   {
     q: "Can I change my prices?",
@@ -18,7 +18,7 @@ const FAQS: Faq[] = [
     a: "It reflects how hard the roof is to work on — pitch, number of roof planes and property type. Difficult roofs usually need more scaffolding and time, so it's a flag to price carefully before you commit.",
   },
   {
-    q: "How do I add Quoter to my website?",
+    q: "How do I add Belpa to my website?",
     a: "We give you a single snippet to paste into your site — or send it to whoever manages it. Once it's in, the quote bubble appears and leads start arriving here. Contact us and we'll walk you through it.",
   },
 ];
