@@ -80,12 +80,9 @@ function AdminNav({
 
   return (
     <div className="flex h-full flex-col px-4 py-6">
-      <Link
-        href="/admin"
-        onClick={onNavigate}
-        className="font-display px-2 text-2xl font-semibold tracking-tight text-ink"
-      >
-        Belpa
+      <Link href="/admin" onClick={onNavigate} className="block px-2">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/belpa-wordmark.png" alt="Belpa" className="h-7 w-auto" />
       </Link>
       <p className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-ink px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white ml-2">
         Admin
@@ -209,9 +206,8 @@ export default function AdminShell({
       {/* Mobile top bar */}
       <header className="glass sticky top-0 z-30 flex items-center justify-between px-4 py-3 md:hidden">
         <span className="flex items-center gap-2">
-          <span className="font-display text-xl font-semibold text-ink">
-            Belpa
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/belpa-wordmark.png" alt="Belpa" className="h-6 w-auto" />
           <span className="rounded-full bg-ink px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-white">
             Admin
           </span>

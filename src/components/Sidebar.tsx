@@ -118,12 +118,9 @@ export default function Sidebar({
   return (
     <div className="flex h-full flex-col px-4 py-6">
       {/* Wordmark */}
-      <Link
-        href={homeHref}
-        onClick={onNavigate}
-        className="font-display px-2 text-2xl font-semibold tracking-tight text-ink"
-      >
-        Belpa
+      <Link href={homeHref} onClick={onNavigate} className="block px-2">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/belpa-wordmark.png" alt="Belpa" className="h-7 w-auto" />
       </Link>
       <p className="mt-1 px-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-600">
         Dashboard

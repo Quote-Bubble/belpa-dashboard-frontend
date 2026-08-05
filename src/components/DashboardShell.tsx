@@ -38,9 +38,8 @@ export default function DashboardShell({
 
         {/* Mobile top bar */}
         <header className="glass sticky top-0 z-30 flex items-center justify-between px-4 py-3 md:hidden">
-          <span className="font-display text-xl font-semibold text-ink">
-            Belpa
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/belpa-wordmark.png" alt="Belpa" className="h-6 w-auto" />
           <button
             type="button"
             aria-label="Open menu"
