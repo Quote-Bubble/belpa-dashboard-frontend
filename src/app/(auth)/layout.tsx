@@ -24,9 +24,11 @@ export default function AuthLayout({
         className="auth-echo pointer-events-none absolute inset-x-0 bottom-0 -z-20 overflow-hidden"
         aria-hidden
       >
-        {/* Lowercase to match the logo's own casing — this is a rendering of
-            the wordmark, not prose. Same device as the landing's footer echo. */}
-        <span className="auth-echo-word">belpa</span>
+        {/* The logo itself, not type set to look like it. A giant ghosted
+            watermark is conventionally monochrome, so the white silhouette is
+            the right treatment here rather than a compromise. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="auth-echo-word" src="/belpa-wordmark-light.png" alt="" />
       </div>
 
       {/* Soft top glow so the card sits in a luminous pocket */}
