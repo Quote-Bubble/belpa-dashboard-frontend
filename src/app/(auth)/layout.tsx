@@ -24,7 +24,9 @@ export default function AuthLayout({
         className="auth-echo pointer-events-none absolute inset-x-0 bottom-0 -z-20 overflow-hidden"
         aria-hidden
       >
-        <span className="auth-echo-word">Belpa</span>
+        {/* Lowercase to match the logo's own casing — this is a rendering of
+            the wordmark, not prose. Same device as the landing's footer echo. */}
+        <span className="auth-echo-word">belpa</span>
       </div>
 
       {/* Soft top glow so the card sits in a luminous pocket */}

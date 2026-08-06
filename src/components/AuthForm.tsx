@@ -58,9 +58,14 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
   return (
     <div className="auth-card glass w-full max-w-sm rounded-2xl p-7 shadow-[var(--shadow-float)]">
       <div className="mb-6 text-center">
-        <p className="font-display text-2xl font-semibold tracking-tight text-ink">
-          Belpa
-        </p>
+        {/* The wordmark position — show the logo, same as Sidebar.tsx. Prose
+            elsewhere on this card ("New to Belpa?") stays capitalised. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/belpa-wordmark.png"
+          alt="Belpa"
+          className="mx-auto h-7 w-auto"
+        />
         <p className="mt-1 text-sm text-ink-soft">
           {isSignup ? "Create your roofer account" : "Sign in to your dashboard"}
         </p>
