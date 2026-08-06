@@ -127,6 +127,8 @@ export type RooferProfile = {
   id: string;
   slug: string;
   name: string;
+  /** Embed domain allowlist. Empty = the widget may be framed anywhere. */
+  allowed_origins: string[];
 };
 
 /** Whether the roofer's widget is set up yet (admin ops console). "prospect" is

@@ -24,7 +24,7 @@ export const getRoofer = cache(async function getRoofer(): Promise<RooferLookup>
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("roofers")
-    .select("id,slug,name")
+    .select("id,slug,name,allowed_origins")
     .order("created_at", { ascending: true })
     .limit(1)
     .maybeSingle();

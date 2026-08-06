@@ -4,6 +4,7 @@ import { getQuoteConfig } from "@/lib/pricing";
 import PageHeader from "@/components/PageHeader";
 import PricingPanel from "@/components/PricingPanel";
 import NotLinkedNotice from "@/components/NotLinkedNotice";
+import AllowedDomains from "@/components/AllowedDomains";
 
 function InfoTile({ label, value }: { label: string; value: string }) {
   return (
@@ -82,6 +83,10 @@ export default async function AccountPage() {
       </div>
 
       <PricingPanel rooferId={roofer.id} initial={quoteConfig} />
+
+      <div className="mt-6">
+        <AllowedDomains initial={roofer.allowed_origins ?? []} />
+      </div>
     </>
   );
 }
