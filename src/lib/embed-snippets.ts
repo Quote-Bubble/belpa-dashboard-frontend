@@ -31,7 +31,13 @@ export function previewWidget(slug: string): string {
   return `${WIDGET_ORIGIN}/demo-widget.html?roofer=${encodeURIComponent(slug)}`;
 }
 
-/** Fullscreen button flow: a button + the launch loader. */
+/**
+ * Button flow: any button on the roofer's site opens the quote flow.
+ *
+ * Presentation is chosen by launch.js from the visitor's viewport — a centred
+ * card over the roofer's page on desktop, fullscreen on phones — so the same
+ * snippet covers both and nothing here needs to change per device.
+ */
 export function buttonSnippet(slug: string): string {
   return `<button data-belpa-launch data-roofer="${slug}">Get a free quote</button>
 <script src="${LOADER_ROOT}/launch.js" async></script>`;

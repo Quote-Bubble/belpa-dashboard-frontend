@@ -6,7 +6,8 @@ import { QRCodeCanvas } from "qrcode.react";
 type Method = "button" | "widget" | "link";
 
 const HINTS: Record<Method, string> = {
-  button: "Opens the quote flow fullscreen from a button.",
+  button:
+    "Opens over your page in a centred card — fullscreen on phones. Best if they have a site.",
   widget: "Embeds the quote flow inline on the page.",
   link: "Hosted page — WhatsApp, GBP, or QR. No website needed.",
 };
