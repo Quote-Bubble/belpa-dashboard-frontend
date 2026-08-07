@@ -297,7 +297,7 @@ export default function JobsClient({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search name or postcode"
-            className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted"
+            className="w-full bg-transparent text-base text-ink outline-none placeholder:text-muted sm:text-sm"
           />
         </label>
       </div>

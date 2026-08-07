@@ -25,7 +25,10 @@ export default function Toast({
   return (
     <div
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-0 bottom-6 z-[60] flex justify-center px-4"
+      className="pointer-events-none fixed inset-x-0 z-[60] flex justify-center px-4"
+      // bottom-6 is 24px; an iPhone home indicator needs ~34px, so a toast
+      // sat half-under it. Tailwind can't express env(), hence the style.
+      style={{ bottom: "max(1.5rem, calc(env(safe-area-inset-bottom) + 0.5rem))" }}
     >
       {message && (
         <div

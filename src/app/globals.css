@@ -554,6 +554,24 @@ body {
   border-radius: 12px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
+
+/* iOS zooms the whole page when you focus a control smaller than 16px, and
+   then leaves you zoomed in with the layout overflowing sideways. Every field
+   in here is text-sm (14px), including the login and password inputs — the
+   first things anyone touches on a phone.
+
+   Phone-only, so desktop keeps the tighter 14px. This works because globals.css
+   is unlayered and Tailwind's utilities live in @layer utilities, so it beats
+   text-sm without !important — and it's set once here rather than relying on
+   whoever adds the next input remembering. */
+@media (max-width: 640px) {
+  .field,
+  input.field,
+  textarea.field,
+  select.field {
+    font-size: 16px;
+  }
+}
 .field:focus,
 .field:focus-within {
   outline: none;

@@ -38,7 +38,14 @@ export default function DashboardShell({
         />
 
         {/* Mobile top bar */}
-        <header className="glass sticky top-0 z-30 flex items-center justify-between px-4 py-3 md:hidden">
+        <header
+          className="glass sticky top-0 z-30 flex items-center justify-between px-4 py-3 md:hidden"
+          style={{
+            paddingTop: "max(0.75rem, env(safe-area-inset-top))",
+            paddingLeft: "max(1rem, env(safe-area-inset-left))",
+            paddingRight: "max(1rem, env(safe-area-inset-right))",
+          }}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/belpa-wordmark.png" alt="Belpa" className="h-6 w-auto" />
           <button
@@ -64,7 +71,12 @@ export default function DashboardShell({
                 transition={{ duration: 0.2, ease: "easeOut" }}
               />
               <motion.div
-                className="surface absolute inset-y-0 left-0 w-72 max-w-[80%]"
+                className="surface absolute inset-y-0 left-0 w-72 max-w-[80%] overflow-y-auto"
+                style={{
+                  paddingTop: "env(safe-area-inset-top)",
+                  paddingBottom: "env(safe-area-inset-bottom)",
+                  paddingLeft: "env(safe-area-inset-left)",
+                }}
                 initial={{ x: "-100%" }}
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
