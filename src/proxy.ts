@@ -10,7 +10,7 @@ import { NextResponse, type NextRequest } from "next/server";
  * responses — otherwise the browser never receives the refreshed tokens and
  * the next request loops (or drops the session).
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
