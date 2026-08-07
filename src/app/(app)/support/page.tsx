@@ -7,7 +7,9 @@ import PageHeader from "@/components/PageHeader";
 import FaqAccordion from "@/components/FaqAccordion";
 import Toast from "@/components/Toast";
 
-const SUPPORT_EMAIL = "support@belpa.co.uk";
+// One address for everything — see the landing's Terms/Privacy, which
+// publish the same one. A second inbox is an inbox someone forgets to read.
+const SUPPORT_EMAIL = "hello@belpa.co.uk";
 
 export default function SupportPage() {
   const [subject, setSubject] = useState("");
