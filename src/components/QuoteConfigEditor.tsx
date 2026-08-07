@@ -1,5 +1,21 @@
 "use client";
 
+import {
+  CirclePlus,
+  Droplet,
+  ExternalLink,
+  Frame,
+  HardHat,
+  House,
+  Layers,
+  Leaf,
+  PackagePlus,
+  Save,
+  ShieldCheck,
+  SprayCan,
+  Wrench,
+  type LucideIcon,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 
@@ -218,6 +234,31 @@ function FlatSection({
   );
 }
 
+/*
+ * Real icons, not hand-drawn paths.
+ *
+ * Everything here used to be bespoke SVG written by hand on whatever grid each
+ * one happened to use, which is why they never sat right next to each other.
+ * Lucide is one professionally-drawn set on a single 24 grid, and its house
+ * style (24 viewBox, round caps and joins) is the convention this file was
+ * already reaching for.
+ *
+ * Every cleaning service also used to fall through to the generic "+"
+ * fallback, so a roof-cleaning company saw a plus sign against every service
+ * it offers.
+ */
+const SERVICE_ICON: Record<ServiceKey, LucideIcon> = {
+  full_replacement: House,
+  flat_roof_replacement: House,
+  tile_or_slate_repair: Wrench,
+  gutters_fascias_soffits: Frame,
+  leak_investigation: Droplet,
+  roof_soft_wash: SprayCan,
+  roof_biocide_treatment: ShieldCheck,
+  gutter_clearing: Leaf,
+  other: CirclePlus,
+};
+
 function ServiceIcon({
   service,
   large,
@@ -226,7 +267,7 @@ function ServiceIcon({
   large?: boolean;
 }) {
   const size = large ? "h-12 w-12" : "h-10 w-10";
-  const icon = large ? 22 : 18;
+  const Icon = SERVICE_ICON[service];
   return (
     <span
       className={[
@@ -235,46 +276,7 @@ function ServiceIcon({
       ].join(" ")}
       aria-hidden
     >
-      <svg width={icon} height={icon} viewBox="0 0 24 24" fill="none">
-        {service === "full_replacement" ||
-        service === "flat_roof_replacement" ? (
-          <path
-            d="M3 12 L12 4 L21 12 V20 H3 V12Z"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinejoin="round"
-          />
-        ) : service === "tile_or_slate_repair" ? (
-          <path
-            d="M4 16 L8 8 L12 14 L16 6 L20 16"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        ) : service === "gutters_fascias_soffits" ? (
-          <path
-            d="M4 8 H20 M6 8 V16 M18 8 V16 M8 16 H16"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-          />
-        ) : service === "leak_investigation" ? (
-          <path
-            d="M12 3 C12 3 6 10 6 14 A6 6 0 0 0 18 14 C18 10 12 3 12 3Z"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinejoin="round"
-          />
-        ) : (
-          <path
-            d="M12 5 V19 M5 12 H19"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-          />
-        )}
-      </svg>
+      <Icon size={large ? 22 : 18} strokeWidth={1.75} />
     </span>
   );
 }
@@ -1406,7 +1408,7 @@ export default function QuoteConfigEditor({
               className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-4 py-2.5 text-[13px] font-semibold text-brand-600 hover:bg-brand-50"
             >
               Preview
-              <ExternalIcon />
+              <ExternalLink size={12} strokeWidth={1.75} />
             </motion.a>
           ) : null}
           <motion.button
@@ -1422,7 +1424,7 @@ export default function QuoteConfigEditor({
             transition={springSoft}
             className="inline-flex items-center gap-2 rounded-full bg-brand-600 px-4 py-2.5 text-[13px] font-semibold text-white disabled:pointer-events-none"
           >
-            <SaveIcon />
+            <Save size={14} strokeWidth={1.75} />
             <AnimatePresence mode="wait" initial={false}>
               <motion.span
                 key={saving ? "saving" : dirty ? "save" : "saved"}
@@ -1463,7 +1465,7 @@ function ReplacementSections({
       <AccordionRow
         open={openSection === "coverings"}
         onToggle={() => onSection("coverings")}
-        icon={<LayersIcon />}
+        icon={<Layers size={18} strokeWidth={1.75} />}
         title="Coverings"
         subtitle="Choose materials and set your rates"
       >
@@ -1475,7 +1477,7 @@ function ReplacementSections({
       <AccordionRow
         open={openSection === "extras"}
         onToggle={() => onSection("extras")}
-        icon={<SparkIcon />}
+        icon={<PackagePlus size={18} strokeWidth={1.75} />}
         title="Extras"
         subtitle="Strip-off, skip hire, gutters, chimney"
       >
@@ -1484,7 +1486,7 @@ function ReplacementSections({
       <AccordionRow
         open={openSection === "access"}
         onToggle={() => onSection("access")}
-        icon={<LadderIcon />}
+        icon={<HardHat size={18} strokeWidth={1.75} />}
         title="Access"
         subtitle="How they get on the roof"
       >
@@ -1513,7 +1515,7 @@ function RepairSections({
       <AccordionRow
         open={openSection === "coverings"}
         onToggle={() => onSection("coverings")}
-        icon={<LayersIcon />}
+        icon={<Layers size={18} strokeWidth={1.75} />}
         title="Coverings"
         subtitle="Choose materials and set your rates"
       >
@@ -1525,7 +1527,7 @@ function RepairSections({
       <AccordionRow
         open={openSection === "access"}
         onToggle={() => onSection("access")}
-        icon={<LadderIcon />}
+        icon={<HardHat size={18} strokeWidth={1.75} />}
         title="Access"
         subtitle="How they get on the roof"
       >
@@ -1554,7 +1556,7 @@ function RooflineSections({
       <AccordionRow
         open={openSection === "rates" || openSection === "coverings"}
         onToggle={() => onSection("rates")}
-        icon={<LayersIcon />}
+        icon={<Layers size={18} strokeWidth={1.75} />}
         title="Linear rates"
         subtitle="Gutters, fascias and soffits"
       >
@@ -1586,7 +1588,7 @@ function RooflineSections({
       <AccordionRow
         open={openSection === "access"}
         onToggle={() => onSection("access")}
-        icon={<LadderIcon />}
+        icon={<HardHat size={18} strokeWidth={1.75} />}
         title="Access"
         subtitle="How they get on the roof"
       >
@@ -1599,71 +1601,3 @@ function RooflineSections({
   );
 }
 
-function ExternalIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden>
-      <path
-        d="M5 2 H2.5 A.5.5 0 0 0 2 2.5 v7 A.5.5 0 0 0 2.5 10 h7 A.5.5 0 0 0 10 9.5 V7 M7 2 h3 v3 M10 2 L5.5 6.5"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        fill="none"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function SaveIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
-      <path
-        d="M3 2.5 H9.5 L11.5 4.5 V11.5 A.5.5 0 0 1 11 12 H3 A.5.5 0 0 1 2.5 11.5 V3 A.5.5 0 0 1 3 2.5 Z M4.5 2.5 V5.5 H9 V2.5 M4.5 12 V8 H9.5 V12"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        fill="none"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function LayersIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden>
-      <path
-        d="M2 7 L9 3 L16 7 L9 11 Z M2 10 L9 14 L16 10"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        fill="none"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function SparkIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden>
-      <path
-        d="M9 2 V6 M9 12 V16 M2 9 H6 M12 9 H16 M4.2 4.2 L6.5 6.5 M11.5 11.5 L13.8 13.8 M13.8 4.2 L11.5 6.5 M6.5 11.5 L4.2 13.8"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function LadderIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden>
-      <path
-        d="M5 15 V3 M13 15 V3 M5 6 H13 M5 9.5 H13 M5 13 H13"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
