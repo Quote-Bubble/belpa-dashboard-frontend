@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, X } from "lucide-react";
 import { useEffect } from "react";
 
 export default function Toast({
@@ -42,13 +43,9 @@ export default function Toast({
             ].join(" ")}
           >
             {error ? (
-              <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round">
-                <path d="M6 6l12 12M18 6L6 18" />
-              </svg>
+              <X size={12} strokeWidth={3} aria-hidden />
             ) : (
-              <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12l5 5 9-9" />
-              </svg>
+              <Check size={12} strokeWidth={2.25} aria-hidden />
             )}
           </span>
           {message}

@@ -1,5 +1,13 @@
 "use client";
 
+import {
+  ChartColumn,
+  CircleHelp,
+  CircleUser,
+  ClipboardList,
+  List,
+  ShieldCheck,
+} from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -18,61 +26,28 @@ type NavItem = {
   icon: React.ReactNode;
 };
 
-const iconProps = {
-  width: 20,
-  height: 20,
-  viewBox: "0 0 24 24",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 1.9,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-};
+// Lucide, at the weight this file already used. Hand-drawn paths were the
+// reason nothing quite lined up across the app — see QuoteConfigEditor.
+const ICON = { size: 20, strokeWidth: 1.9 } as const;
 
-const quotesIcon = (
-  <svg {...iconProps} aria-hidden>
-    <path d="M4 5h16M4 12h16M4 19h10" />
-  </svg>
-);
-
-const jobsIcon = (
-  <svg {...iconProps} aria-hidden>
-    <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
-    <path d="M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v0Z" />
-    <path d="M9 12h6M9 16h4" />
-  </svg>
-);
+const quotesIcon = <List {...ICON} aria-hidden />;
+const jobsIcon = <ClipboardList {...ICON} aria-hidden />;
 
 const REST_NAV: NavItem[] = [
   {
     href: "/analytics",
     label: "Analytics",
-    icon: (
-      <svg {...iconProps} aria-hidden>
-        <path d="M4 19V5M4 19h16M8 19v-6M13 19V9M18 19v-9" />
-      </svg>
-    ),
+    icon: <ChartColumn {...ICON} aria-hidden />,
   },
   {
     href: "/account",
     label: "Account",
-    icon: (
-      <svg {...iconProps} aria-hidden>
-        <circle cx="12" cy="8" r="3.2" />
-        <path d="M5.5 20a6.5 6.5 0 0 1 13 0" />
-      </svg>
-    ),
+    icon: <CircleUser {...ICON} aria-hidden />,
   },
   {
     href: "/support",
     label: "Support",
-    icon: (
-      <svg {...iconProps} aria-hidden>
-        <circle cx="12" cy="12" r="9" />
-        <path d="M9.3 9.3a2.7 2.7 0 0 1 5.2 1c0 1.8-2.7 2.2-2.7 4" />
-        <path d="M12 17.5h.01" />
-      </svg>
-    ),
+    icon: <CircleHelp {...ICON} aria-hidden />,
   },
 ];
 
@@ -183,10 +158,7 @@ export default function Sidebar({
             className="group mb-2 flex items-center gap-3 rounded-xl bg-ink px-3 py-2.5 text-white shadow-sm ring-1 ring-black/5 transition-colors hover:bg-black"
           >
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/15">
-              <svg {...iconProps} width={17} height={17} aria-hidden>
-                <path d="M12 3 4 6v5c0 4.5 3.2 7.4 8 9 4.8-1.6 8-4.5 8-9V6l-8-3Z" />
-                <path d="m9.2 12 2 2 3.6-3.8" />
-              </svg>
+              <ShieldCheck size={17} strokeWidth={1.8} aria-hidden />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-semibold leading-tight">

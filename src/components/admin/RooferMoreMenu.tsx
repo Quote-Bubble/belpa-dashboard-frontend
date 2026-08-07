@@ -1,5 +1,6 @@
 "use client";
 
+import { Ellipsis } from "lucide-react";
 import { useEffect, useRef, useState, useTransition } from "react";
 
 import Toast from "@/components/Toast";
@@ -68,11 +69,7 @@ export default function RooferMoreMenu({
         }}
         className="grid h-9 w-9 place-items-center rounded-full text-muted transition-colors hover:bg-black/[0.04] hover:text-ink"
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-          <circle cx="5" cy="12" r="1.7" />
-          <circle cx="12" cy="12" r="1.7" />
-          <circle cx="19" cy="12" r="1.7" />
-        </svg>
+        <Ellipsis size={18} strokeWidth={1.8} aria-hidden />
       </button>
 
       {open && (

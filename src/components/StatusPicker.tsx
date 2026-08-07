@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, ChevronDown } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
@@ -80,21 +81,7 @@ export default function StatusPicker({
             {statusLabel(status)}
           </motion.span>
         </AnimatePresence>
-        <svg
-          width={12}
-          height={12}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2.6}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="transition-transform duration-150"
-          style={{ transform: open ? "rotate(180deg)" : "none" }}
-          aria-hidden
-        >
-          <path d="M6 9l6 6 6-6" />
-        </svg>
+        <ChevronDown size={14} strokeWidth={2} aria-hidden />
       </button>
 
       {typeof document !== "undefined" &&
@@ -138,9 +125,7 @@ export default function StatusPicker({
                       >
                         <span>{statusLabel(s)}</span>
                         {active && (
-                          <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke={c.fg} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                            <path d="M5 12l5 5 9-9" />
-                          </svg>
+                          <Check size={14} strokeWidth={2} aria-hidden />
                         )}
                       </button>
                     </li>

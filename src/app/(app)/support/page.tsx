@@ -1,5 +1,6 @@
 "use client";
 
+import { Mail } from "lucide-react";
 import { useState } from "react";
 
 import PageHeader from "@/components/PageHeader";
@@ -67,10 +68,7 @@ export default function SupportPage() {
               href={`mailto:${SUPPORT_EMAIL}`}
               className="btn-ghost mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold"
             >
-              <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="5" width="18" height="14" rx="2.5" />
-                <path d="M4 7l8 6 8-6" />
-              </svg>
+              <Mail size={18} strokeWidth={1.8} aria-hidden />
               {SUPPORT_EMAIL}
             </a>
           </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { Archive, ChevronLeft, ChevronRight, ChevronUp, RotateCcw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 
@@ -43,74 +44,37 @@ const HEADER_COLS: { key: SortKey; label: string }[] = [
 
 function SortCaret({ dir }: { dir: SortDir }) {
   return (
-    <svg
-      width={13}
-      height={13}
-      viewBox="0 0 24 24"
-      className="text-ink-soft"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2.4}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      {dir === "asc" ? <path d="M6 15l6-6 6 6" /> : <path d="M6 9l6 6 6-6" />}
-    </svg>
+    <ChevronUp size={13} strokeWidth={2.25} className="text-ink-soft" aria-hidden />
   );
 }
 
 function ArchiveIcon() {
   return (
-    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <rect x="3" y="4" width="18" height="4" rx="1" />
-      <path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4" />
-    </svg>
+    <Archive size={16} strokeWidth={2} aria-hidden />
   );
 }
 
 function RestoreIcon() {
   return (
-    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M3 8a9 9 0 1 1-1.5 5" />
-      <path d="M3 4v4h4" />
-    </svg>
+    <RotateCcw size={16} strokeWidth={2} aria-hidden />
   );
 }
 
 function ChevronLeftIcon() {
   return (
-    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M15 6l-6 6 6 6" />
-    </svg>
+    <ChevronLeft size={16} strokeWidth={2} aria-hidden />
   );
 }
 
 function ChevronRightIcon() {
   return (
-    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M9 6l6 6-6 6" />
-    </svg>
+    <ChevronRight size={16} strokeWidth={2} aria-hidden />
   );
 }
 
 function ExpandChevron({ expanded }: { expanded: boolean }) {
   return (
-    <svg
-      width={16}
-      height={16}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-      style={{ transform: expanded ? "rotate(90deg)" : "none" }}
-      className="transition-transform duration-150"
-    >
-      <path d="M9 6l6 6-6 6" />
-    </svg>
+    <ChevronRight size={16} strokeWidth={2} aria-hidden />
   );
 }
 

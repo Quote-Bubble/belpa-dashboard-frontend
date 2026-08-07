@@ -1,5 +1,6 @@
 "use client";
 
+import { Menu } from "lucide-react";
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 
@@ -46,17 +47,7 @@ export default function DashboardShell({
             onClick={() => setMobileOpen(true)}
             className="rounded-lg p-2 text-ink"
           >
-            <svg
-              width={22}
-              height={22}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-            >
-              <path d="M4 7h16M4 12h16M4 17h16" />
-            </svg>
+            <Menu size={20} strokeWidth={1.8} aria-hidden />
           </button>
         </header>
 

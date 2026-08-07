@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronDown } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   motion,
@@ -169,20 +170,7 @@ export default function FilterBar({
             </option>
           ))}
         </select>
-        <svg
-          width={16}
-          height={16}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2.4}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden
-          className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-soft"
-        >
-          <path d="M6 9l6 6 6-6" />
-        </svg>
+        <ChevronDown size={14} strokeWidth={2} aria-hidden />
       </div>
 
       {/* Desktop: the chip bar with the jelly bubble. */}

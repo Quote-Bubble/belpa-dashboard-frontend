@@ -1408,7 +1408,7 @@ export default function QuoteConfigEditor({
               className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-4 py-2.5 text-[13px] font-semibold text-brand-600 hover:bg-brand-50"
             >
               Preview
-              <ExternalLink size={12} strokeWidth={1.75} />
+              <ExternalLink size={12} strokeWidth={2.25} />
             </motion.a>
           ) : null}
           <motion.button
@@ -1424,7 +1424,7 @@ export default function QuoteConfigEditor({
             transition={springSoft}
             className="inline-flex items-center gap-2 rounded-full bg-brand-600 px-4 py-2.5 text-[13px] font-semibold text-white disabled:pointer-events-none"
           >
-            <Save size={14} strokeWidth={1.75} />
+            <Save size={14} strokeWidth={2} />
             <AnimatePresence mode="wait" initial={false}>
               <motion.span
                 key={saving ? "saving" : dirty ? "save" : "saved"}
@@ -1465,7 +1465,7 @@ function ReplacementSections({
       <AccordionRow
         open={openSection === "coverings"}
         onToggle={() => onSection("coverings")}
-        icon={<Layers size={18} strokeWidth={1.75} />}
+        icon={<Layers size={18} strokeWidth={1.8} />}
         title="Coverings"
         subtitle="Choose materials and set your rates"
       >
@@ -1477,7 +1477,7 @@ function ReplacementSections({
       <AccordionRow
         open={openSection === "extras"}
         onToggle={() => onSection("extras")}
-        icon={<PackagePlus size={18} strokeWidth={1.75} />}
+        icon={<PackagePlus size={18} strokeWidth={1.8} />}
         title="Extras"
         subtitle="Strip-off, skip hire, gutters, chimney"
       >
@@ -1486,7 +1486,7 @@ function ReplacementSections({
       <AccordionRow
         open={openSection === "access"}
         onToggle={() => onSection("access")}
-        icon={<HardHat size={18} strokeWidth={1.75} />}
+        icon={<HardHat size={18} strokeWidth={1.8} />}
         title="Access"
         subtitle="How they get on the roof"
       >
@@ -1515,7 +1515,7 @@ function RepairSections({
       <AccordionRow
         open={openSection === "coverings"}
         onToggle={() => onSection("coverings")}
-        icon={<Layers size={18} strokeWidth={1.75} />}
+        icon={<Layers size={18} strokeWidth={1.8} />}
         title="Coverings"
         subtitle="Choose materials and set your rates"
       >
@@ -1527,7 +1527,7 @@ function RepairSections({
       <AccordionRow
         open={openSection === "access"}
         onToggle={() => onSection("access")}
-        icon={<HardHat size={18} strokeWidth={1.75} />}
+        icon={<HardHat size={18} strokeWidth={1.8} />}
         title="Access"
         subtitle="How they get on the roof"
       >
@@ -1556,7 +1556,7 @@ function RooflineSections({
       <AccordionRow
         open={openSection === "rates" || openSection === "coverings"}
         onToggle={() => onSection("rates")}
-        icon={<Layers size={18} strokeWidth={1.75} />}
+        icon={<Layers size={18} strokeWidth={1.8} />}
         title="Linear rates"
         subtitle="Gutters, fascias and soffits"
       >
@@ -1588,7 +1588,7 @@ function RooflineSections({
       <AccordionRow
         open={openSection === "access"}
         onToggle={() => onSection("access")}
-        icon={<HardHat size={18} strokeWidth={1.75} />}
+        icon={<HardHat size={18} strokeWidth={1.8} />}
         title="Access"
         subtitle="How they get on the roof"
       >

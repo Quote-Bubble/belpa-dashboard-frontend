@@ -1,5 +1,16 @@
 "use client";
 
+import {
+  Archive,
+  Check,
+  Clock,
+  Copy,
+  Mail,
+  MapPin,
+  Phone,
+  RotateCcw,
+  TriangleAlert,
+} from "lucide-react";
 import { useState } from "react";
 
 import type { DashboardLead, LeadPayload, LeadStatus } from "@/lib/types";
@@ -34,68 +45,33 @@ import {
 import RoofMap from "@/components/RoofMap";
 import StatusPicker from "@/components/StatusPicker";
 
-const iconProps = {
-  width: 16,
-  height: 16,
-  viewBox: "0 0 24 24",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 1.8,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-};
-
 const Icons = {
   phone: (
-    <svg {...iconProps}>
-      <path d="M4 5c0 8.3 6.7 15 15 15v-3.5l-4-1.5-2 2a12 12 0 0 1-6-6l2-2L11 5H4z" />
-    </svg>
+    <Phone size={16} strokeWidth={2} />
   ),
   mail: (
-    <svg {...iconProps}>
-      <rect x="3" y="5" width="18" height="14" rx="2.5" />
-      <path d="M4 7l8 6 8-6" />
-    </svg>
+    <Mail size={16} strokeWidth={2} />
   ),
   pin: (
-    <svg {...iconProps}>
-      <path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11z" />
-      <circle cx="12" cy="10" r="2.5" />
-    </svg>
+    <MapPin size={16} strokeWidth={2} />
   ),
   clock: (
-    <svg {...iconProps}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5.2l3.2 1.9" />
-    </svg>
+    <Clock size={16} strokeWidth={2} />
   ),
   alert: (
-    <svg {...iconProps}>
-      <path d="M12 4l9 16H3l9-16zM12 10v4M12 17h.01" />
-    </svg>
+    <TriangleAlert size={16} strokeWidth={2} />
   ),
   copy: (
-    <svg {...iconProps} width={13} height={13}>
-      <rect x="9" y="9" width="11" height="11" rx="2" />
-      <path d="M5 15V5a1 1 0 0 1 1-1h9" />
-    </svg>
+    <Copy size={13} strokeWidth={2.25} />
   ),
   check: (
-    <svg {...iconProps} width={13} height={13}>
-      <path d="M4 12.5l5 5 11-11" />
-    </svg>
+    <Check size={13} strokeWidth={2.25} />
   ),
   archive: (
-    <svg {...iconProps} width={15} height={15}>
-      <rect x="3" y="4" width="18" height="4" rx="1" />
-      <path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4" />
-    </svg>
+    <Archive size={16} strokeWidth={2} />
   ),
   restore: (
-    <svg {...iconProps} width={15} height={15}>
-      <path d="M4 9a8 8 0 1 1 .9 5.3" />
-      <path d="M4 4v5h5" />
-    </svg>
+    <RotateCcw size={16} strokeWidth={2} />
   ),
 };
 

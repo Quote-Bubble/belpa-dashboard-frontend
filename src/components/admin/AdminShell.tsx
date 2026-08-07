@@ -1,5 +1,6 @@
 "use client";
 
+import { CircleUser, House, Menu } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -8,16 +9,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { createClient } from "@/lib/supabase/client";
 import CloudsBackground from "@/components/CloudsBackground";
 
-const iconProps = {
-  width: 20,
-  height: 20,
-  viewBox: "0 0 24 24",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 1.9,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-};
+// Lucide at the weight this shell already used.
+const ICON = { size: 20, strokeWidth: 1.9 } as const;
 
 type NavItem = {
   href: string;
@@ -31,11 +24,7 @@ const NAV: NavItem[] = [
     href: "/admin",
     label: "Roofers",
     icon: (
-      <svg {...iconProps} aria-hidden>
-        <path d="M3 10.5 12 4l9 6.5" />
-        <path d="M5 9.5V20h14V9.5" />
-        <path d="M9.5 20v-5h5v5" />
-      </svg>
+      <House {...ICON} aria-hidden />
     ),
     isActive: (p) => p === "/admin" || /^\/admin\/[^/]+$/.test(p),
   },
@@ -43,10 +32,7 @@ const NAV: NavItem[] = [
     href: "/admin/account",
     label: "Account",
     icon: (
-      <svg {...iconProps} aria-hidden>
-        <circle cx="12" cy="8" r="3.2" />
-        <path d="M5.5 20a6.5 6.5 0 0 1 13 0" />
-      </svg>
+      <CircleUser {...ICON} aria-hidden />
     ),
     isActive: (p) => p === "/admin/account",
   },
@@ -140,11 +126,7 @@ function AdminNav({
           className="group mb-2 flex items-center gap-3 rounded-xl bg-brand-50 px-3 py-2.5 text-brand-800 ring-1 ring-brand-100 transition-colors hover:bg-brand-100"
         >
           <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/70 text-brand-600">
-            <svg {...iconProps} width={17} height={17} aria-hidden>
-              <path d="M3 10.5 12 4l9 6.5" />
-              <path d="M5 9.5V20h14V9.5" />
-              <path d="M9.5 20v-5h5v5" />
-            </svg>
+            <House size={17} strokeWidth={1.8} aria-hidden />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold leading-tight">
@@ -218,17 +200,7 @@ export default function AdminShell({
           onClick={() => setMobileOpen(true)}
           className="rounded-lg p-2 text-ink"
         >
-          <svg
-            width={22}
-            height={22}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeLinecap="round"
-          >
-            <path d="M4 7h16M4 12h16M4 17h16" />
-          </svg>
+          <Menu size={22} strokeWidth={1.7} aria-hidden />
         </button>
       </header>
 

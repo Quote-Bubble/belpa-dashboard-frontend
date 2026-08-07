@@ -1,5 +1,6 @@
 "use client";
 
+import { Archive, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
@@ -302,10 +303,7 @@ export default function QuotesClient({
           ? "Follow-up"
           : statusLabel(f);
   const archiveIcon = (
-    <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-label="Archived">
-      <rect x="3" y="4" width="18" height="4" rx="1" />
-      <path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4" />
-    </svg>
+    <Archive size={16} strokeWidth={2} aria-hidden />
   );
   const filterItems: Filter[] = order.map((f) => ({
     key: f,
@@ -349,10 +347,7 @@ export default function QuotesClient({
         />
 
         <label className="search-box field flex items-center gap-2 px-3 py-2 sm:w-64">
-          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" className="text-muted" aria-hidden>
-            <circle cx="11" cy="11" r="7" />
-            <path d="M21 21l-4.3-4.3" />
-          </svg>
+          <Search size={16} strokeWidth={2} aria-hidden />
           <input
             type="search"
             value={search}
