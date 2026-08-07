@@ -842,24 +842,16 @@ function ExtrasEditor({
 export default function QuoteConfigEditor({
   rooferId,
   initial,
-  allowedOrigins: initialOrigins = [],
-  showOrigins = false,
   previewUrl,
   onSaved,
 }: {
   rooferId: string;
   initial: QuoteConfig;
-  allowedOrigins?: string[];
-  showOrigins?: boolean;
   previewUrl?: string;
   onSaved?: () => void;
 }) {
   const [config, setConfig] = useState<QuoteConfig>(initial);
   const [baseline, setBaseline] = useState<QuoteConfig>(initial);
-  const [originsText, setOriginsText] = useState(initialOrigins.join("\n"));
-  const [originsBaseline, setOriginsBaseline] = useState(
-    initialOrigins.join("\n"),
-  );
   const [openService, setOpenService] = useState<ServiceKey>(
     CLEANING_SERVICE_KEYS.some((k) => initial.enabledServices.includes(k))
       ? CLEANING_SERVICE_KEYS[0]
@@ -874,9 +866,7 @@ export default function QuoteConfigEditor({
   } | null>(null);
 
   const completeness = useMemo(() => assessCompleteness(config), [config]);
-  const dirty =
-    JSON.stringify(config) !== JSON.stringify(baseline) ||
-    originsText !== originsBaseline;
+  const dirty = JSON.stringify(config) !== JSON.stringify(baseline);
 
   // Which niche is this company set up as — only that group's services show.
   const nicheKeys = CLEANING_SERVICE_KEYS.some((k) =>
@@ -949,29 +939,12 @@ export default function QuoteConfigEditor({
       { onConflict: "roofer_id" },
     );
 
-    if (!error && showOrigins) {
-      const origins = originsText
-        .split(/[\n,]+/)
-        .map((s) => s.trim())
-        .filter(Boolean);
-      const { error: oErr } = await supabase
-        .from("roofers")
-        .update({ allowed_origins: origins })
-        .eq("id", rooferId);
-      if (oErr) {
-        setSaving(false);
-        setToast({ message: oErr.message, tone: "error" });
-        return;
-      }
-    }
-
     setSaving(false);
     if (error) {
       setToast({ message: error.message, tone: "error" });
       return;
     }
     setBaseline(config);
-    setOriginsBaseline(originsText);
     setToast({
       message: "Pricing saved — their bubble uses these rates.",
       tone: "ok",
@@ -1311,7 +1284,6 @@ export default function QuoteConfigEditor({
                   </h3>
                   <p className="mt-0.5 text-[13px] text-muted">
                     VAT, quote range
-                    {showOrigins ? ", embed sites" : ""}
                   </p>
                 </div>
                 <motion.svg
@@ -1399,23 +1371,6 @@ export default function QuoteConfigEditor({
                         </div>
                       </div>
                     </div>
-                    {showOrigins ? (
-                      <div className="rounded-xl border border-line px-3.5 py-3">
-                        <p className="text-[14px] font-medium text-ink">
-                          Allowed embed sites
-                        </p>
-                        <p className="mb-2 text-[12px] text-muted">
-                          One per line · blank = anywhere
-                        </p>
-                        <textarea
-                          rows={2}
-                          className="w-full rounded-xl border border-line px-3 py-2 text-sm text-ink outline-none focus:border-brand-400"
-                          placeholder="https://ridgewayroofing.co.uk"
-                          value={originsText}
-                          onChange={(e) => setOriginsText(e.target.value)}
-                        />
-                      </div>
-                    ) : null}
                   </div>
                   <div className="rounded-xl border border-line bg-[#f7f8fa] px-3.5 py-3.5">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">

@@ -9,14 +9,10 @@ import type { QuoteConfig } from "@/lib/quote-config";
 export default function PricingPageClient({
   rooferId,
   initial,
-  allowedOrigins,
-  showOrigins,
   previewUrl,
 }: {
   rooferId: string;
   initial: QuoteConfig;
-  allowedOrigins?: string[];
-  showOrigins?: boolean;
   previewUrl?: string;
 }) {
   const router = useRouter();
@@ -24,8 +20,6 @@ export default function PricingPageClient({
     <QuoteConfigEditor
       rooferId={rooferId}
       initial={initial}
-      allowedOrigins={allowedOrigins}
-      showOrigins={showOrigins}
       previewUrl={previewUrl}
       onSaved={() => router.refresh()}
     />

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import InstallSnippets from "@/components/admin/InstallSnippets";
+import AllowedDomains from "@/components/admin/AllowedDomains";
 import Toast from "@/components/Toast";
 import type { ActionResult } from "@/lib/action-result";
 import { unlinkRooferLogin } from "@/lib/admin-actions";
@@ -22,6 +23,7 @@ type Props = {
     widget: string;
     link: string;
     preview: { button: string; widget: string; link: string };
+    allowedOrigins: string[];
   };
   details: {
     name: string;
@@ -160,13 +162,23 @@ export default function RooferPanel({
         )}
 
         {tab === "install" && (
-          <InstallSnippets
-            slug={install.slug}
-            button={install.button}
-            widget={install.widget}
-            link={install.link}
-            preview={install.preview}
-          />
+          <>
+            <InstallSnippets
+              slug={install.slug}
+              button={install.button}
+              widget={install.widget}
+              link={install.link}
+              preview={install.preview}
+            />
+            {/* Directly under the snippet on purpose: handing over the embed
+                and locking it to their domain are one job, done in one sitting,
+                and splitting them is how the second half gets forgotten. */}
+            <AllowedDomains
+              rooferId={rooferId}
+              initial={install.allowedOrigins}
+              website={details.website}
+            />
+          </>
         )}
 
         {tab === "access" && (

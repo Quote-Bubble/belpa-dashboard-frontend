@@ -193,8 +193,6 @@ export default async function RooferDetailPage({
       <PricingPageClient
         rooferId={roofer.id}
         initial={quoteConfig}
-        allowedOrigins={roofer.allowed_origins ?? []}
-        showOrigins
         previewUrl={hostedLink(roofer.slug)}
       />
     );
@@ -220,6 +218,7 @@ export default async function RooferDetailPage({
               widget: previewWidget(roofer.slug),
               link: hostedLink(roofer.slug),
             },
+            allowedOrigins: roofer.allowed_origins ?? [],
           }}
           details={{
             name: roofer.name,
