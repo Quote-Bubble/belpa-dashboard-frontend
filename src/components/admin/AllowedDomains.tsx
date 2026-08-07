@@ -91,28 +91,10 @@ export default function AllowedDomains({
   const suggestionUsed =
     suggested !== null &&
     withWwwPair(suggested).every((o) => origins.includes(o));
-  const locked = origins.length > 0;
 
   return (
     <div className="mt-6 border-t border-line pt-5">
-      <div className="flex flex-wrap items-center gap-2">
-        <h3 className="text-sm font-semibold text-ink">Lock to their site</h3>
-        <span
-          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-            locked
-              ? "bg-emerald-50 text-emerald-700"
-              : "bg-amber-50 text-amber-700"
-          }`}
-        >
-          {locked ? "Locked" : "Open to any site"}
-        </span>
-      </div>
-
-      <p className="mt-1.5 text-xs text-ink-soft">
-        {locked
-          ? "The embed and button only load on these domains. Browsers block them anywhere else."
-          : "The embed and button currently load on any website. Add their domain once it's installed."}
-      </p>
+      <h3 className="text-sm font-semibold text-ink">Lock to their site</h3>
 
       {suggested && !suggestionUsed && (
         <button
@@ -172,13 +154,6 @@ export default function AllowedDomains({
           ))}
         </ul>
       )}
-
-      {/* Stated because it's the one thing that looks like a gap and isn't:
-          frame-ancestors governs framing, and a QR code opens a normal page. */}
-      <p className="mt-3 text-[11px] text-muted">
-        Applies to the embed and button. The Link and QR stay open to anyone
-        holding them — that's what makes them shareable.
-      </p>
     </div>
   );
 }
