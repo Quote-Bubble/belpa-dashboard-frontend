@@ -86,16 +86,21 @@ export default function InstallSnippets({
               >
                 {/* The filled pill is one element that slides between tabs,
                     rather than a background colour that blinks from one button
-                    to the next. Sits behind the label via -z-10 so the text
-                    stays selectable and keeps its own colour transition. */}
+                    to the next.
+
+                    Layered by paint order, not z-index: the button is
+                    position:relative with z-index:auto and so opens no stacking
+                    context, which means a negative z-index here would escape it
+                    and hide behind the container's white background. Absolute
+                    pill first, label in a relative span after it. */}
                 {active && (
                   <motion.span
                     layoutId="install-tab-pill"
-                    className="absolute inset-0 -z-10 rounded-full bg-brand-600"
+                    className="absolute inset-0 rounded-full bg-brand-600"
                     transition={INDICATOR}
                   />
                 )}
-                {t.label}
+                <span className="relative">{t.label}</span>
               </button>
             );
           })}

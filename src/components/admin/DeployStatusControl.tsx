@@ -79,15 +79,23 @@ export default function DeployStatusControl({
                   here specifically: this control changes what the roofer's
                   install actually does, and the movement is the confirmation
                   that the click registered — the request is still in flight at
-                  this point, so nothing else has changed yet. */}
+                  this point, so nothing else has changed yet.
+
+                  The pill must NOT use a negative z-index. This button is
+                  position:relative with z-index:auto, which does not open a
+                  stacking context, so a -z-10 child escapes it and paints
+                  behind the white container's background — invisible pill,
+                  white-on-white label. Ordinary paint order does the job:
+                  absolute pill first, then the label in a relative span above
+                  it. */}
               {active && (
                 <motion.span
                   layoutId="deploy-status-pill"
-                  className="absolute inset-0 -z-10 rounded-full bg-brand-600"
+                  className="absolute inset-0 rounded-full bg-brand-600"
                   transition={INDICATOR}
                 />
               )}
-              {o.label}
+              <span className="relative">{o.label}</span>
             </button>
           );
         })}
