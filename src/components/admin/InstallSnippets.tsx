@@ -5,11 +5,16 @@ import { QRCodeCanvas } from "qrcode.react";
 
 type Method = "button" | "widget" | "link";
 
-const HINTS: Record<Method, string> = {
-  button:
-    "Opens over your page in a centred card — fullscreen on phones. Best if they have a site.",
-  widget: "Embeds the quote flow inline on the page.",
-  link: "Hosted page — WhatsApp, GBP, or QR. No website needed.",
+/**
+ * Field labels for the box below — what the thing is and, for the snippets,
+ * where it goes. Not a description of the feature: whoever is reading this has
+ * already picked the tab, and an operator running an install does not need the
+ * option sold to them again.
+ */
+const LABELS: Record<Method, string> = {
+  button: "Paste where the button should appear",
+  widget: "Paste where the quote form should appear",
+  link: "Quote link",
 };
 
 const TABS: { value: Method; label: string }[] = [
@@ -108,9 +113,11 @@ export default function InstallSnippets({
         </div>
       </div>
 
-      <p className="mt-2 text-xs text-muted">{HINTS[tab]}</p>
+      <p className="mt-4 mb-1.5 text-xs font-medium text-ink-soft">
+        {LABELS[tab]}
+      </p>
 
-      <pre className="mt-2 overflow-x-auto rounded-xl bg-[#0f172a] px-3.5 py-2.5 text-[12px] leading-relaxed text-[#e2e8f0]">
+      <pre className="overflow-x-auto rounded-xl bg-[#0f172a] px-3.5 py-2.5 text-[12px] leading-relaxed text-[#e2e8f0]">
         <code>{code}</code>
       </pre>
 
