@@ -1,11 +1,10 @@
 "use client";
 
-import { motion } from "motion/react";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import Toast from "@/components/Toast";
-import { INDICATOR } from "@/lib/motion";
+import SegmentedControl from "@/components/SegmentedControl";
 import { setDeployStatus } from "@/lib/admin-actions";
 import type { DeployStatus } from "@/lib/types";
 
@@ -36,70 +35,37 @@ export default function DeployStatusControl({
 
   return (
     <>
-      <div className="inline-flex rounded-full border border-line bg-white p-0.5">
-        {OPTIONS.map((o) => {
-          const active = o.value === status;
-          return (
-            <button
-              key={o.value}
-              type="button"
-              disabled={pending || active}
-              onClick={() =>
-                start(async () => {
-                  if (
-                    o.value === "live" &&
-                    !pricingReady &&
-                    !window.confirm(
-                      pricingWarning ||
-                        "Pricing isn’t complete yet. Mark live anyway?",
-                    )
-                  ) {
-                    return;
-                  }
-                  const result = await setDeployStatus(id, o.value);
-                  if (result.ok) {
-                    setToast({
-                      message: result.message ?? "Updated.",
-                      tone: "ok",
-                    });
-                    router.refresh();
-                  } else {
-                    setToast({ message: result.error, tone: "error" });
-                  }
-                })
-              }
-              className={[
-                "relative rounded-full px-3 py-1.5 text-xs font-semibold transition-colors duration-200 disabled:cursor-default",
-                active
-                  ? "text-white"
-                  : "text-ink-soft hover:text-ink disabled:opacity-60",
-              ].join(" ")}
-            >
-              {/* Slides between options instead of the fill jumping. Worth it
-                  here specifically: this control changes what the roofer's
-                  install actually does, and the movement is the confirmation
-                  that the click registered — the request is still in flight at
-                  this point, so nothing else has changed yet.
-
-                  The pill must NOT use a negative z-index. This button is
-                  position:relative with z-index:auto, which does not open a
-                  stacking context, so a -z-10 child escapes it and paints
-                  behind the white container's background — invisible pill,
-                  white-on-white label. Ordinary paint order does the job:
-                  absolute pill first, then the label in a relative span above
-                  it. */}
-              {active && (
-                <motion.span
-                  layoutId="deploy-status-pill"
-                  className="absolute inset-0 rounded-full bg-brand-600"
-                  transition={INDICATOR}
-                />
-              )}
-              <span className="relative">{o.label}</span>
-            </button>
-          );
-        })}
-      </div>
+      <SegmentedControl
+        options={OPTIONS}
+        value={status}
+        layoutId="deploy-status-pill"
+        disabled={pending}
+        ariaLabel="Deploy status"
+        onChange={(next) =>
+          start(async () => {
+            // Confirmation lives here rather than in the control: the control
+            // knows about pills, not about whether a roofer's pricing is ready
+            // to go live.
+            if (
+              next === "live" &&
+              !pricingReady &&
+              !window.confirm(
+                pricingWarning ||
+                  "Pricing isn’t complete yet. Mark live anyway?",
+              )
+            ) {
+              return;
+            }
+            const result = await setDeployStatus(id, next);
+            if (result.ok) {
+              setToast({ message: result.message ?? "Updated.", tone: "ok" });
+              router.refresh();
+            } else {
+              setToast({ message: result.error, tone: "error" });
+            }
+          })
+        }
+      />
       <Toast
         message={toast?.message ?? null}
         tone={toast?.tone}

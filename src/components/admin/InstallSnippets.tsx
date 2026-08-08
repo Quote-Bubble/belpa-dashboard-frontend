@@ -4,7 +4,8 @@ import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { QRCodeCanvas } from "qrcode.react";
 
-import { INDICATOR, POPOVER_TRANSITION } from "@/lib/motion";
+import SegmentedControl from "@/components/SegmentedControl";
+import { POPOVER_TRANSITION } from "@/lib/motion";
 
 type Method = "button" | "widget" | "link";
 
@@ -71,40 +72,14 @@ export default function InstallSnippets({
   return (
     <div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex w-full rounded-full border border-line bg-white p-0.5 sm:inline-flex sm:w-auto">
-          {TABS.map((t) => {
-            const active = t.value === tab;
-            return (
-              <button
-                key={t.value}
-                type="button"
-                onClick={() => setTab(t.value)}
-                className={[
-                  "relative flex-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors duration-200 sm:flex-none",
-                  active ? "text-white" : "text-ink-soft hover:text-ink",
-                ].join(" ")}
-              >
-                {/* The filled pill is one element that slides between tabs,
-                    rather than a background colour that blinks from one button
-                    to the next.
-
-                    Layered by paint order, not z-index: the button is
-                    position:relative with z-index:auto and so opens no stacking
-                    context, which means a negative z-index here would escape it
-                    and hide behind the container's white background. Absolute
-                    pill first, label in a relative span after it. */}
-                {active && (
-                  <motion.span
-                    layoutId="install-tab-pill"
-                    className="absolute inset-0 rounded-full bg-brand-600"
-                    transition={INDICATOR}
-                  />
-                )}
-                <span className="relative">{t.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        <SegmentedControl
+          options={TABS}
+          value={tab}
+          onChange={setTab}
+          layoutId="install-tab-pill"
+          fullWidth
+          ariaLabel="Install method"
+        />
         <div className="flex gap-2">
           <a
             href={

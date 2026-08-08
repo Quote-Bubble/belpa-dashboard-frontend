@@ -41,6 +41,12 @@ export default function QuotesJobsSwitcher({
               setMode(tab.mode);
               onSelect?.();
             }}
+            // z-[1] is load-bearing, not decoration: it gives the button a
+            // stacking context so the pill's -z-[1] below stays inside it.
+            // Remove it and the pill escapes to behind the container's
+            // background, taking the white active label with it — an empty
+            // capsule with the selected option missing. SegmentedControl
+            // sidesteps the whole problem using paint order instead.
             className={`relative z-[1] flex-1 rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
               isActive ? "text-white" : "text-ink-soft hover:text-ink"
             }`}
