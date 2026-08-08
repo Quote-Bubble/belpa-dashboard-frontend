@@ -1,9 +1,11 @@
 "use client";
 
 import { Ellipsis } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState, useTransition } from "react";
 
 import Toast from "@/components/Toast";
+import { POPOVER_TRANSITION, popoverVariants } from "@/lib/motion";
 import { deleteRoofer } from "@/lib/admin-actions";
 
 function isRedirectError(err: unknown): boolean {
@@ -72,63 +74,78 @@ export default function RooferMoreMenu({
         <Ellipsis size={18} strokeWidth={1.8} aria-hidden />
       </button>
 
-      {open && (
-        <div className="surface absolute right-0 top-full z-20 mt-1.5 w-56 overflow-hidden rounded-xl py-1 shadow-lg shadow-black/10">
-          {!confirming ? (
-            <button
-              type="button"
-              onClick={() => setConfirming(true)}
-              className="flex w-full items-center px-3.5 py-2.5 text-left text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
-            >
-              Delete roofer
-            </button>
-          ) : (
-            <div className="px-3.5 py-3">
-              <p className="text-xs leading-relaxed text-ink-soft">
-                Delete <span className="font-semibold text-ink">{name}</span>?
-                Leads and pricing go too. Can’t be undone.
-              </p>
-              <div className="mt-3 flex justify-end gap-2">
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={() => setConfirming(false)}
-                  className="rounded-full px-3 py-1.5 text-xs font-semibold text-ink-soft hover:text-ink"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={() =>
-                    start(async () => {
-                      try {
-                        const result = await deleteRoofer(id);
-                        if (!result.ok) {
-                          setToast({ message: result.error, tone: "error" });
+      {/* Same popover physics as StatusPicker in the main dashboard — this is
+          the identical gesture (a small menu dropping from a trigger) and it
+          should not feel different just because it lives under /admin. */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            variants={popoverVariants}
+            initial="hidden"
+            animate="shown"
+            exit="hidden"
+            transition={POPOVER_TRANSITION}
+            // Scales from the trigger's corner rather than its own centre, so
+            // it reads as unfolding out of the button that opened it.
+            style={{ transformOrigin: "top right" }}
+            className="surface absolute right-0 top-full z-20 mt-1.5 w-56 overflow-hidden rounded-xl py-1 shadow-lg shadow-black/10"
+          >
+            {!confirming ? (
+              <button
+                type="button"
+                onClick={() => setConfirming(true)}
+                className="flex w-full items-center px-3.5 py-2.5 text-left text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+              >
+                Delete roofer
+              </button>
+            ) : (
+              <div className="px-3.5 py-3">
+                <p className="text-xs leading-relaxed text-ink-soft">
+                  Delete <span className="font-semibold text-ink">{name}</span>?
+                  Leads and pricing go too. Can’t be undone.
+                </p>
+                <div className="mt-3 flex justify-end gap-2">
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() => setConfirming(false)}
+                    className="rounded-full px-3 py-1.5 text-xs font-semibold text-ink-soft hover:text-ink"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() =>
+                      start(async () => {
+                        try {
+                          const result = await deleteRoofer(id);
+                          if (!result.ok) {
+                            setToast({ message: result.error, tone: "error" });
+                            setOpen(false);
+                            setConfirming(false);
+                          }
+                        } catch (err) {
+                          if (isRedirectError(err)) throw err;
+                          setToast({
+                            message: "Couldn’t delete that roofer.",
+                            tone: "error",
+                          });
                           setOpen(false);
                           setConfirming(false);
                         }
-                      } catch (err) {
-                        if (isRedirectError(err)) throw err;
-                        setToast({
-                          message: "Couldn’t delete that roofer.",
-                          tone: "error",
-                        });
-                        setOpen(false);
-                        setConfirming(false);
-                      }
-                    })
-                  }
-                  className="rounded-full bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
-                >
-                  {pending ? "Deleting…" : "Delete"}
-                </button>
+                      })
+                    }
+                    className="rounded-full bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                  >
+                    {pending ? "Deleting…" : "Delete"}
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Toast
         message={toast?.message ?? null}

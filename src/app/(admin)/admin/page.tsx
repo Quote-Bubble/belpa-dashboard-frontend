@@ -1,9 +1,6 @@
-import { ChevronRight } from "lucide-react";
-import Link from "next/link";
-
 import PageHeader from "@/components/PageHeader";
 import AddRoofer from "@/components/admin/AddRoofer";
-import DeployBadge from "@/components/admin/DeployBadge";
+import RooferList from "@/components/admin/RooferList";
 import { createClient } from "@/lib/supabase/server";
 import type { RooferAdminRow } from "@/lib/types";
 
@@ -21,10 +18,12 @@ export default async function AdminFleetPage() {
   const rows = (data ?? []) as RooferAdminRow[];
 
   const { data: leadRows } = await supabase.from("leads").select("roofer_id");
-  const counts = new Map<string, number>();
+  // Plain object rather than a Map: this crosses the server/client boundary to
+  // RooferList, and a Map is not serialisable in an RSC payload.
+  const counts: Record<string, number> = {};
   (leadRows ?? []).forEach((l) => {
     const rid = (l as { roofer_id: string }).roofer_id;
-    counts.set(rid, (counts.get(rid) ?? 0) + 1);
+    counts[rid] = (counts[rid] ?? 0) + 1;
   });
 
   return (
@@ -34,50 +33,7 @@ export default async function AdminFleetPage() {
       <AddRoofer />
 
       <div className="surface overflow-hidden rounded-2xl">
-        {rows.length === 0 ? (
-          <p className="px-5 py-14 text-center text-sm text-muted">
-            No roofers yet — add your first one above.
-          </p>
-        ) : (
-          <ul className="divide-y divide-line/70">
-            {rows.map((r) => {
-              const leads = counts.get(r.id) ?? 0;
-              return (
-                <li key={r.id}>
-                  <Link
-                    href={`/admin/${r.id}`}
-                    className="group flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-black/[0.02] sm:gap-4 sm:px-5"
-                  >
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-b from-brand-400 to-brand-600 text-sm font-semibold text-white">
-                      {r.name.charAt(0).toUpperCase()}
-                    </span>
-
-                    <span className="min-w-0 flex-1 truncate font-semibold text-ink group-hover:text-brand-700">
-                      {r.name}
-                    </span>
-
-                    <span className="hidden max-w-[200px] truncate text-sm text-ink-soft lg:block">
-                      {r.website ? r.website.replace(/^https?:\/\//, "") : null}
-                    </span>
-
-                    <DeployBadge status={r.deploy_status} />
-
-                    <span className="hidden w-20 shrink-0 text-right text-sm text-ink-soft sm:block">
-                      <span className="font-semibold tabular-nums text-ink">
-                        {leads}
-                      </span>{" "}
-                      <span className="text-xs text-muted">
-                        lead{leads === 1 ? "" : "s"}
-                      </span>
-                    </span>
-
-                    <ChevronRight size={16} strokeWidth={2} aria-hidden />
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+        <RooferList rows={rows} counts={counts} />
       </div>
     </div>
   );

@@ -1,6 +1,9 @@
 "use client";
 
+import { AnimatePresence, motion } from "motion/react";
 import { useState, useTransition } from "react";
+
+import { EASE_SOFT, POPOVER_TRANSITION } from "@/lib/motion";
 import { createClient } from "@/lib/supabase/client";
 
 /**
@@ -132,26 +135,54 @@ export default function AllowedDomains({
         </button>
       </div>
 
-      {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+      {/* Errors slide down rather than appearing, so the fields below being
+          pushed reads as caused by the message rather than as a jump. */}
+      <AnimatePresence initial={false}>
+        {error && (
+          <motion.p
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={POPOVER_TRANSITION}
+            className="overflow-hidden text-xs text-red-600"
+          >
+            <span className="mt-2 block">{error}</span>
+          </motion.p>
+        )}
+      </AnimatePresence>
 
       {origins.length > 0 && (
         <ul className="mt-3 space-y-1.5">
-          {origins.map((origin) => (
-            <li
-              key={origin}
-              className="flex items-center justify-between gap-3 rounded-lg bg-[#f7f8fa] px-3 py-1.5"
-            >
-              <span className="truncate text-xs text-ink">{origin}</span>
-              <button
-                type="button"
-                onClick={() => save(origins.filter((o) => o !== origin))}
-                disabled={pending}
-                className="shrink-0 text-xs font-semibold text-muted transition-colors hover:text-red-600 disabled:opacity-60"
+          {/* This list is the one place in admin where entries are added and
+              removed by hand, so it is where an unannounced change is most
+              disorienting: the roofer's site allowlist decides whether their
+              embed loads at all. Height collapse on exit means the rows below
+              slide up rather than snapping into the gap. */}
+          <AnimatePresence initial={false}>
+            {origins.map((origin) => (
+              <motion.li
+                key={origin}
+                layout
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2, ease: EASE_SOFT }}
+                className="overflow-hidden"
               >
-                Remove
-              </button>
-            </li>
-          ))}
+                <span className="flex items-center justify-between gap-3 rounded-lg bg-[#f7f8fa] px-3 py-1.5">
+                  <span className="truncate text-xs text-ink">{origin}</span>
+                  <button
+                    type="button"
+                    onClick={() => save(origins.filter((o) => o !== origin))}
+                    disabled={pending}
+                    className="shrink-0 text-xs font-semibold text-muted transition-colors hover:text-red-600 disabled:opacity-60"
+                  >
+                    Remove
+                  </button>
+                </span>
+              </motion.li>
+            ))}
+          </AnimatePresence>
         </ul>
       )}
     </div>

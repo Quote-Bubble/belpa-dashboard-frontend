@@ -1,17 +1,24 @@
 "use client";
 
+import { AnimatePresence, motion } from "motion/react";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import InstallSnippets from "@/components/admin/InstallSnippets";
 import AllowedDomains from "@/components/admin/AllowedDomains";
 import Toast from "@/components/Toast";
+import { EASE_SOFT, INDICATOR, POPOVER_TRANSITION } from "@/lib/motion";
 import type { ActionResult } from "@/lib/action-result";
 import { unlinkRooferLogin } from "@/lib/admin-actions";
 
 const field =
   "field w-full px-3 py-2.5 text-sm text-ink outline-none placeholder:text-muted";
 const label = "mb-1.5 block text-xs font-medium text-ink-soft";
+
+/** Card height easing between tabs. Slower than the crossfade on purpose:
+ *  the fade should finish before the box stops moving, or the new content
+ *  appears to slide rather than settle. */
+const PANEL_RESIZE = { duration: 0.3, ease: EASE_SOFT } as const;
 
 type Tab = "details" | "install" | "access";
 
@@ -91,153 +98,172 @@ export default function RooferPanel({
             >
               {t.label}
               {active && (
-                <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-brand-600" />
+                <motion.span
+                  layoutId="roofer-panel-underline"
+                  className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-brand-600"
+                  transition={INDICATOR}
+                />
               )}
             </button>
           );
         })}
       </div>
 
-      <div className="p-4 sm:p-5">
-        {tab === "details" && (
-          <form
-            action={async (fd) => showResult(await updateAction(fd))}
-            className="grid gap-3 sm:grid-cols-2"
+      {/* The three panels differ a lot in height — Details is a six-field form,
+          Access is a paragraph — so switching used to resize the card in one
+          jump. layout on the wrapper animates that height change, and mode
+          ="wait" keeps the outgoing panel from overlapping the incoming one
+          while it happens. */}
+      <motion.div layout transition={PANEL_RESIZE} className="p-4 sm:p-5">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={tab}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={POPOVER_TRANSITION}
           >
-            <div className="sm:col-span-2">
-              <label className={label} htmlFor="name">
-                Company
-              </label>
-              <input
-                id="name"
-                name="name"
-                defaultValue={details.name}
-                className={field}
-                required
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <label className={label} htmlFor="website">
-                Website
-              </label>
-              <input
-                id="website"
-                name="website"
-                defaultValue={details.website}
-                className={field}
-                placeholder="https://"
-              />
-            </div>
-            <div>
-              <label className={label} htmlFor="contact_name">
-                Contact name
-              </label>
-              <input
-                id="contact_name"
-                name="contact_name"
-                defaultValue={details.contactName}
-                className={field}
-              />
-            </div>
-            <div>
-              <label className={label} htmlFor="contact_phone">
-                Contact phone
-              </label>
-              <input
-                id="contact_phone"
-                name="contact_phone"
-                defaultValue={details.contactPhone}
-                className={field}
-              />
-            </div>
-            <div className="sm:col-span-2 flex justify-end pt-1">
-              <button
-                type="submit"
-                className="btn-primary rounded-full px-5 py-2 text-sm font-semibold"
+            {tab === "details" && (
+              <form
+                action={async (fd) => showResult(await updateAction(fd))}
+                className="grid gap-3 sm:grid-cols-2"
               >
-                Save
-              </button>
-            </div>
-          </form>
-        )}
+                <div className="sm:col-span-2">
+                  <label className={label} htmlFor="name">
+                    Company
+                  </label>
+                  <input
+                    id="name"
+                    name="name"
+                    defaultValue={details.name}
+                    className={field}
+                    required
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className={label} htmlFor="website">
+                    Website
+                  </label>
+                  <input
+                    id="website"
+                    name="website"
+                    defaultValue={details.website}
+                    className={field}
+                    placeholder="https://"
+                  />
+                </div>
+                <div>
+                  <label className={label} htmlFor="contact_name">
+                    Contact name
+                  </label>
+                  <input
+                    id="contact_name"
+                    name="contact_name"
+                    defaultValue={details.contactName}
+                    className={field}
+                  />
+                </div>
+                <div>
+                  <label className={label} htmlFor="contact_phone">
+                    Contact phone
+                  </label>
+                  <input
+                    id="contact_phone"
+                    name="contact_phone"
+                    defaultValue={details.contactPhone}
+                    className={field}
+                  />
+                </div>
+                <div className="sm:col-span-2 flex justify-end pt-1">
+                  <button
+                    type="submit"
+                    className="btn-primary rounded-full px-5 py-2 text-sm font-semibold"
+                  >
+                    Save
+                  </button>
+                </div>
+              </form>
+            )}
 
-        {tab === "install" && (
-          <>
-            <InstallSnippets
-              slug={install.slug}
-              button={install.button}
-              widget={install.widget}
-              link={install.link}
-              preview={install.preview}
-            />
-            {/* Directly under the snippet on purpose: handing over the embed
+            {tab === "install" && (
+              <>
+                <InstallSnippets
+                  slug={install.slug}
+                  button={install.button}
+                  widget={install.widget}
+                  link={install.link}
+                  preview={install.preview}
+                />
+                {/* Directly under the snippet on purpose: handing over the embed
                 and locking it to their domain are one job, done in one sitting,
                 and splitting them is how the second half gets forgotten. */}
-            <AllowedDomains
-              rooferId={rooferId}
-              initial={install.allowedOrigins}
-              website={details.website}
-            />
-          </>
-        )}
-
-        {tab === "access" && (
-          <div className="space-y-3">
-            {members.length > 0 ? (
-              <ul className="space-y-2">
-                {members.map((m) => (
-                  <li
-                    key={m.email}
-                    className="flex items-center justify-between gap-3 rounded-xl bg-brand-50/80 px-3 py-2"
-                  >
-                    <span className="truncate text-xs font-medium text-brand-700">
-                      {m.email}
-                    </span>
-                    <button
-                      type="button"
-                      disabled={unlinking}
-                      onClick={() =>
-                        startUnlink(async () => {
-                          showResult(
-                            await unlinkRooferLogin(rooferId, m.email),
-                          );
-                        })
-                      }
-                      className="shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:opacity-60"
-                    >
-                      Unlink
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-muted">No logins linked yet.</p>
+                <AllowedDomains
+                  rooferId={rooferId}
+                  initial={install.allowedOrigins}
+                  website={details.website}
+                />
+              </>
             )}
-            <form
-              action={async (fd) => showResult(await linkAction(fd))}
-              className="flex flex-col gap-2 sm:flex-row"
-            >
-              <input
-                name="email"
-                type="email"
-                required
-                placeholder="roofer@email.co.uk"
-                className={`${field} sm:flex-1`}
-              />
-              <button
-                type="submit"
-                className="btn-primary shrink-0 rounded-full px-4 py-2.5 text-sm font-semibold"
-              >
-                Link
-              </button>
-            </form>
-            <p className="text-xs text-muted">
-              They must create an account first. Then link their signup email
-              here.
-            </p>
-          </div>
-        )}
-      </div>
+
+            {tab === "access" && (
+              <div className="space-y-3">
+                {members.length > 0 ? (
+                  <ul className="space-y-2">
+                    {members.map((m) => (
+                      <li
+                        key={m.email}
+                        className="flex items-center justify-between gap-3 rounded-xl bg-brand-50/80 px-3 py-2"
+                      >
+                        <span className="truncate text-xs font-medium text-brand-700">
+                          {m.email}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={unlinking}
+                          onClick={() =>
+                            startUnlink(async () => {
+                              showResult(
+                                await unlinkRooferLogin(rooferId, m.email),
+                              );
+                            })
+                          }
+                          className="shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:opacity-60"
+                        >
+                          Unlink
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted">No logins linked yet.</p>
+                )}
+                <form
+                  action={async (fd) => showResult(await linkAction(fd))}
+                  className="flex flex-col gap-2 sm:flex-row"
+                >
+                  <input
+                    name="email"
+                    type="email"
+                    required
+                    placeholder="roofer@email.co.uk"
+                    className={`${field} sm:flex-1`}
+                  />
+                  <button
+                    type="submit"
+                    className="btn-primary shrink-0 rounded-full px-4 py-2.5 text-sm font-semibold"
+                  >
+                    Link
+                  </button>
+                </form>
+                <p className="text-xs text-muted">
+                  They must create an account first. Then link their signup
+                  email here.
+                </p>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </motion.div>
 
       <Toast
         message={toast?.message ?? null}

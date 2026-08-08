@@ -52,6 +52,21 @@ export const rowExit: Transition = {
   ease: EASE_SOFT,
 };
 
+/**
+ * An indicator that slides between targets via a shared layoutId — the tab
+ * underline in the admin hub, the filled pill in the install tabs.
+ *
+ * A spring rather than a duration because the travel distance varies with how
+ * far apart the two tabs are. A fixed duration covering 40px and 400px looks
+ * sluggish at one end and abrupt at the other; a spring reads the same at both.
+ */
+export const INDICATOR: Transition = {
+  type: "spring",
+  stiffness: 420,
+  damping: 34,
+  mass: 0.7,
+};
+
 /** Section fade-in used for page header + toolbar + table shell. */
 export const fadeUp: Variants = {
   hidden: { opacity: 0 },

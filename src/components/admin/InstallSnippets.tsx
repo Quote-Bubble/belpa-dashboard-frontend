@@ -1,7 +1,10 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { QRCodeCanvas } from "qrcode.react";
+
+import { INDICATOR, POPOVER_TRANSITION } from "@/lib/motion";
 
 type Method = "button" | "widget" | "link";
 
@@ -77,12 +80,21 @@ export default function InstallSnippets({
                 type="button"
                 onClick={() => setTab(t.value)}
                 className={[
-                  "flex-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors sm:flex-none",
-                  active
-                    ? "bg-brand-600 text-white"
-                    : "text-ink-soft hover:text-ink",
+                  "relative flex-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors duration-200 sm:flex-none",
+                  active ? "text-white" : "text-ink-soft hover:text-ink",
                 ].join(" ")}
               >
+                {/* The filled pill is one element that slides between tabs,
+                    rather than a background colour that blinks from one button
+                    to the next. Sits behind the label via -z-10 so the text
+                    stays selectable and keeps its own colour transition. */}
+                {active && (
+                  <motion.span
+                    layoutId="install-tab-pill"
+                    className="absolute inset-0 -z-10 rounded-full bg-brand-600"
+                    transition={INDICATOR}
+                  />
+                )}
                 {t.label}
               </button>
             );
@@ -113,13 +125,27 @@ export default function InstallSnippets({
         </div>
       </div>
 
-      <p className="mt-4 mb-1.5 text-xs font-medium text-ink-soft">
-        {LABELS[tab]}
-      </p>
+      {/* mode="wait" so the outgoing snippet clears before the new one
+          arrives. Without it the two overlap mid-fade and you briefly read
+          two different code blocks stacked on each other, which on a dark
+          block is genuinely unreadable rather than merely busy. */}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={tab}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={POPOVER_TRANSITION}
+        >
+          <p className="mt-4 mb-1.5 text-xs font-medium text-ink-soft">
+            {LABELS[tab]}
+          </p>
 
-      <pre className="overflow-x-auto rounded-xl bg-[#0f172a] px-3.5 py-2.5 text-[12px] leading-relaxed text-[#e2e8f0]">
-        <code>{code}</code>
-      </pre>
+          <pre className="overflow-x-auto rounded-xl bg-[#0f172a] px-3.5 py-2.5 text-[12px] leading-relaxed text-[#e2e8f0]">
+            <code>{code}</code>
+          </pre>
+        </motion.div>
+      </AnimatePresence>
 
       {tab === "link" && (
         <div

@@ -6,6 +6,7 @@ import { useFormStatus } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 
 import Toast from "@/components/Toast";
+import { EASE_SOFT, POPOVER_TRANSITION } from "@/lib/motion";
 import { createRoofer } from "@/lib/admin-actions";
 import type { ActionResult } from "@/lib/action-result";
 
@@ -76,7 +77,16 @@ export default function AddRoofer() {
           </span>
           <span className="text-sm font-semibold text-ink">Add a roofer</span>
         </span>
-        <ChevronDown size={14} strokeWidth={2} aria-hidden />
+        {/* Flips to point up while the form is open. The chevron is the only
+            thing on this row indicating state, and leaving it pointing down at
+            an already-open form quietly says the opposite of what is true. */}
+        <motion.span
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={POPOVER_TRANSITION}
+          className="inline-flex"
+        >
+          <ChevronDown size={14} strokeWidth={2} aria-hidden />
+        </motion.span>
       </button>
 
       <AnimatePresence initial={false}>
@@ -86,7 +96,7 @@ export default function AddRoofer() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.28, ease: EASE_SOFT }}
             className="overflow-hidden"
           >
             <form
