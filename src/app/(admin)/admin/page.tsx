@@ -32,12 +32,13 @@ export default async function AdminFleetPage() {
 
   return (
     <div>
-      <PageHeader title="Roofers" />
-
-      {/* Above the fleet, because it is a queue: it has to be seen on the way
-          past, not found. It collapses to a single quiet line when empty, so
-          it costs nothing on the days there is nothing to review. */}
-      <Signups initial={signups} />
+      {/* In the header rather than the body: reviewing a signup is rare, and a
+          permanent card meant the page's most prominent block usually read
+          "Nothing waiting". The trigger's count badge keeps it noticeable on
+          the days it matters without costing anything on the days it does not. */}
+      <PageHeader title="Roofers">
+        <Signups initial={signups} />
+      </PageHeader>
 
       <AddRoofer />
 
