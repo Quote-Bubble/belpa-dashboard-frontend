@@ -1,6 +1,7 @@
 import PageHeader from "@/components/PageHeader";
 import AddRoofer from "@/components/admin/AddRoofer";
 import RooferList from "@/components/admin/RooferList";
+import Signups, { type Signup } from "@/components/admin/Signups";
 import { createClient } from "@/lib/supabase/server";
 import type { RooferAdminRow } from "@/lib/types";
 
@@ -26,9 +27,17 @@ export default async function AdminFleetPage() {
     counts[rid] = (counts[rid] ?? 0) + 1;
   });
 
+  const { data: signupRows } = await supabase.rpc("admin_list_signups");
+  const signups = (signupRows ?? []) as Signup[];
+
   return (
     <div>
       <PageHeader title="Roofers" />
+
+      {/* Above the fleet, because it is a queue: it has to be seen on the way
+          past, not found. It collapses to a single quiet line when empty, so
+          it costs nothing on the days there is nothing to review. */}
+      <Signups initial={signups} />
 
       <AddRoofer />
 
