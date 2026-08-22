@@ -44,6 +44,8 @@ import {
 } from "@/lib/format";
 import RoofMap from "@/components/RoofMap";
 import StatusPicker from "@/components/StatusPicker";
+import { DamagePhotos } from "@/components/DamagePhotos";
+import { SeverityBadge, SeverityMeter } from "@/components/SeverityBadge";
 
 const Icons = {
   phone: (
@@ -173,6 +175,10 @@ export default function QuoteDetailPanel({
   const solar = payload?.solar ?? null;
   const roofline = payload?.roofline ?? null;
   const obstructions = payload?.obstructions ?? null;
+  const damage = payload?.damage ?? null;
+  const photoPaths = (damage?.photoPaths ?? []).filter(
+    (p): p is string => typeof p === "string",
+  );
 
   const postcode = displayPostcode(lead.addressFormatted, lead.addressPostcode);
   const tone = intentTone(lead.intent);
@@ -244,6 +250,7 @@ export default function QuoteDetailPanel({
               >
                 {intentLabel(lead.intent)}
               </span>
+              {lead.severity ? <SeverityBadge score={lead.severity} /> : null}
             </div>
 
             <p
@@ -432,7 +439,34 @@ export default function QuoteDetailPanel({
                       value={formatCount(obstructions?.rooflights)}
                     />
                   </Cluster>
+
+                  {lead.severity ? (
+                    <div>
+                      <ColLabel>Damage</ColLabel>
+                      <div className="space-y-4">
+                        <SeverityMeter score={lead.severity} />
+                        {damage?.severity?.visibleIssues?.length ? (
+                          <div>
+                            <p className="text-[11px] font-medium uppercase tracking-wide text-muted">
+                              Visible in the photos
+                            </p>
+                            <ul className="mt-1 space-y-0.5">
+                              {damage.severity.visibleIssues.map((issue) => (
+                                <li key={issue} className="text-sm text-ink">
+                                  {issue}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
+
+                {photoPaths.length > 0 ? (
+                  <DamagePhotos paths={photoPaths} />
+                ) : null}
 
                 <p className="mt-6 border-t border-line pt-4 text-xs text-muted">
                   Measured by {payloadLabel(solar?.measurementMethod)} · imagery{" "}
@@ -442,6 +476,9 @@ export default function QuoteDetailPanel({
                     : ""}
                   . Gutter and obstruction figures are totals — the widget does
                   not store where the customer marked them.
+                  {lead.severity
+                    ? " Damage severity is graded automatically from the customer's photos and is an indication only — it narrows the estimate range but is no substitute for seeing the roof."
+                    : ""}
                 </p>
               </>
             )}

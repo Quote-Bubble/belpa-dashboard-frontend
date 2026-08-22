@@ -14,7 +14,7 @@ const VALID_INTENTS: readonly LeadIntent[] = [
 
 /** Columns needed for Quotes / Jobs list rows (payload is loaded on expand). */
 export const LEAD_LIST_COLUMNS =
-  "id,status,intent,lead_type,job_type,contact_name,contact_phone,contact_email,address_formatted,address_postcode,quote_min_ex_vat,quote_max_ex_vat,actual_price_ex_vat,received_at,archived";
+  "id,status,intent,lead_type,job_type,contact_name,contact_phone,contact_email,address_formatted,address_postcode,quote_min_ex_vat,quote_max_ex_vat,actual_price_ex_vat,severity,received_at,archived";
 
 export type LeadRow = {
   id: string;
@@ -30,6 +30,7 @@ export type LeadRow = {
   quote_min_ex_vat: number | null;
   quote_max_ex_vat: number | null;
   actual_price_ex_vat: number | null;
+  severity: number | null;
   received_at: string;
   archived: boolean;
 };
@@ -54,6 +55,12 @@ export function mapLeadRow(row: LeadRow): DashboardLead {
     quoteMinExVat: row.quote_min_ex_vat,
     quoteMaxExVat: row.quote_max_ex_vat,
     actualPriceExVat: row.actual_price_ex_vat,
+    // Defensive: the column is CHECK-constrained to 1-5, but a row written by
+    // an older backend (or a future one) must not put junk on screen.
+    severity:
+      row.severity !== null && row.severity >= 1 && row.severity <= 5
+        ? (row.severity as DashboardLead["severity"])
+        : null,
     receivedAt: row.received_at,
     archived: row.archived,
   };

@@ -4,6 +4,7 @@ import type {
   LeadIntent,
   LeadStatus,
   RooflineScope,
+  SeverityScore,
 } from "@/lib/types";
 
 const gbp = new Intl.NumberFormat("en-GB", {
@@ -128,6 +129,48 @@ export function intentLabel(intent: LeadIntent): string {
  * QuotesClient's Follow-up filter already uses (FILTER_COLORS.followup.ink),
  * so the tab and the badge agree on what a browser looks like.
  */
+/**
+ * Severity 1-5 as a green-to-red ramp.
+ *
+ * Deliberately rendered as an outlined tag or a dot rather than a filled pill:
+ * intentTone's note about not competing with the status pill applies doubly
+ * here, because severity 1 and 5 borrow the won/lost greens and reds. A filled
+ * red "5" sitting inches from a filled red "Lost" would read as a status.
+ *
+ * Colours are reused by value from statusColor / intentTone / FILTER_COLORS
+ * rather than newly invented, which is this codebase's convention.
+ */
+export function severityTone(score: SeverityScore): { fg: string; bg: string } {
+  switch (score) {
+    case 1:
+      return { fg: "#0d6b3c", bg: "#e6f6ee" };
+    case 2:
+      return { fg: "#0f766e", bg: "#f0fdfa" };
+    case 3:
+      return { fg: "#b45309", bg: "#fffbeb" };
+    case 4:
+      return { fg: "#c2410c", bg: "#fff3ed" };
+    case 5:
+      return { fg: "#c02626", bg: "#fdeaea" };
+  }
+}
+
+/** Word for a severity score. Kept short — it sits beside "N/5", not instead. */
+export function severityLabel(score: SeverityScore): string {
+  switch (score) {
+    case 1:
+      return "Minimal";
+    case 2:
+      return "Minor";
+    case 3:
+      return "Moderate";
+    case 4:
+      return "Significant";
+    case 5:
+      return "Severe";
+  }
+}
+
 export function intentTone(intent: LeadIntent): { fg: string; bg: string } {
   switch (intent) {
     case "estimate_viewed":
