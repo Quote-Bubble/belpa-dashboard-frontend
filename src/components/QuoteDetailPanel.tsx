@@ -43,6 +43,7 @@ import {
   whatsappLink,
 } from "@/lib/format";
 import RoofMap from "@/components/RoofMap";
+import StreetView from "@/components/StreetView";
 import StatusPicker from "@/components/StatusPicker";
 
 const Icons = {
@@ -338,12 +339,28 @@ export default function QuoteDetailPanel({
 
           {/* ---------------- Evidence: everything you verify ---------------- */}
           <div className="min-w-0">
-            <div className="h-56 sm:h-72">
-              {loading ? (
-                <div className="h-full animate-pulse rounded-xl bg-black/[0.04]" />
-              ) : (
-                <RoofMap payload={payload} />
-              )}
+            {/* Roof from above, frontage from the road. The satellite view
+                answers how big the job is; the street view answers whether it
+                is worth driving to — parking, access, scaffold room, side gate.
+                Side by side on desktop, stacked on a phone. */}
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="h-56 sm:h-72">
+                {loading ? (
+                  <div className="h-full animate-pulse rounded-xl bg-black/[0.04]" />
+                ) : (
+                  <RoofMap payload={payload} />
+                )}
+              </div>
+              <div className="h-56 sm:h-72">
+                {loading ? (
+                  <div className="h-full animate-pulse rounded-xl bg-black/[0.04]" />
+                ) : (
+                  <StreetView
+                    payload={payload}
+                    address={lead.addressFormatted}
+                  />
+                )}
+              </div>
             </div>
 
             {payload?.conditionFlagged && (
