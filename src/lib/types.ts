@@ -27,6 +27,8 @@ export type JobType =
   | "gutters_fascias_soffits"
   | "other";
 
+export type SeverityScore = 1 | 2 | 3 | 4 | 5;
+
 export type DashboardLead = {
   id: string;
   status: LeadStatus;
@@ -42,6 +44,13 @@ export type DashboardLead = {
   quoteMaxExVat: number | null;
   /** Roofer-entered won price (ex VAT). Null until they fill it on Jobs. */
   actualPriceExVat: number | null;
+  /**
+   * Damage severity 1-5, graded from customer photos by the backend. Null is
+   * the norm, not an error: the job type never offered photos, the customer
+   * skipped them, or the grader was unsure. Read-only here — see migration
+   * 0019, which deliberately grants no UPDATE on this column.
+   */
+  severity: SeverityScore | null;
   receivedAt: string; // ISO timestamp
   /** Persisted on `leads.archived`. Hidden from the main tabs; shown under "Archived". */
   archived: boolean;
@@ -102,6 +111,19 @@ export type LeadPayload = {
     rooflights?: number | null;
   } | null;
   fallbackReason?: string | null;
+  /**
+   * Storage paths in the private `lead-photos` bucket, in the order the
+   * customer added them. Read via short-lived signed URLs — never public.
+   */
+  damage?: {
+    photoPaths?: string[] | null;
+    severity?: {
+      score?: number | null;
+      confidence?: string | null;
+      visibleIssues?: string[] | null;
+      model?: string | null;
+    } | null;
+  } | null;
 };
 
 /** Fetch state for one lead's payload, loaded lazily when a row is expanded. */

@@ -10,7 +10,7 @@ import type {
   LeadStatus,
 } from "@/lib/types";
 import { EXPAND_TRANSITION, rowExit } from "@/lib/motion";
-import { formatRelativeTime, jobTypeLabel } from "@/lib/format";
+import { formatRelativeTime, jobTypeLabel, severityTone } from "@/lib/format";
 import { PAGE_SIZE_OPTIONS } from "@/lib/pagination";
 import StatusPicker from "@/components/StatusPicker";
 import QuoteDetailPanel from "@/components/QuoteDetailPanel";
@@ -297,8 +297,27 @@ export default function QuotesTable({
                         </div>
 
                         {/* Job type */}
-                        <div className="truncate text-ink-soft">
-                          {jobTypeLabel(lead.jobType)}
+                        <div className="min-w-0">
+                          <div className="truncate text-ink-soft">
+                            {jobTypeLabel(lead.jobType)}
+                          </div>
+                          {lead.severity ? (
+                            <div
+                              className="mt-0.5 flex items-center gap-1.5 text-[12px] font-medium"
+                              style={{ color: severityTone(lead.severity).fg }}
+                            >
+                              <span
+                                aria-hidden="true"
+                                className="h-1.5 w-1.5 shrink-0 rounded-full"
+                                style={{
+                                  backgroundColor: severityTone(lead.severity).fg,
+                                }}
+                              />
+                              <span className="truncate">
+                                Severity {lead.severity}/5
+                              </span>
+                            </div>
+                          ) : null}
                         </div>
 
                         {/* Estimate */}
@@ -439,6 +458,14 @@ export default function QuotesTable({
                           animate={false}
                         />
                       </span>
+                      {lead.severity ? (
+                        <span
+                          className="font-medium"
+                          style={{ color: severityTone(lead.severity).fg }}
+                        >
+                          Severity {lead.severity}/5
+                        </span>
+                      ) : null}
                     </div>
                   </button>
                   <div className="flex shrink-0 flex-col items-end gap-2">
