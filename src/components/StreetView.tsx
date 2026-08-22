@@ -133,6 +133,50 @@ export default function StreetView({
         onError={() => setFailed(true)}
       />
 
+      {/* Which house.
+          A street photo can hold four or five properties, and until now nothing
+          said which one was quoted. Street View Static has no marker parameter,
+          but it does not need one: the camera is aimed at the property by
+          computed bearing, so the quoted house is at the horizontal centre of
+          the frame BY CONSTRUCTION. The marker just makes that legible.
+
+          It hangs from the top edge rather than sitting on the building, so it
+          points without covering the frontage, the roofline or the driveway —
+          the things the photo exists to show. */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 flex justify-center"
+        aria-hidden="true"
+      >
+        <svg width="30" height="74" viewBox="0 0 30 74" fill="none">
+          {/* Dark stroke under every shape: this sits over uncontrolled
+              photography and has to read against a bright sky or a dark hedge. */}
+          <line
+            x1="15"
+            y1="0"
+            x2="15"
+            y2="40"
+            stroke="rgba(0,0,0,0.45)"
+            strokeWidth="4"
+          />
+          <line
+            x1="15"
+            y1="0"
+            x2="15"
+            y2="40"
+            stroke="#2f6bff"
+            strokeWidth="2"
+            strokeDasharray="4 3"
+          />
+          <path
+            d="M15 62 L9.5 50 A7.5 7.5 0 1 1 20.5 50 Z"
+            fill="#2f6bff"
+            stroke="rgba(0,0,0,0.5)"
+            strokeWidth="2.5"
+          />
+          <circle cx="15" cy="44" r="2.6" fill="#fff" />
+        </svg>
+      </div>
+
       {/* Capture date matters: Street View is often years old, so an extension
           or a new driveway may simply not be in the picture yet. */}
       <span className="absolute left-2 top-2 flex items-center gap-1.5 rounded-md bg-black/55 px-2 py-1 text-[11px] font-medium text-white/90">
