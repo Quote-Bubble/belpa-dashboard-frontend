@@ -273,27 +273,12 @@ export default function QuoteDetailPanel({
               </p>
             )}
 
-            {/* What the grader saw, directly beneath the photos it read.
-                It belongs with them rather than in the right-hand column, and
-                putting it here also fills the space the shorter evidence
-                column used to leave empty. */}
-            {damage?.severity?.visibleIssues?.length ? (
-              <div className="mt-4 rounded-xl bg-black/[0.03] px-4 py-3">
-                <p className="text-[11px] font-medium uppercase tracking-wide text-muted">
-                  Visible in the photos
-                </p>
-                <p className="mt-1.5 text-[15px] leading-relaxed text-ink">
-                  {damage.severity.visibleIssues.join(" · ")}
-                </p>
-              </div>
-            ) : null}
-
-            {lead.severity ? (
-              <p className="mt-3 text-[11px] leading-snug text-muted">
-                Severity is graded automatically from these photos — an
-                indication only, and no substitute for seeing the roof.
-              </p>
-            ) : null}
+            {/* Deliberately nothing else under the photographs.
+                A "visible in the photos" list used to sit here naming what the
+                grader saw, with a disclaimer under it explaining that the
+                grade was only an indication. Both were writing captions for a
+                roofer who is already looking at the photographs and can see
+                the missing tiles perfectly well. */}
           </div>
 
           <div className="flex min-w-0 flex-col">
