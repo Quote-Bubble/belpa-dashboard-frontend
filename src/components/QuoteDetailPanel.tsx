@@ -220,14 +220,18 @@ export default function QuoteDetailPanel({
   ];
 
   /* At-a-glance rows: only what this lead actually knows. Property type and
-     storeys read as one fact ("Semi-detached, Two storeys"), the way someone
-     would say it out loud. */
-  const propertyLine = [
-    propertyTypeLabel(payload?.propertyType),
-    storeysLabel(payload?.storeys),
-  ]
+     storeys read as one fact, the way someone would say it out loud.
+     storeysLabel returns the bare count ("Two") because it used to sit under a
+     "Storeys" caption; without that caption "Semi-detached, Two" reads as a
+     truncation, so the noun goes back in here. */
+  const storeys = storeysLabel(payload?.storeys);
+  const storeysLine =
+    storeys === EMPTY
+      ? EMPTY
+      : `${storeys.toLowerCase()} store${payload?.storeys === 1 ? "y" : "ys"}`;
+  const propertyLine = [propertyTypeLabel(payload?.propertyType), storeysLine]
     .filter((v) => v && v !== EMPTY)
-    .join(", ");
+    .join(" · ");
 
   // The long tail, shown only on jobs that measured something.
   const survey = [
@@ -247,13 +251,21 @@ export default function QuoteDetailPanel({
 
   return (
     <div className="px-4 pb-4 pt-1 sm:px-6">
-      <div className="surface overflow-hidden rounded-2xl p-4 sm:p-6">
+      {/* Capped, not full-bleed.
+          Left to fill the table it sits in, the right-hand column ran to well
+          over a thousand pixels — a full-width WhatsApp button, sentences
+          spanning the screen, and a tall void under the thumbnails where the
+          shorter left column ran out. This is a card, so it is sized like one
+          and the columns stay in proportion to each other. */}
+      <div className="surface mx-auto max-w-4xl overflow-hidden rounded-2xl p-4 sm:p-5">
         {/* Evidence left, everything you act on right. On a phone it stacks in
             that same order: a roofer decides from the photograph first. */}
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,22rem)_1fr] lg:gap-8">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,20rem)_1fr] lg:gap-6">
           {/* ---------------- Evidence ---------------- */}
           <div className="min-w-0">
-            <div className="h-52 sm:h-64 lg:h-56">
+            {/* Sized by ratio rather than a fixed height, so it grows with the
+                column instead of leaving a gap beside it. */}
+            <div className="aspect-[4/3] w-full sm:aspect-[16/10] lg:aspect-[4/3]">
               {loading ? (
                 <div className="h-full animate-pulse rounded-xl bg-black/[0.04]" />
               ) : (
@@ -279,6 +291,28 @@ export default function QuoteDetailPanel({
                 Couldn&apos;t load the customer&apos;s photos just now.
               </p>
             )}
+
+            {/* What the grader saw, directly beneath the photos it read.
+                It belongs with them rather than in the right-hand column, and
+                putting it here also fills the space the shorter evidence
+                column used to leave empty. */}
+            {damage?.severity?.visibleIssues?.length ? (
+              <div className="mt-3 rounded-lg bg-black/[0.03] px-3 py-2.5">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted">
+                  Visible in the photos
+                </p>
+                <p className="mt-1 text-sm leading-snug text-ink">
+                  {damage.severity.visibleIssues.join(" · ")}
+                </p>
+              </div>
+            ) : null}
+
+            {lead.severity ? (
+              <p className="mt-3 text-[11px] leading-snug text-muted">
+                Severity is graded automatically from these photos — an
+                indication only, and no substitute for seeing the roof.
+              </p>
+            ) : null}
           </div>
 
           {/* ---------------- Action rail: everything you act on ------------- */}
@@ -286,7 +320,7 @@ export default function QuoteDetailPanel({
             <p className="font-display text-3xl font-semibold text-ink">
               {formatQuoteRange(lead.quoteMinExVat, lead.quoteMaxExVat)}
             </p>
-            <p className="mt-0.5 text-sm text-muted">
+            <p className="text-sm text-muted">
               ex. VAT
               {lead.actualPriceExVat != null && (
                 <span className="ml-2 font-semibold text-ink">
@@ -294,19 +328,19 @@ export default function QuoteDetailPanel({
                 </span>
               )}
             </p>
-            <p className="mt-2 text-sm font-medium text-ink-soft">
+            <p className="mt-1 text-sm font-medium text-ink-soft">
               {jobTypeLabel(lead.jobType)}
               {lead.leadType === "manual_consultation" &&
                 " · consultation request"}
             </p>
 
             {payload?.otherJobDescription && (
-              <p className="mt-3 rounded-lg bg-black/[0.03] px-3 py-2 text-sm text-ink-soft">
+              <p className="mt-2.5 rounded-lg bg-black/[0.03] px-3 py-2 text-sm text-ink-soft">
                 “{payload.otherJobDescription}”
               </p>
             )}
             {payload?.fallbackReason && (
-              <p className="mt-3 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+              <p className="mt-2.5 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
                 <span className="mt-0.5 shrink-0">{Icons.alert}</span>
                 <span>
                   No instant quote — {payloadLabel(payload.fallbackReason)}
@@ -316,7 +350,7 @@ export default function QuoteDetailPanel({
 
             {/* Status is the control; intent is a fact about the lead, so it
                 reads as a quiet outlined tag rather than a second pill. */}
-            <div className="mt-5 flex flex-wrap items-center gap-2">
+            <div className="mt-3 flex flex-wrap items-center gap-2">
               {onStatusChange ? (
                 <StatusPicker
                   status={lead.status}
@@ -347,7 +381,7 @@ export default function QuoteDetailPanel({
             </div>
 
             {payload?.conditionFlagged && (
-              <p className="mt-4 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+              <p className="mt-3 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
                 <span className="mt-0.5 shrink-0">{Icons.alert}</span>
                 <span>
                   Customer flagged the roof’s condition — worth asking about
@@ -357,7 +391,7 @@ export default function QuoteDetailPanel({
             )}
 
             {/* ---- what this lead actually knows ---- */}
-            <ul className="mt-5 space-y-3 border-t border-line pt-5">
+            <ul className="mt-4 space-y-2 border-t border-line pt-4">
               {propertyLine && <Row icon={Icons.home}>{propertyLine}</Row>}
               {materialLabel(payload?.material) !== EMPTY && (
                 <Row icon={Icons.layers}>{materialLabel(payload?.material)}</Row>
@@ -375,7 +409,9 @@ export default function QuoteDetailPanel({
               )}
               {lead.severity ? (
                 <Row icon={Icons.alert}>
-                  <SeverityMeter score={lead.severity} />
+                  {/* Label-less: the row's icon and the pill above already say
+                      "severity", and the caption cost a whole extra line. */}
+                  <SeverityMeter score={lead.severity} compact />
                 </Row>
               ) : null}
               <Row icon={Icons.clock}>
@@ -385,25 +421,8 @@ export default function QuoteDetailPanel({
               </Row>
             </ul>
 
-            {/* What the grader saw. Kept next to the severity it explains,
-                rather than in the survey drawer with the measurements. */}
-            {damage?.severity?.visibleIssues?.length ? (
-              <div className="mt-4 rounded-lg bg-black/[0.03] px-3 py-2.5">
-                <p className="text-[11px] font-medium uppercase tracking-wide text-muted">
-                  Visible in the photos
-                </p>
-                <ul className="mt-1 space-y-0.5">
-                  {damage.severity.visibleIssues.map((issue) => (
-                    <li key={issue} className="text-sm text-ink">
-                      {issue}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
             {/* ---- contact ---- */}
-            <div className="mt-5 border-t border-line pt-5">
+            <div className="mt-4 border-t border-line pt-4">
               {canText && (
                 <a
                   href={whatsappLink(lead.contactPhone)}
@@ -423,7 +442,7 @@ export default function QuoteDetailPanel({
                   WhatsApp {lead.contactName.split(" ")[0]}
                 </a>
               )}
-              <div className={canText ? "mt-4 space-y-3" : "space-y-3"}>
+              <div className={canText ? "mt-3 space-y-2" : "space-y-2"}>
                 {lead.contactPhone.trim() ? (
                   isSafeTelHref(lead.contactPhone) ? (
                     <a
@@ -459,7 +478,7 @@ export default function QuoteDetailPanel({
             </div>
 
             {error && (
-              <p className="mt-5 text-sm text-red-700">
+              <p className="mt-4 text-sm text-red-700">
                 Couldn’t load the full detail for this lead: {error}
               </p>
             )}
@@ -469,19 +488,19 @@ export default function QuoteDetailPanel({
                 nothing — which is every repair. This is what used to fill the
                 panel with dashes. */}
             {!loading && survey.length > 0 && (
-              <details className="group mt-5 border-t border-line pt-4">
+              <details className="group mt-4 border-t border-line pt-3">
                 <summary className="cursor-pointer list-none text-[11px] font-semibold uppercase tracking-[0.12em] text-muted transition-colors hover:text-ink-soft">
                   <span className="inline-block transition-transform group-open:rotate-90">
                     ▸
                   </span>{" "}
                   Full survey ({survey.length})
                 </summary>
-                <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
+                <div className="mt-3 grid grid-cols-2 gap-x-5 gap-y-3">
                   {survey.map(([label, value]) => (
                     <Figure key={label} label={label} value={value} />
                   ))}
                 </div>
-                <p className="mt-4 text-xs text-muted">
+                <p className="mt-3 text-[11px] leading-snug text-muted">
                   Measured by {payloadLabel(solar?.measurementMethod)} · imagery{" "}
                   {payloadLabel(solar?.imageryQuality).toLowerCase()}
                   {solar?.imageryDate
@@ -493,18 +512,10 @@ export default function QuoteDetailPanel({
               </details>
             )}
 
-            {lead.severity ? (
-              <p className="mt-4 text-xs text-muted">
-                Damage severity is graded automatically from the customer’s
-                photos and is an indication only — it narrows the estimate range
-                but is no substitute for seeing the roof.
-              </p>
-            ) : null}
-
             {/* Anchored to the foot of the rail so the reference and archive
                 sit on the panel's baseline instead of leaving a hole beneath
                 a rail that is shorter than the evidence column. */}
-            <div className="mt-5 flex items-center justify-between gap-3 border-t border-line pt-4 lg:mt-auto lg:pt-5">
+            <div className="mt-4 flex items-center justify-between gap-3 border-t border-line pt-3 lg:mt-auto">
               <QuoteIdCopy id={lead.id} />
               <button
                 type="button"

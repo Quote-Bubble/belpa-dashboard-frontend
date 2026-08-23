@@ -39,14 +39,24 @@ export function SeverityBadge({
  * A five-segment meter for the detail panel, where there is room to show the
  * score's position on the scale rather than just its value.
  */
-export function SeverityMeter({ score }: { score: SeverityScore }) {
+export function SeverityMeter({
+  score,
+  compact = false,
+}: {
+  score: SeverityScore;
+  /** Drops the caption for use in a labelled icon row, where "Damage severity"
+   *  is already implied and cost a whole line of its own. */
+  compact?: boolean;
+}) {
   const { fg } = severityTone(score);
   return (
     <div>
-      <p className="text-[11px] font-medium uppercase tracking-wide text-muted">
-        Damage severity
-      </p>
-      <div className="mt-1 flex items-center gap-2">
+      {!compact && (
+        <p className="text-[11px] font-medium uppercase tracking-wide text-muted">
+          Damage severity
+        </p>
+      )}
+      <div className={`flex items-center gap-2 ${compact ? "" : "mt-1"}`}>
         <span className="flex gap-1" aria-hidden="true">
           {[1, 2, 3, 4, 5].map((step) => (
             <span
