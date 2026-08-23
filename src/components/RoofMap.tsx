@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { APIProvider, Map, Polygon } from "@vis.gl/react-google-maps";
+import { APIProvider, Map, Marker, Polygon } from "@vis.gl/react-google-maps";
 
 import RoofPlan from "@/components/RoofPlan";
 import { sanitizePolygonCoords } from "@/lib/roof-plan";
@@ -15,6 +15,41 @@ const BRAND = "#2f6bff";
 /** Widget's default when a lead carries no stored framing — close enough to
  *  read a single roof, and what the flow itself opens on. */
 const FALLBACK_ZOOM = 20;
+
+/**
+ * The customer's dropped pin.
+ *
+ * Without it a repair lead is a satellite photograph of a street with nothing
+ * saying which house was quoted — the outline used to answer that, but repairs
+ * never draw one.
+ *
+ * The teardrop is the widget's own marker (LocateStep's SVG), so the roofer
+ * sees the same pin the customer placed.
+ *
+ * Drawn into a SQUARE canvas with the tip dead centre, which is the whole
+ * trick here: given a plain URL, Google centres the image on the coordinate.
+ * A normal pin-shaped image would therefore float half its height above the
+ * spot it marks, and correcting that needs google.maps.Point/Size — real
+ * constructors that do not exist until the Maps script has loaded, so building
+ * them during render is a race. Centring the tip sidesteps all of it.
+ */
+function pinIcon(pixels: number): string {
+  const centre = pixels / 2;
+  // Source teardrop is 36x48 with its tip at (18,48). Land that tip on the
+  // canvas centre and let the balloon rise above it.
+  const height = pixels * 0.47;
+  const scale = height / 48;
+  const x = centre - 18 * scale;
+  const y = centre - height;
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${pixels}" height="${pixels}" viewBox="0 0 ${pixels} ${pixels}">` +
+    `<g transform="translate(${x.toFixed(2)} ${y.toFixed(2)}) scale(${scale.toFixed(4)})">` +
+    // White stroke so the pin reads against a dark roof or a bright driveway.
+    `<path d="M18 0C8.06 0 0 8.06 0 18c0 13.5 18 30 18 30s18-16.5 18-30C36 8.06 27.94 0 18 0z" fill="${BRAND}" stroke="#fff" stroke-width="3"/>` +
+    `<circle cx="18" cy="18" r="7" fill="#fff"/>` +
+    `</g></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
 
 /**
  * The quote flow's satellite map, persisted to the dashboard.
@@ -80,6 +115,18 @@ export default function RoofMap({
           reuseMaps
           style={{ width: "100%", height: "100%" }}
         >
+          {/* Where the customer dropped the pin. Kept even when an outline
+              exists: the outline says how big the roof is, the pin says which
+              spot they actually confirmed, and on a terrace those can differ
+              by a house. Smaller in the strip, where a full-size pin would
+              cover the building it is pointing at. */}
+          <Marker
+            position={coords}
+            clickable={false}
+            title="Where the customer dropped the pin"
+            icon={pinIcon(thumb ? 30 : 60)}
+          />
+
           {path.length >= 3 && (
             <Polygon
               paths={path}
