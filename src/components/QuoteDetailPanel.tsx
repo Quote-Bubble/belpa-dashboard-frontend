@@ -30,7 +30,6 @@ import {
   formatQuoteRange,
   formatRelativeTime,
   intentLabel,
-  intentTone,
   isSafeMailtoHref,
   isSafeTelHref,
   jobTypeLabel,
@@ -48,7 +47,7 @@ import MediaStrip from "@/components/MediaStrip";
 import MediaViewer, { type MediaItem } from "@/components/MediaViewer";
 import StreetView from "@/components/StreetView";
 import StatusPicker from "@/components/StatusPicker";
-import { SeverityBadge, SeverityMeter } from "@/components/SeverityBadge";
+import { SeverityMeter } from "@/components/SeverityBadge";
 import { useSignedPhotos } from "@/lib/use-signed-photos";
 
 // 18px in the fact rows and contact list, to sit level with 15px text rather
@@ -178,7 +177,6 @@ export default function QuoteDetailPanel({
   );
 
   const postcode = displayPostcode(lead.addressFormatted, lead.addressPostcode);
-  const tone = intentTone(lead.intent);
   const canText = lead.contactPhone.trim() && isSafeTelHref(lead.contactPhone);
 
   const photos = useSignedPhotos(photoPaths);
@@ -316,6 +314,14 @@ export default function QuoteDetailPanel({
                 {jobTypeLabel(lead.jobType)}
                 {lead.leadType === "manual_consultation" &&
                   " · consultation request"}
+                {/* Intent, only when it is not the ordinary one.
+                    Its chip is gone because "Quote requested" described nearly
+                    every lead and said nothing. The other two are not noise:
+                    "priced only" means they never asked to be contacted, and
+                    "callback requested" means they are waiting for the phone
+                    to ring. Those ride on this line rather than as a pill. */}
+                {lead.intent !== "quote_requested" &&
+                  ` · ${intentLabel(lead.intent).toLowerCase()}`}
               </p>
 
               {payload?.otherJobDescription && (
@@ -332,9 +338,13 @@ export default function QuoteDetailPanel({
                 </p>
               )}
 
-              {/* Status is the control; intent is a fact about the lead, so it
-                reads as a quiet outlined tag rather than a second pill. */}
-              <div className="mt-4 flex flex-wrap items-center gap-2">
+              {/* Status alone.
+                  The intent tag restated what the panel already is, and the
+                  severity pill said the same thing as the meter a few rows
+                  below it. Three pills in a row for one piece of information
+                  read as clutter, so only the one you can actually change
+                  stays. */}
+              <div className="mt-4">
                 {onStatusChange ? (
                   <StatusPicker
                     status={lead.status}
@@ -351,17 +361,6 @@ export default function QuoteDetailPanel({
                     {statusLabel(lead.status)}
                   </span>
                 )}
-                <span
-                  className="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold"
-                  style={{
-                    color: tone.fg,
-                    background: tone.bg,
-                    borderColor: `${tone.fg}33`,
-                  }}
-                >
-                  {intentLabel(lead.intent)}
-                </span>
-                {lead.severity ? <SeverityBadge score={lead.severity} /> : null}
               </div>
 
               {payload?.conditionFlagged && (
