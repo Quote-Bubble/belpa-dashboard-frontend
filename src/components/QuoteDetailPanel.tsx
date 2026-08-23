@@ -5,6 +5,8 @@ import {
   Check,
   Clock,
   Copy,
+  House,
+  Layers,
   Mail,
   MapPin,
   Phone,
@@ -42,11 +44,12 @@ import {
   storeysLabel,
   whatsappLink,
 } from "@/lib/format";
-import RoofMap from "@/components/RoofMap";
+import MediaStrip from "@/components/MediaStrip";
+import MediaViewer, { type MediaItem } from "@/components/MediaViewer";
 import StreetView from "@/components/StreetView";
 import StatusPicker from "@/components/StatusPicker";
-import { DamagePhotos } from "@/components/DamagePhotos";
 import { SeverityBadge, SeverityMeter } from "@/components/SeverityBadge";
+import { useSignedPhotos } from "@/lib/use-signed-photos";
 
 const Icons = {
   phone: (
@@ -64,6 +67,12 @@ const Icons = {
   alert: (
     <TriangleAlert size={16} strokeWidth={2} />
   ),
+  home: (
+    <House size={16} strokeWidth={2} />
+  ),
+  layers: (
+    <Layers size={16} strokeWidth={2} />
+  ),
   copy: (
     <Copy size={13} strokeWidth={2.25} />
   ),
@@ -78,16 +87,15 @@ const Icons = {
   ),
 };
 
-function ColLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
-      {children}
-    </p>
-  );
-}
-
-/** Compact label-over-value cell. Missing values stay legible but recede, so a
- *  dash never carries the same weight as a real measurement. */
+/**
+ * Compact label-over-value cell, used only inside the full-survey disclosure.
+ *
+ * Nothing renders one of these with a missing value any more: the panel filters
+ * empties out before building the list. A repair lead was showing nine dashes
+ * out of thirteen fields, so most of the panel was spent saying what it did not
+ * know. The guard stays because a dash is still better than a blank if one ever
+ * slips through.
+ */
 function Figure({ label, value }: { label: string; value: string }) {
   const missing = value === EMPTY;
   return (
@@ -107,20 +115,26 @@ function Figure({ label, value }: { label: string; value: string }) {
   );
 }
 
-/** One titled group of survey figures. */
-function Cluster({
-  label,
+/** A row in the at-a-glance list: icon, then the fact itself. No label — the
+ *  icon carries it, and "Semi-detached" needs no caption saying "Property". */
+function Row({
+  icon,
   children,
 }: {
-  label: string;
+  icon: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <ColLabel>{label}</ColLabel>
-      <div className="grid grid-cols-2 gap-x-6 gap-y-4">{children}</div>
-    </div>
+    <li className="flex items-start gap-3">
+      <span className="mt-0.5 shrink-0 text-muted">{icon}</span>
+      <span className="min-w-0 text-sm font-medium text-ink">{children}</span>
+    </li>
   );
+}
+
+/** Drops empty values so a section with nothing in it disappears entirely. */
+function present(pairs: [string, string][]): [string, string][] {
+  return pairs.filter(([, value]) => value && value !== EMPTY);
 }
 
 /** The lead id, kept available for support without letting a UUID lead the page. */
@@ -185,12 +199,90 @@ export default function QuoteDetailPanel({
   const tone = intentTone(lead.intent);
   const canText = lead.contactPhone.trim() && isSafeTelHref(lead.contactPhone);
 
+  const photos = useSignedPhotos(photoPaths);
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+
+  /* The evidence strip. The roof outline leads, then the customer's photos.
+     The outline is only worth a tile when there is a live map behind it — with
+     no coordinates RoofMap falls back to a placeholder, and a tile whose whole
+     message is "nothing here" earns none of that space. */
+  const media: MediaItem[] = [
+    ...(payload?.coords
+      ? [{ kind: "map" as const, label: "Roof outline", payload }]
+      : []),
+    ...(photos.state === "ready"
+      ? photos.urls.map((url, i) => ({
+          kind: "photo" as const,
+          label: `Customer photo ${i + 1} of ${photos.urls.length}`,
+          url,
+        }))
+      : []),
+  ];
+
+  /* At-a-glance rows: only what this lead actually knows. Property type and
+     storeys read as one fact ("Semi-detached, Two storeys"), the way someone
+     would say it out loud. */
+  const propertyLine = [
+    propertyTypeLabel(payload?.propertyType),
+    storeysLabel(payload?.storeys),
+  ]
+    .filter((v) => v && v !== EMPTY)
+    .join(", ");
+
+  // The long tail, shown only on jobs that measured something.
+  const survey = [
+    ...present([
+      ["Area", formatArea(solar?.areaM2)],
+      ["Ground area", formatArea(solar?.groundAreaM2)],
+      ["Pitch", formatPitch(solar?.pitchDegrees)],
+      ["Roof type", roofTypeLabel(solar?.roofType)],
+      ["Gutter run", formatLength(roofline?.gutterLengthM)],
+      ["Perimeter", formatLength(roofline?.perimeterM)],
+      ["Scope", rooflineScopeLabel(roofline?.scope)],
+      ["Chimneys", formatCount(obstructions?.chimneys)],
+      ["Rooflights", formatCount(obstructions?.rooflights)],
+      ["Condition", conditionLabel(payload?.conditionAnswer)],
+    ]),
+  ];
+
   return (
     <div className="px-4 pb-4 pt-1 sm:px-6">
-      <div className="surface overflow-hidden rounded-2xl p-6 sm:p-7">
-        <div className="grid gap-7 lg:grid-cols-[minmax(0,19rem)_1fr] lg:gap-9">
+      <div className="surface overflow-hidden rounded-2xl p-4 sm:p-6">
+        {/* Evidence left, everything you act on right. On a phone it stacks in
+            that same order: a roofer decides from the photograph first. */}
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,22rem)_1fr] lg:gap-8">
+          {/* ---------------- Evidence ---------------- */}
+          <div className="min-w-0">
+            <div className="h-52 sm:h-64 lg:h-56">
+              {loading ? (
+                <div className="h-full animate-pulse rounded-xl bg-black/[0.04]" />
+              ) : (
+                <StreetView payload={payload} address={lead.addressFormatted} />
+              )}
+            </div>
+
+            {loading ? (
+              <div className="mt-2 flex gap-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="aspect-square flex-1 animate-pulse rounded-lg bg-black/[0.04]"
+                  />
+                ))}
+              </div>
+            ) : (
+              <MediaStrip items={media} onOpen={setViewerIndex} />
+            )}
+
+            {photos.state === "failed" && (
+              <p className="mt-2 text-xs text-muted">
+                Couldn&apos;t load the customer&apos;s photos just now.
+              </p>
+            )}
+          </div>
+
           {/* ---------------- Action rail: everything you act on ------------- */}
-          <div className="flex min-w-0 flex-col lg:border-r lg:border-line lg:pr-8">
+          <div className="flex min-w-0 flex-col">
             <p className="font-display text-3xl font-semibold text-ink">
               {formatQuoteRange(lead.quoteMinExVat, lead.quoteMaxExVat)}
             </p>
@@ -254,17 +346,64 @@ export default function QuoteDetailPanel({
               {lead.severity ? <SeverityBadge score={lead.severity} /> : null}
             </div>
 
-            <p
-              className="mt-3 flex items-center gap-2 text-sm text-ink-soft"
-              title={formatDateTime(lead.receivedAt)}
-            >
-              <span className="text-muted">{Icons.clock}</span>
-              {formatRelativeTime(lead.receivedAt)}
-            </p>
+            {payload?.conditionFlagged && (
+              <p className="mt-4 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                <span className="mt-0.5 shrink-0">{Icons.alert}</span>
+                <span>
+                  Customer flagged the roof’s condition — worth asking about
+                  before you price the job.
+                </span>
+              </p>
+            )}
+
+            {/* ---- what this lead actually knows ---- */}
+            <ul className="mt-5 space-y-3 border-t border-line pt-5">
+              {propertyLine && <Row icon={Icons.home}>{propertyLine}</Row>}
+              {materialLabel(payload?.material) !== EMPTY && (
+                <Row icon={Icons.layers}>{materialLabel(payload?.material)}</Row>
+              )}
+              {(lead.addressFormatted || postcode) && (
+                <Row icon={Icons.pin}>
+                  {lead.addressFormatted}
+                  {postcode && (
+                    <span className="text-ink-soft">
+                      {lead.addressFormatted ? ", " : ""}
+                      {postcode}
+                    </span>
+                  )}
+                </Row>
+              )}
+              {lead.severity ? (
+                <Row icon={Icons.alert}>
+                  <SeverityMeter score={lead.severity} />
+                </Row>
+              ) : null}
+              <Row icon={Icons.clock}>
+                <span title={formatDateTime(lead.receivedAt)}>
+                  {formatRelativeTime(lead.receivedAt)}
+                </span>
+              </Row>
+            </ul>
+
+            {/* What the grader saw. Kept next to the severity it explains,
+                rather than in the survey drawer with the measurements. */}
+            {damage?.severity?.visibleIssues?.length ? (
+              <div className="mt-4 rounded-lg bg-black/[0.03] px-3 py-2.5">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted">
+                  Visible in the photos
+                </p>
+                <ul className="mt-1 space-y-0.5">
+                  {damage.severity.visibleIssues.map((issue) => (
+                    <li key={issue} className="text-sm text-ink">
+                      {issue}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
 
             {/* ---- contact ---- */}
-            <div className="mt-6 border-t border-line pt-5">
-              <ColLabel>Contact</ColLabel>
+            <div className="mt-5 border-t border-line pt-5">
               {canText && (
                 <a
                   href={whatsappLink(lead.contactPhone)}
@@ -316,22 +455,56 @@ export default function QuoteDetailPanel({
                       <span className="truncate">{lead.contactEmail}</span>
                     </span>
                   ))}
-                <div className="flex items-start gap-2.5">
-                  <span className="mt-0.5 shrink-0 text-muted">{Icons.pin}</span>
-                  <span className="text-sm font-medium text-ink">
-                    {lead.addressFormatted || EMPTY}
-                    {postcode && (
-                      <span className="block text-ink-soft">{postcode}</span>
-                    )}
-                  </span>
-                </div>
               </div>
             </div>
+
+            {error && (
+              <p className="mt-5 text-sm text-red-700">
+                Couldn’t load the full detail for this lead: {error}
+              </p>
+            )}
+
+            {/* The long tail of survey figures.
+                Collapsed, and not rendered at all when the job measured
+                nothing — which is every repair. This is what used to fill the
+                panel with dashes. */}
+            {!loading && survey.length > 0 && (
+              <details className="group mt-5 border-t border-line pt-4">
+                <summary className="cursor-pointer list-none text-[11px] font-semibold uppercase tracking-[0.12em] text-muted transition-colors hover:text-ink-soft">
+                  <span className="inline-block transition-transform group-open:rotate-90">
+                    ▸
+                  </span>{" "}
+                  Full survey ({survey.length})
+                </summary>
+                <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
+                  {survey.map(([label, value]) => (
+                    <Figure key={label} label={label} value={value} />
+                  ))}
+                </div>
+                <p className="mt-4 text-xs text-muted">
+                  Measured by {payloadLabel(solar?.measurementMethod)} · imagery{" "}
+                  {payloadLabel(solar?.imageryQuality).toLowerCase()}
+                  {solar?.imageryDate
+                    ? `, captured ${formatDateOnly(solar.imageryDate)}`
+                    : ""}
+                  . Gutter and obstruction figures are totals — the widget does
+                  not store where the customer marked them.
+                </p>
+              </details>
+            )}
+
+            {lead.severity ? (
+              <p className="mt-4 text-xs text-muted">
+                Damage severity is graded automatically from the customer’s
+                photos and is an indication only — it narrows the estimate range
+                but is no substitute for seeing the roof.
+              </p>
+            ) : null}
 
             {/* Anchored to the foot of the rail so the reference and archive
                 sit on the panel's baseline instead of leaving a hole beneath
                 a rail that is shorter than the evidence column. */}
-            <div className="mt-6 flex items-center justify-between gap-3 border-t border-line pt-4 lg:mt-auto lg:pt-5">
+            <div className="mt-5 flex items-center justify-between gap-3 border-t border-line pt-4 lg:mt-auto lg:pt-5">
               <QuoteIdCopy id={lead.id} />
               <button
                 type="button"
@@ -343,165 +516,17 @@ export default function QuoteDetailPanel({
               </button>
             </div>
           </div>
-
-          {/* ---------------- Evidence: everything you verify ---------------- */}
-          <div className="min-w-0">
-            {/* Roof from above, frontage from the road. The satellite view
-                answers how big the job is; the street view answers whether it
-                is worth driving to — parking, access, scaffold room, side gate.
-                Side by side on desktop, stacked on a phone. */}
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="h-56 sm:h-72">
-                {loading ? (
-                  <div className="h-full animate-pulse rounded-xl bg-black/[0.04]" />
-                ) : (
-                  <RoofMap payload={payload} />
-                )}
-              </div>
-              <div className="h-56 sm:h-72">
-                {loading ? (
-                  <div className="h-full animate-pulse rounded-xl bg-black/[0.04]" />
-                ) : (
-                  <StreetView
-                    payload={payload}
-                    address={lead.addressFormatted}
-                  />
-                )}
-              </div>
-            </div>
-
-            {payload?.conditionFlagged && (
-              <p className="mt-4 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                <span className="mt-0.5 shrink-0">{Icons.alert}</span>
-                <span>
-                  Customer flagged the roof’s condition — worth asking about
-                  before you price the job.
-                </span>
-              </p>
-            )}
-
-            {error ? (
-              <p className="mt-6 text-sm text-red-700">
-                Couldn’t load the full detail for this lead: {error}
-              </p>
-            ) : loading ? (
-              <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="space-y-1.5">
-                    <div className="h-2.5 w-16 animate-pulse rounded bg-black/[0.06]" />
-                    <div className="h-3.5 w-12 animate-pulse rounded bg-black/[0.06]" />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <>
-                <div className="mt-6 grid gap-x-8 gap-y-6 sm:grid-cols-2">
-                  <Cluster label="Roof">
-                    <Figure label="Area" value={formatArea(solar?.areaM2)} />
-                    <Figure
-                      label="Ground area"
-                      value={formatArea(solar?.groundAreaM2)}
-                    />
-                    <Figure
-                      label="Pitch"
-                      value={formatPitch(solar?.pitchDegrees)}
-                    />
-                    <Figure
-                      label="Type"
-                      value={roofTypeLabel(solar?.roofType)}
-                    />
-                  </Cluster>
-
-                  <Cluster label="Roofline">
-                    <Figure
-                      label="Gutter run"
-                      value={formatLength(roofline?.gutterLengthM)}
-                    />
-                    <Figure
-                      label="Perimeter"
-                      value={formatLength(roofline?.perimeterM)}
-                    />
-                    <Figure
-                      label="Scope"
-                      value={rooflineScopeLabel(roofline?.scope)}
-                    />
-                  </Cluster>
-
-                  <Cluster label="Property">
-                    <Figure
-                      label="Type"
-                      value={propertyTypeLabel(payload?.propertyType)}
-                    />
-                    <Figure
-                      label="Storeys"
-                      value={storeysLabel(payload?.storeys)}
-                    />
-                    <Figure
-                      label="Material"
-                      value={materialLabel(payload?.material)}
-                    />
-                    <Figure
-                      label="Condition"
-                      value={conditionLabel(payload?.conditionAnswer)}
-                    />
-                  </Cluster>
-
-                  <Cluster label="Obstructions">
-                    <Figure
-                      label="Chimneys"
-                      value={formatCount(obstructions?.chimneys)}
-                    />
-                    <Figure
-                      label="Rooflights"
-                      value={formatCount(obstructions?.rooflights)}
-                    />
-                  </Cluster>
-
-                  {lead.severity ? (
-                    <div>
-                      <ColLabel>Damage</ColLabel>
-                      <div className="space-y-4">
-                        <SeverityMeter score={lead.severity} />
-                        {damage?.severity?.visibleIssues?.length ? (
-                          <div>
-                            <p className="text-[11px] font-medium uppercase tracking-wide text-muted">
-                              Visible in the photos
-                            </p>
-                            <ul className="mt-1 space-y-0.5">
-                              {damage.severity.visibleIssues.map((issue) => (
-                                <li key={issue} className="text-sm text-ink">
-                                  {issue}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        ) : null}
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-
-                {photoPaths.length > 0 ? (
-                  <DamagePhotos paths={photoPaths} />
-                ) : null}
-
-                <p className="mt-6 border-t border-line pt-4 text-xs text-muted">
-                  Measured by {payloadLabel(solar?.measurementMethod)} · imagery{" "}
-                  {payloadLabel(solar?.imageryQuality).toLowerCase()}
-                  {solar?.imageryDate
-                    ? `, captured ${formatDateOnly(solar.imageryDate)}`
-                    : ""}
-                  . Gutter and obstruction figures are totals — the widget does
-                  not store where the customer marked them.
-                  {lead.severity
-                    ? " Damage severity is graded automatically from the customer's photos and is an indication only — it narrows the estimate range but is no substitute for seeing the roof."
-                    : ""}
-                </p>
-              </>
-            )}
-          </div>
         </div>
       </div>
+
+      {viewerIndex !== null && (
+        <MediaViewer
+          items={media}
+          index={viewerIndex}
+          onIndexChange={setViewerIndex}
+          onClose={() => setViewerIndex(null)}
+        />
+      )}
     </div>
   );
 }

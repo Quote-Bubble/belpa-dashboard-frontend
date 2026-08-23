@@ -28,7 +28,17 @@ const FALLBACK_ZOOM = 20;
  * shown — no Maps key configured, or a lead with no coordinates. That keeps
  * every lead's detail panel useful instead of leaving a hole.
  */
-export default function RoofMap({ payload }: { payload: LeadPayload | null }) {
+export default function RoofMap({
+  payload,
+  variant = "panel",
+}: {
+  payload: LeadPayload | null;
+  /** "thumb" renders it in the evidence strip: same map, but frozen and
+   *  chrome-free, because at that size the controls are unusable and a scroll
+   *  over the strip should scroll the page rather than zoom a tile. */
+  variant?: "panel" | "thumb";
+}) {
+  const thumb = variant === "thumb";
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.trim();
   const coords = payload?.coords ?? null;
   /* A key can be present and still be refused — Maps browser keys are usually
@@ -48,7 +58,12 @@ export default function RoofMap({ payload }: { payload: LeadPayload | null }) {
   const zoom = view?.zoom ?? FALLBACK_ZOOM;
 
   return (
-    <div className="relative h-full min-h-[220px] overflow-hidden rounded-xl border border-line bg-[#0f1520]">
+    <div
+      className={[
+        "relative h-full overflow-hidden border border-line bg-[#0f1520]",
+        thumb ? "rounded-lg" : "min-h-[220px] rounded-xl",
+      ].join(" ")}
+    >
       <APIProvider apiKey={apiKey} onError={() => setMapsUnavailable(true)}>
         <Map
           mapTypeId="satellite"
@@ -56,9 +71,9 @@ export default function RoofMap({ payload }: { payload: LeadPayload | null }) {
           defaultZoom={zoom}
           // The roofer is inspecting, not editing: panning and zooming are the
           // point, but rotation/tilt would only let them lose the building.
-          gestureHandling="cooperative"
+          gestureHandling={thumb ? "none" : "cooperative"}
           disableDefaultUI
-          zoomControl
+          zoomControl={!thumb}
           rotateControl={false}
           tiltInteractionEnabled={false}
           isFractionalZoomEnabled
@@ -80,7 +95,7 @@ export default function RoofMap({ payload }: { payload: LeadPayload | null }) {
         </Map>
       </APIProvider>
 
-      {path.length < 3 && (
+      {path.length < 3 && !thumb && (
         <span className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
           No roof outline was drawn
         </span>
