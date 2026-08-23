@@ -26,28 +26,27 @@ const FALLBACK_ZOOM = 20;
  * The teardrop is the widget's own marker (LocateStep's SVG), so the roofer
  * sees the same pin the customer placed.
  *
- * Drawn into a SQUARE canvas with the tip dead centre, which is the whole
- * trick here: given a plain URL, Google centres the image on the coordinate.
- * A normal pin-shaped image would therefore float half its height above the
- * spot it marks, and correcting that needs google.maps.Point/Size — real
- * constructors that do not exist until the Maps script has loaded, so building
- * them during render is a race. Centring the tip sidesteps all of it.
+ * The tip is at the BOTTOM CENTRE of the canvas, which is where Google anchors
+ * an icon given as a plain URL — "the center point of the bottom of the image",
+ * not its middle. A first attempt centred the tip instead, which hung the pin
+ * half an image-height above the coordinate. That is a fixed offset in SCREEN
+ * pixels, so it hid itself completely when zoomed in, where 30px of screen is
+ * centimetres of roof, and only showed up on zooming out, where the same 30px
+ * is several houses. Matching the documented anchor keeps it exact at every
+ * zoom, with no google.maps.Point to construct before the script has loaded.
  */
-function pinIcon(pixels: number): string {
-  const centre = pixels / 2;
-  // Source teardrop is 36x48 with its tip at (18,48). Land that tip on the
-  // canvas centre and let the balloon rise above it.
-  const height = pixels * 0.47;
-  const scale = height / 48;
-  const x = centre - 18 * scale;
-  const y = centre - height;
+function pinIcon(width: number): string {
+  // Natural teardrop is 36x48 with its tip at (18,48) — already bottom centre,
+  // so the path is drawn at its own coordinates and the viewBox does the work.
+  const height = (width * 48) / 36;
   const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${pixels}" height="${pixels}" viewBox="0 0 ${pixels} ${pixels}">` +
-    `<g transform="translate(${x.toFixed(2)} ${y.toFixed(2)}) scale(${scale.toFixed(4)})">` +
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height.toFixed(1)}" viewBox="0 0 36 48">` +
     // White stroke so the pin reads against a dark roof or a bright driveway.
-    `<path d="M18 0C8.06 0 0 8.06 0 18c0 13.5 18 30 18 30s18-16.5 18-30C36 8.06 27.94 0 18 0z" fill="${BRAND}" stroke="#fff" stroke-width="3"/>` +
+    // Its outer half is clipped at the very point, which is under a pixel at
+    // these sizes and is the right trade for an exact anchor.
+    `<path d="M18 0C8.06 0 0 8.06 0 18c0 13.5 18 30 18 30s18-16.5 18-30C36 8.06 27.94 0 18 0z" fill="${BRAND}" stroke="#fff" stroke-width="2.5"/>` +
     `<circle cx="18" cy="18" r="7" fill="#fff"/>` +
-    `</g></svg>`;
+    `</svg>`;
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
@@ -124,7 +123,7 @@ export default function RoofMap({
             position={coords}
             clickable={false}
             title="Where the customer dropped the pin"
-            icon={pinIcon(thumb ? 30 : 60)}
+            icon={pinIcon(thumb ? 20 : 32)}
           />
 
           {path.length >= 3 && (
