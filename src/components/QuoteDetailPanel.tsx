@@ -47,7 +47,6 @@ import MediaStrip from "@/components/MediaStrip";
 import MediaViewer, { type MediaItem } from "@/components/MediaViewer";
 import StreetView from "@/components/StreetView";
 import StatusPicker from "@/components/StatusPicker";
-import { SeverityMeter } from "@/components/SeverityBadge";
 import { useSignedPhotos } from "@/lib/use-signed-photos";
 
 // 18px in the fact rows and contact list, to sit level with 15px text rather
@@ -377,13 +376,12 @@ export default function QuoteDetailPanel({
                     )}
                   </Row>
                 )}
-                {lead.severity ? (
-                  <Row icon={Icons.alert}>
-                    {/* Label-less: the row's icon and the pill above already say
-                      "severity", and the caption cost a whole extra line. */}
-                    <SeverityMeter score={lead.severity} compact />
-                  </Row>
-                ) : null}
+                {/* No severity row.
+                    The grade is still computed and still narrows the customer's
+                    estimate, but it is not shown to the roofer: the model reads
+                    the same photograph they are looking at, from no better
+                    vantage point, so putting a number on it only anchors a
+                    judgement that is theirs to make. */}
                 <Row icon={Icons.clock}>
                   <span title={formatDateTime(lead.receivedAt)}>
                     {formatRelativeTime(lead.receivedAt)}
