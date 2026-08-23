@@ -103,9 +103,9 @@ export default function RoofMap({
           mapTypeId="satellite"
           defaultCenter={center}
           defaultZoom={zoom}
-          // The roofer is inspecting, not editing: panning and zooming are the
-          // point, but rotation/tilt would only let them lose the building.
-          gestureHandling={thumb ? "none" : "cooperative"}
+          // The roofer is inspecting, not editing: scroll-wheel zoom should
+          // just work. `cooperative` put up the "use ctrl + scroll" overlay.
+          gestureHandling={thumb ? "none" : "greedy"}
           disableDefaultUI
           zoomControl={!thumb}
           rotateControl={false}
