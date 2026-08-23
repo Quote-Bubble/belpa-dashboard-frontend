@@ -1,61 +1,52 @@
 "use client";
 
-import RoofMap from "@/components/RoofMap";
-import type { MediaItem } from "@/components/MediaViewer";
-
 /**
- * The evidence strip under the street view: roof outline first, then the
- * customer's damage photos, with the overflow collapsed into a "+N" tile.
+ * The customer's damage photos, as a row of thumbnails with the overflow
+ * collapsed into a "+N" tile.
  *
- * Everything opens the same full-screen viewer. The outline is a live map even
- * at this size — a frozen one, so a stray scroll over the strip does not zoom
- * it — because it is the same component the viewer opens, and rendering it
- * small costs less than the full-size map the panel used to draw anyway.
+ * Photos only. The property views — frontage and aerial — used to share this
+ * strip, which put a picture of a broken tile beside a map at the same size as
+ * though they answered the same question. They now sit in their own labelled
+ * row above, and this one is just "what the customer sent".
  */
 
 /** Past this the tiles get too small to tell one slipped tile from another. */
 const MAX_VISIBLE = 4;
 
 export default function MediaStrip({
-  items,
+  urls,
   onOpen,
 }: {
-  items: MediaItem[];
+  urls: string[];
   onOpen: (index: number) => void;
 }) {
-  if (items.length === 0) return null;
+  if (urls.length === 0) return null;
 
-  const overflow = Math.max(0, items.length - MAX_VISIBLE);
-  const visible = overflow > 0 ? items.slice(0, MAX_VISIBLE - 1) : items;
+  const overflow = Math.max(0, urls.length - MAX_VISIBLE);
+  const visible = overflow > 0 ? urls.slice(0, MAX_VISIBLE - 1) : urls;
 
   return (
-    <ul className="mt-2.5 flex gap-2.5">
-      {visible.map((item, index) => (
-        <li
-          key={item.kind === "photo" ? item.url : "map"}
-          className="min-w-0 flex-1"
-        >
-          <Tile label={item.label} onClick={() => onOpen(index)}>
-            {item.kind === "map" ? (
-              <div className="pointer-events-none h-full">
-                <RoofMap payload={item.payload} variant="thumb" />
-              </div>
-            ) : (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={item.url}
-                alt={item.label}
-                loading="lazy"
-                className="h-full w-full object-cover"
-              />
-            )}
+    <ul className="grid grid-cols-4 gap-3">
+      {visible.map((url, index) => (
+        <li key={url} className="min-w-0">
+          <Tile
+            label={`Customer photo ${index + 1}`}
+            onClick={() => onOpen(index)}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={url}
+              alt={`Customer photo ${index + 1}`}
+              loading="lazy"
+              className="h-full w-full object-cover"
+            />
           </Tile>
         </li>
       ))}
 
       {overflow > 0 && (
-        <li className="min-w-0 flex-1">
-          {/* Opens at the first hidden item rather than at the start, so "+3"
+        <li className="min-w-0">
+          {/* Opens at the first hidden photo rather than at the start, so "+3"
               shows you the three you could not see. */}
           <Tile
             label={`Show ${overflow} more`}
@@ -86,7 +77,7 @@ function Tile({
       onClick={onClick}
       aria-label={label}
       title={label}
-      className="block aspect-square w-full overflow-hidden rounded-lg border border-line bg-black/[0.04] transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+      className="block aspect-square w-full overflow-hidden rounded-xl border border-line bg-black/[0.04] transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
     >
       {children}
     </button>

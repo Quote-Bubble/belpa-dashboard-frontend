@@ -4,12 +4,13 @@ import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 
-import RoofMap from "@/components/RoofMap";
-import type { LeadPayload } from "@/lib/types";
-
 /**
- * Full-screen viewer for a lead's evidence — the roof outline and the
- * customer's damage photos, paged with arrows.
+ * Full-screen viewer for the customer's damage photos, paged with arrows.
+ *
+ * Photos only. The aerial used to open in here too, but it is a live map: it
+ * pans and zooms perfectly well in the panel, and a map inside a lightbox is a
+ * worse version of the same thing. A photograph is the only item here that
+ * genuinely benefits from filling the screen.
  *
  * Rendered through a portal onto document.body rather than in place. The detail
  * panel lives inside a row that animates its height with `overflow: hidden`,
@@ -19,9 +20,7 @@ import type { LeadPayload } from "@/lib/types";
  * staying true.
  */
 
-export type MediaItem =
-  | { kind: "map"; label: string; payload: LeadPayload | null }
-  | { kind: "photo"; label: string; url: string };
+export type MediaItem = { label: string; url: string };
 
 /** Below this, a horizontal drag is a scroll or a wobble, not a swipe. */
 const SWIPE_THRESHOLD_PX = 48;
@@ -129,20 +128,12 @@ export default function MediaViewer({
           <NavButton side="left" onClick={() => go(-1)} />
         )}
 
-        {item.kind === "map" ? (
-          // Full size and fully interactive here, unlike the frozen thumbnail:
-          // this is where a roofer zooms out to check access and neighbours.
-          <div className="h-full max-h-[80vh] w-full max-w-5xl">
-            <RoofMap payload={item.payload} />
-          </div>
-        ) : (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
-            src={item.url}
-            alt={item.label}
-            className="max-h-full max-w-full rounded-lg object-contain"
-          />
-        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={item.url}
+          alt={item.label}
+          className="max-h-full max-w-full rounded-lg object-contain"
+        />
 
         {count > 1 && <NavButton side="right" onClick={() => go(1)} />}
       </div>

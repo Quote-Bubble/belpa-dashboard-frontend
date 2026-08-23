@@ -44,6 +44,7 @@ import {
   whatsappLink,
 } from "@/lib/format";
 import MediaStrip from "@/components/MediaStrip";
+import RoofMap from "@/components/RoofMap";
 import MediaViewer, { type MediaItem } from "@/components/MediaViewer";
 import StreetView from "@/components/StreetView";
 import StatusPicker from "@/components/StatusPicker";
@@ -117,6 +118,28 @@ function present(pairs: [string, string][]): [string, string][] {
   return pairs.filter(([, value]) => value && value !== EMPTY);
 }
 
+/** Names a group of images, so a map and a broken tile are visibly not the
+ *  same kind of thing. */
+function GroupLabel({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <p
+      className={`mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted ${className}`}
+    >
+      {children}
+    </p>
+  );
+}
+
+function Skeleton() {
+  return <div className="h-full animate-pulse rounded-xl bg-black/[0.04]" />;
+}
+
 /** The lead id, kept available for support without letting a UUID lead the page. */
 function QuoteIdCopy({ id }: { id: string }) {
   const [copied, setCopied] = useState(false);
@@ -181,31 +204,16 @@ export default function QuoteDetailPanel({
   const photos = useSignedPhotos(photoPaths);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
-  /* The evidence strip. The roof outline leads, then the customer's photos.
-     The outline is only worth a tile when there is a live map behind it — with
-     no coordinates RoofMap falls back to a placeholder, and a tile whose whole
-     message is "nothing here" earns none of that space. */
-  const media: MediaItem[] = [
-    ...(payload?.coords
-      ? [
-          {
-            kind: "map" as const,
-            label:
-              payload.affectedArea && payload.affectedArea.length >= 3
-                ? "Affected area"
-                : "Roof outline",
-            payload,
-          },
-        ]
-      : []),
-    ...(photos.state === "ready"
+  /* Viewer contents: the customer's photos, in order. The aerial is not in
+     here — it is a live map that pans and zooms in the panel, so a lightbox
+     would be a worse version of what is already on screen. */
+  const viewerItems: MediaItem[] =
+    photos.state === "ready"
       ? photos.urls.map((url, i) => ({
-          kind: "photo" as const,
           label: `Customer photo ${i + 1} of ${photos.urls.length}`,
           url,
         }))
-      : []),
-  ];
+      : [];
 
   /* At-a-glance rows: only what this lead actually knows. Property type and
      storeys read as one fact, the way someone would say it out loud.
@@ -247,46 +255,65 @@ export default function QuoteDetailPanel({
           proportions are. Two columns, generous, capped where a line of text
           stops being comfortable to read rather than where the screen ends. */}
       <div className="surface mx-auto max-w-6xl overflow-hidden rounded-2xl p-5 sm:p-7">
-        {/* Evidence beside the detail, stacked on a phone with the photograph
-            first — that is what a roofer decides from. */}
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,26rem)_1fr] lg:gap-8">
+        {/* An even split, and two labelled groups inside it.
+            Before this the three images were three sizes with no logic: a huge
+            frontage, then a small aerial and a small damage photo side by side
+            as though a map and a broken tile answered the same question. They
+            answer different ones, so they are grouped and named, and nothing is
+            arbitrarily larger than anything else. */}
+        <div className="grid gap-5 lg:grid-cols-2 lg:gap-8">
           {/* ---------------- Evidence ---------------- */}
           <div className="min-w-0">
-            {/* Sized by ratio rather than a fixed height, so it grows with the
-                column instead of leaving a gap beside it. */}
-            <div className="aspect-[4/3] w-full sm:aspect-[16/10] lg:aspect-[4/3]">
-              {loading ? (
-                <div className="h-full animate-pulse rounded-xl bg-black/[0.04]" />
-              ) : (
-                <StreetView payload={payload} address={lead.addressFormatted} />
-              )}
+            <GroupLabel>The property</GroupLabel>
+            {/* Equal tiles. The aerial needs the width as much as the frontage
+                does — Google's attribution is not optional and looked cramped
+                when this was a thumbnail. */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="aspect-[4/3]">
+                {loading ? (
+                  <Skeleton />
+                ) : (
+                  <StreetView
+                    payload={payload}
+                    address={lead.addressFormatted}
+                  />
+                )}
+              </div>
+              <div className="aspect-[4/3]">
+                {loading ? <Skeleton /> : <RoofMap payload={payload} />}
+              </div>
             </div>
 
+            {/* Photos get their own named row rather than sharing a strip with
+                the maps. The count is in the label so the roofer knows there
+                are more before clicking anything. */}
             {loading ? (
-              <div className="mt-2 flex gap-2">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="aspect-square flex-1 animate-pulse rounded-lg bg-black/[0.04]"
-                  />
-                ))}
-              </div>
-            ) : (
-              <MediaStrip items={media} onOpen={setViewerIndex} />
-            )}
-
-            {photos.state === "failed" && (
-              <p className="mt-2 text-xs text-muted">
-                Couldn&apos;t load the customer&apos;s photos just now.
-              </p>
-            )}
-
-            {/* Deliberately nothing else under the photographs.
-                A "visible in the photos" list used to sit here naming what the
-                grader saw, with a disclaimer under it explaining that the
-                grade was only an indication. Both were writing captions for a
-                roofer who is already looking at the photographs and can see
-                the missing tiles perfectly well. */}
+              <>
+                <GroupLabel className="mt-5">Customer photos</GroupLabel>
+                <div className="grid grid-cols-4 gap-3">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="aspect-square animate-pulse rounded-xl bg-black/[0.04]"
+                    />
+                  ))}
+                </div>
+              </>
+            ) : photos.state === "ready" && photos.urls.length > 0 ? (
+              <>
+                <GroupLabel className="mt-5">
+                  Customer photos · {photos.urls.length}
+                </GroupLabel>
+                <MediaStrip urls={photos.urls} onOpen={setViewerIndex} />
+              </>
+            ) : photos.state === "failed" ? (
+              <>
+                <GroupLabel className="mt-5">Customer photos</GroupLabel>
+                <p className="text-sm text-muted">
+                  Couldn&apos;t load them just now.
+                </p>
+              </>
+            ) : null}
           </div>
 
           <div className="flex min-w-0 flex-col">
@@ -510,7 +537,7 @@ export default function QuoteDetailPanel({
 
       {viewerIndex !== null && (
         <MediaViewer
-          items={media}
+          items={viewerItems}
           index={viewerIndex}
           onIndexChange={setViewerIndex}
           onClose={() => setViewerIndex(null)}

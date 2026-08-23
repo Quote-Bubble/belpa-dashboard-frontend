@@ -17,7 +17,7 @@ const VIEW = 100;
 
 function Empty({ note }: { note: string }) {
   return (
-    <div className="flex h-full min-h-[220px] flex-col items-center justify-center rounded-xl border border-dashed border-line bg-black/[0.015] px-4 text-center">
+    <div className="flex h-full flex-col items-center justify-center rounded-xl border border-dashed border-line bg-black/[0.015] px-4 text-center">
       <svg
         width={26}
         height={26}
@@ -70,7 +70,7 @@ export default function RoofPlan({ payload }: { payload: LeadPayload | null }) {
   ].filter(Boolean) as string[];
 
   return (
-    <figure className="relative h-full min-h-[220px] overflow-hidden rounded-xl border border-line bg-[#0f1520]">
+    <figure className="relative h-full overflow-hidden rounded-xl border border-line bg-[#0f1520]">
       <svg
         viewBox={`0 0 ${VIEW} ${VIEW}`}
         preserveAspectRatio="xMidYMid meet"

@@ -63,17 +63,7 @@ function pinIcon(width: number): string {
  * shown — no Maps key configured, or a lead with no coordinates. That keeps
  * every lead's detail panel useful instead of leaving a hole.
  */
-export default function RoofMap({
-  payload,
-  variant = "panel",
-}: {
-  payload: LeadPayload | null;
-  /** "thumb" renders it in the evidence strip: same map, but frozen and
-   *  chrome-free, because at that size the controls are unusable and a scroll
-   *  over the strip should scroll the page rather than zoom a tile. */
-  variant?: "panel" | "thumb";
-}) {
-  const thumb = variant === "thumb";
+export default function RoofMap({ payload }: { payload: LeadPayload | null }) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.trim();
   const coords = payload?.coords ?? null;
   /* A key can be present and still be refused — Maps browser keys are usually
@@ -93,13 +83,10 @@ export default function RoofMap({
   const center = view?.center ?? coords;
   const zoom = view?.zoom ?? FALLBACK_ZOOM;
 
+  // No min-height: this now sits in an aspect-ratio box beside the street
+  // view, and a floor would make the two tiles different heights.
   return (
-    <div
-      className={[
-        "relative h-full overflow-hidden border border-line bg-[#0f1520]",
-        thumb ? "rounded-lg" : "min-h-[220px] rounded-xl",
-      ].join(" ")}
-    >
+    <div className="relative h-full overflow-hidden rounded-xl border border-line bg-[#0f1520]">
       <APIProvider apiKey={apiKey} onError={() => setMapsUnavailable(true)}>
         <Map
           mapTypeId="satellite"
@@ -107,9 +94,9 @@ export default function RoofMap({
           defaultZoom={zoom}
           // The roofer is inspecting, not editing: scroll-wheel zoom should
           // just work. `cooperative` put up the "use ctrl + scroll" overlay.
-          gestureHandling={thumb ? "none" : "greedy"}
+          gestureHandling="greedy"
           disableDefaultUI
-          zoomControl={!thumb}
+          zoomControl
           rotateControl={false}
           tiltInteractionEnabled={false}
           isFractionalZoomEnabled
@@ -125,7 +112,7 @@ export default function RoofMap({
             position={coords}
             clickable={false}
             title="Where the customer dropped the pin"
-            icon={pinIcon(thumb ? 20 : 32)}
+            icon={pinIcon(28)}
           />
 
           {roofPath.length >= 3 && (
@@ -156,12 +143,12 @@ export default function RoofMap({
         </Map>
       </APIProvider>
 
-      {roofPath.length < 3 && affectedPath.length < 3 && !thumb && (
+      {roofPath.length < 3 && affectedPath.length < 3 && (
         <span className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
           No roof outline was drawn
         </span>
       )}
-      {affectedPath.length >= 3 && roofPath.length < 3 && !thumb && (
+      {affectedPath.length >= 3 && roofPath.length < 3 && (
         <span className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
           Affected area
         </span>
