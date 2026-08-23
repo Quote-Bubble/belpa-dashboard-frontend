@@ -11,6 +11,7 @@ import type { LeadPayload } from "@/lib/types";
    its Polygon props), so the outline the roofer sees is the one the customer
    drew rather than a lookalike in different colours. */
 const BRAND = "#2f6bff";
+const AFFECTED = "#ef4444";
 
 /** Widget's default when a lead carries no stored framing — close enough to
  *  read a single roof, and what the flow itself opens on. */
@@ -86,7 +87,8 @@ export default function RoofMap({
     return <RoofPlan payload={payload} />;
   }
 
-  const path = sanitizePolygonCoords(payload?.polygonCoords);
+  const roofPath = sanitizePolygonCoords(payload?.polygonCoords);
+  const affectedPath = sanitizePolygonCoords(payload?.affectedArea);
   const view = payload?.mapView ?? null;
   const center = view?.center ?? coords;
   const zoom = view?.zoom ?? FALLBACK_ZOOM;
@@ -126,9 +128,9 @@ export default function RoofMap({
             icon={pinIcon(thumb ? 20 : 32)}
           />
 
-          {path.length >= 3 && (
+          {roofPath.length >= 3 && (
             <Polygon
-              paths={path}
+              paths={roofPath}
               geodesic
               clickable={false}
               fillColor={BRAND}
@@ -138,12 +140,30 @@ export default function RoofMap({
               strokeWeight={3}
             />
           )}
+
+          {affectedPath.length >= 3 && (
+            <Polygon
+              paths={affectedPath}
+              geodesic
+              clickable={false}
+              fillColor={AFFECTED}
+              fillOpacity={0.28}
+              strokeColor={AFFECTED}
+              strokeOpacity={1}
+              strokeWeight={3}
+            />
+          )}
         </Map>
       </APIProvider>
 
-      {path.length < 3 && !thumb && (
+      {roofPath.length < 3 && affectedPath.length < 3 && !thumb && (
         <span className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
           No roof outline was drawn
+        </span>
+      )}
+      {affectedPath.length >= 3 && roofPath.length < 3 && !thumb && (
+        <span className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+          Affected area
         </span>
       )}
     </div>

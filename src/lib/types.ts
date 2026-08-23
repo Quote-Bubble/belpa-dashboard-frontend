@@ -89,6 +89,8 @@ export type LeadPayload = {
    *  the rest (belpa-widget-frontend/lib/quote-flow.ts:532). When the customer
    *  never drew, it falls back to a rectangle from the scan bounding box. */
   polygonCoords?: LatLng[] | null;
+  /** Repair-only damaged patch the customer boxed on the satellite map. */
+  affectedArea?: LatLng[] | null;
   /** Centre + zoom of the satellite map the customer drew on. Lets the roof
    *  reopen on the framing they actually saw instead of one inferred from the
    *  polygon. Absent on leads captured before the widget sent it, and on

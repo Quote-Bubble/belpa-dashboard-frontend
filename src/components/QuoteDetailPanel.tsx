@@ -187,7 +187,16 @@ export default function QuoteDetailPanel({
      message is "nothing here" earns none of that space. */
   const media: MediaItem[] = [
     ...(payload?.coords
-      ? [{ kind: "map" as const, label: "Roof outline", payload }]
+      ? [
+          {
+            kind: "map" as const,
+            label:
+              payload.affectedArea && payload.affectedArea.length >= 3
+                ? "Affected area"
+                : "Roof outline",
+            payload,
+          },
+        ]
       : []),
     ...(photos.state === "ready"
       ? photos.urls.map((url, i) => ({
