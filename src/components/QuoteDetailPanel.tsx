@@ -51,14 +51,16 @@ import StatusPicker from "@/components/StatusPicker";
 import { SeverityBadge, SeverityMeter } from "@/components/SeverityBadge";
 import { useSignedPhotos } from "@/lib/use-signed-photos";
 
+// 18px in the fact rows and contact list, to sit level with 15px text rather
+// than looking undersized beside it.
 const Icons = {
-  phone: <Phone size={16} strokeWidth={2} />,
-  mail: <Mail size={16} strokeWidth={2} />,
-  pin: <MapPin size={16} strokeWidth={2} />,
-  clock: <Clock size={16} strokeWidth={2} />,
-  alert: <TriangleAlert size={16} strokeWidth={2} />,
-  home: <House size={16} strokeWidth={2} />,
-  layers: <Layers size={16} strokeWidth={2} />,
+  phone: <Phone size={18} strokeWidth={2} />,
+  mail: <Mail size={18} strokeWidth={2} />,
+  pin: <MapPin size={18} strokeWidth={2} />,
+  clock: <Clock size={18} strokeWidth={2} />,
+  alert: <TriangleAlert size={18} strokeWidth={2} />,
+  home: <House size={18} strokeWidth={2} />,
+  layers: <Layers size={18} strokeWidth={2} />,
   copy: <Copy size={13} strokeWidth={2.25} />,
   check: <Check size={13} strokeWidth={2.25} />,
   archive: <Archive size={16} strokeWidth={2} />,
@@ -103,9 +105,11 @@ function Row({
   children: React.ReactNode;
 }) {
   return (
-    <li className="flex items-start gap-3">
-      <span className="mt-0.5 shrink-0 text-muted">{icon}</span>
-      <span className="min-w-0 text-sm font-medium text-ink">{children}</span>
+    <li className="flex items-start gap-3.5">
+      <span className="mt-px shrink-0 text-muted">{icon}</span>
+      <span className="min-w-0 text-[15px] font-medium leading-6 text-ink">
+        {children}
+      </span>
     </li>
   );
 }
@@ -229,27 +233,17 @@ export default function QuoteDetailPanel({
 
   return (
     <div className="px-4 pb-4 pt-1 sm:px-6">
-      {/* Capped, not full-bleed.
-          Left to fill the table it sits in, the right-hand column ran to well
-          over a thousand pixels — a full-width WhatsApp button, sentences
-          spanning the screen, and a tall void under the thumbnails where the
-          shorter left column ran out. This is a card, so it is sized like one
-          and the columns stay in proportion to each other. */}
-      <div className="surface overflow-hidden rounded-2xl p-4 sm:p-5">
-        {/* Spend width on columns, not on margins.
-            Capping this and centring it swapped a stretched panel for two dead
-            gutters. Filling the row and splitting again as space allows does
-            the opposite: the same content gets shorter the wider the screen
-            gets, instead of either running long or leaving a hole.
-
-            phone  everything stacked, evidence first — a roofer decides from
-                   the photograph before anything else
-            lg     evidence | details over actions
-            xl     evidence | details | actions
-
-            The survey drawer sits below all three, full width, because its
-            figures need room to lay out once opened. */}
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,19rem)_1fr] lg:gap-6">
+      {/* Wide, but still a card.
+          Three attempts to size this: full-bleed stretched it to 1200px of
+          run-on sentences, max-w-4xl left dead gutters either side, and a
+          third column filled those gutters by squeezing every column until
+          nothing had room. The width is not the problem to solve — the
+          proportions are. Two columns, generous, capped where a line of text
+          stops being comfortable to read rather than where the screen ends. */}
+      <div className="surface mx-auto max-w-6xl overflow-hidden rounded-2xl p-5 sm:p-7">
+        {/* Evidence beside the detail, stacked on a phone with the photograph
+            first — that is what a roofer decides from. */}
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,26rem)_1fr] lg:gap-8">
           {/* ---------------- Evidence ---------------- */}
           <div className="min-w-0">
             {/* Sized by ratio rather than a fixed height, so it grows with the
@@ -286,11 +280,11 @@ export default function QuoteDetailPanel({
                 putting it here also fills the space the shorter evidence
                 column used to leave empty. */}
             {damage?.severity?.visibleIssues?.length ? (
-              <div className="mt-3 rounded-lg bg-black/[0.03] px-3 py-2.5">
+              <div className="mt-4 rounded-xl bg-black/[0.03] px-4 py-3">
                 <p className="text-[11px] font-medium uppercase tracking-wide text-muted">
                   Visible in the photos
                 </p>
-                <p className="mt-1 text-sm leading-snug text-ink">
+                <p className="mt-1.5 text-[15px] leading-relaxed text-ink">
                   {damage.severity.visibleIssues.join(" · ")}
                 </p>
               </div>
@@ -304,15 +298,13 @@ export default function QuoteDetailPanel({
             ) : null}
           </div>
 
-          {/* Splits again at xl, so the facts and the things you do about them
-              sit side by side rather than one below the other. */}
-          <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,15rem)] xl:gap-6">
+          <div className="flex min-w-0 flex-col">
             {/* ---------------- The facts ---------------- */}
             <div className="min-w-0">
-              <p className="font-display text-3xl font-semibold text-ink">
+              <p className="font-display text-4xl font-semibold tracking-tight text-ink">
                 {formatQuoteRange(lead.quoteMinExVat, lead.quoteMaxExVat)}
               </p>
-              <p className="text-sm text-muted">
+              <p className="mt-1 text-[15px] text-muted">
                 ex. VAT
                 {lead.actualPriceExVat != null && (
                   <span className="ml-2 font-semibold text-ink">
@@ -320,7 +312,7 @@ export default function QuoteDetailPanel({
                   </span>
                 )}
               </p>
-              <p className="mt-1 text-sm font-medium text-ink-soft">
+              <p className="mt-2 text-base font-medium text-ink-soft">
                 {jobTypeLabel(lead.jobType)}
                 {lead.leadType === "manual_consultation" &&
                   " · consultation request"}
@@ -342,7 +334,7 @@ export default function QuoteDetailPanel({
 
               {/* Status is the control; intent is a fact about the lead, so it
                 reads as a quiet outlined tag rather than a second pill. */}
-              <div className="mt-3 flex flex-wrap items-center gap-2">
+              <div className="mt-4 flex flex-wrap items-center gap-2">
                 {onStatusChange ? (
                   <StatusPicker
                     status={lead.status}
@@ -383,7 +375,7 @@ export default function QuoteDetailPanel({
               )}
 
               {/* ---- what this lead actually knows ---- */}
-              <ul className="mt-4 space-y-2 border-t border-line pt-4">
+              <ul className="mt-5 space-y-3.5 border-t border-line pt-5">
                 {propertyLine && <Row icon={Icons.home}>{propertyLine}</Row>}
                 {materialLabel(payload?.material) !== EMPTY && (
                   <Row icon={Icons.layers}>
@@ -419,13 +411,13 @@ export default function QuoteDetailPanel({
             {/* ---------------- What you do about it ---------------- */}
             {/* No top rule at xl: the column gap already separates it, and a
                 second horizontal line there just adds clutter. */}
-            <div className="min-w-0 border-t border-line pt-4 xl:border-t-0 xl:pt-0">
+            <div className="mt-5 min-w-0 border-t border-line pt-5">
               {canText && (
                 <a
                   href={whatsappLink(lead.contactPhone)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-[#25D366] bg-white px-4 py-2.5 text-sm font-semibold text-[#128a3f] shadow-[0_6px_16px_-8px_rgba(37,211,102,0.5)] transition-all hover:-translate-y-0.5 hover:bg-[#25D366]/10"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-[#25D366] bg-white px-4 py-3 text-[15px] font-semibold text-[#128a3f] shadow-[0_6px_16px_-8px_rgba(37,211,102,0.5)] transition-all hover:-translate-y-0.5 hover:bg-[#25D366]/10"
                 >
                   <svg
                     width={17}
@@ -439,18 +431,18 @@ export default function QuoteDetailPanel({
                   WhatsApp {lead.contactName.split(" ")[0]}
                 </a>
               )}
-              <div className={canText ? "mt-3 space-y-2" : "space-y-2"}>
+              <div className={canText ? "mt-4 space-y-3" : "space-y-3"}>
                 {lead.contactPhone.trim() ? (
                   isSafeTelHref(lead.contactPhone) ? (
                     <a
                       href={`tel:${lead.contactPhone.trim()}`}
-                      className="flex items-center gap-2.5 text-sm font-medium text-brand-600"
+                      className="flex items-center gap-3.5 text-[15px] font-medium text-brand-600"
                     >
                       <span className="text-muted">{Icons.phone}</span>
                       {lead.contactPhone}
                     </a>
                   ) : (
-                    <span className="flex items-center gap-2.5 text-sm font-medium text-ink">
+                    <span className="flex items-center gap-3.5 text-[15px] font-medium text-ink">
                       <span className="text-muted">{Icons.phone}</span>
                       {lead.contactPhone}
                     </span>
@@ -460,13 +452,13 @@ export default function QuoteDetailPanel({
                   (isSafeMailtoHref(lead.contactEmail) ? (
                     <a
                       href={`mailto:${lead.contactEmail.trim()}`}
-                      className="flex items-center gap-2.5 truncate text-sm font-medium text-brand-600"
+                      className="flex items-center gap-3.5 truncate text-[15px] font-medium text-brand-600"
                     >
                       <span className="shrink-0 text-muted">{Icons.mail}</span>
                       <span className="truncate">{lead.contactEmail}</span>
                     </a>
                   ) : (
-                    <span className="flex items-center gap-2.5 truncate text-sm font-medium text-ink">
+                    <span className="flex items-center gap-3.5 truncate text-[15px] font-medium text-ink">
                       <span className="shrink-0 text-muted">{Icons.mail}</span>
                       <span className="truncate">{lead.contactEmail}</span>
                     </span>
@@ -488,7 +480,7 @@ export default function QuoteDetailPanel({
             which is every repair. This is what used to fill the panel with
             dashes. */}
         {!loading && survey.length > 0 && (
-          <details className="group mt-4 border-t border-line pt-3">
+          <details className="group mt-6 border-t border-line pt-4">
             <summary className="cursor-pointer list-none text-[11px] font-semibold uppercase tracking-[0.12em] text-muted transition-colors hover:text-ink-soft">
               <span className="inline-block transition-transform group-open:rotate-90">
                 ▸
@@ -512,7 +504,7 @@ export default function QuoteDetailPanel({
           </details>
         )}
 
-        <div className="mt-4 flex items-center justify-between gap-3 border-t border-line pt-3">
+        <div className="mt-5 flex items-center justify-between gap-3 border-t border-line pt-4">
           <QuoteIdCopy id={lead.id} />
           <button
             type="button"

@@ -61,15 +61,26 @@ export function SeverityMeter({
           {[1, 2, 3, 4, 5].map((step) => (
             <span
               key={step}
-              className="h-1.5 w-4 rounded-full"
+              className={
+                compact ? "h-2 w-5 rounded-full" : "h-1.5 w-4 rounded-full"
+              }
               style={{ backgroundColor: step <= score ? fg : "#e9eaee" }}
             />
           ))}
         </span>
-        <span className="text-sm font-semibold" style={{ color: fg }}>
+        <span
+          className={
+            compact ? "text-[15px] font-semibold" : "text-sm font-semibold"
+          }
+          style={{ color: fg }}
+        >
           {score}/5
         </span>
-        <span className="text-sm text-muted">{severityLabel(score)}</span>
+        <span
+          className={compact ? "text-[15px] text-muted" : "text-sm text-muted"}
+        >
+          {severityLabel(score)}
+        </span>
       </div>
     </div>
   );

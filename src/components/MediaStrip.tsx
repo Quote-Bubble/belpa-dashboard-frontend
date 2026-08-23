@@ -29,9 +29,12 @@ export default function MediaStrip({
   const visible = overflow > 0 ? items.slice(0, MAX_VISIBLE - 1) : items;
 
   return (
-    <ul className="mt-2 flex gap-2">
+    <ul className="mt-2.5 flex gap-2.5">
       {visible.map((item, index) => (
-        <li key={item.kind === "photo" ? item.url : "map"} className="min-w-0 flex-1">
+        <li
+          key={item.kind === "photo" ? item.url : "map"}
+          className="min-w-0 flex-1"
+        >
           <Tile label={item.label} onClick={() => onOpen(index)}>
             {item.kind === "map" ? (
               <div className="pointer-events-none h-full">
@@ -58,7 +61,7 @@ export default function MediaStrip({
             label={`Show ${overflow} more`}
             onClick={() => onOpen(MAX_VISIBLE - 1)}
           >
-            <span className="flex h-full w-full items-center justify-center bg-black/[0.06] text-sm font-semibold text-ink-soft">
+            <span className="flex h-full w-full items-center justify-center bg-black/[0.06] text-base font-semibold text-ink-soft">
               +{overflow}
             </span>
           </Tile>
