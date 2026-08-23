@@ -52,39 +52,17 @@ import { SeverityBadge, SeverityMeter } from "@/components/SeverityBadge";
 import { useSignedPhotos } from "@/lib/use-signed-photos";
 
 const Icons = {
-  phone: (
-    <Phone size={16} strokeWidth={2} />
-  ),
-  mail: (
-    <Mail size={16} strokeWidth={2} />
-  ),
-  pin: (
-    <MapPin size={16} strokeWidth={2} />
-  ),
-  clock: (
-    <Clock size={16} strokeWidth={2} />
-  ),
-  alert: (
-    <TriangleAlert size={16} strokeWidth={2} />
-  ),
-  home: (
-    <House size={16} strokeWidth={2} />
-  ),
-  layers: (
-    <Layers size={16} strokeWidth={2} />
-  ),
-  copy: (
-    <Copy size={13} strokeWidth={2.25} />
-  ),
-  check: (
-    <Check size={13} strokeWidth={2.25} />
-  ),
-  archive: (
-    <Archive size={16} strokeWidth={2} />
-  ),
-  restore: (
-    <RotateCcw size={16} strokeWidth={2} />
-  ),
+  phone: <Phone size={16} strokeWidth={2} />,
+  mail: <Mail size={16} strokeWidth={2} />,
+  pin: <MapPin size={16} strokeWidth={2} />,
+  clock: <Clock size={16} strokeWidth={2} />,
+  alert: <TriangleAlert size={16} strokeWidth={2} />,
+  home: <House size={16} strokeWidth={2} />,
+  layers: <Layers size={16} strokeWidth={2} />,
+  copy: <Copy size={13} strokeWidth={2.25} />,
+  check: <Check size={13} strokeWidth={2.25} />,
+  archive: <Archive size={16} strokeWidth={2} />,
+  restore: <RotateCcw size={16} strokeWidth={2} />,
 };
 
 /**
@@ -257,10 +235,21 @@ export default function QuoteDetailPanel({
           spanning the screen, and a tall void under the thumbnails where the
           shorter left column ran out. This is a card, so it is sized like one
           and the columns stay in proportion to each other. */}
-      <div className="surface mx-auto max-w-4xl overflow-hidden rounded-2xl p-4 sm:p-5">
-        {/* Evidence left, everything you act on right. On a phone it stacks in
-            that same order: a roofer decides from the photograph first. */}
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,20rem)_1fr] lg:gap-6">
+      <div className="surface overflow-hidden rounded-2xl p-4 sm:p-5">
+        {/* Spend width on columns, not on margins.
+            Capping this and centring it swapped a stretched panel for two dead
+            gutters. Filling the row and splitting again as space allows does
+            the opposite: the same content gets shorter the wider the screen
+            gets, instead of either running long or leaving a hole.
+
+            phone  everything stacked, evidence first — a roofer decides from
+                   the photograph before anything else
+            lg     evidence | details over actions
+            xl     evidence | details | actions
+
+            The survey drawer sits below all three, full width, because its
+            figures need room to lay out once opened. */}
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,19rem)_1fr] lg:gap-6">
           {/* ---------------- Evidence ---------------- */}
           <div className="min-w-0">
             {/* Sized by ratio rather than a fixed height, so it grows with the
@@ -315,114 +304,122 @@ export default function QuoteDetailPanel({
             ) : null}
           </div>
 
-          {/* ---------------- Action rail: everything you act on ------------- */}
-          <div className="flex min-w-0 flex-col">
-            <p className="font-display text-3xl font-semibold text-ink">
-              {formatQuoteRange(lead.quoteMinExVat, lead.quoteMaxExVat)}
-            </p>
-            <p className="text-sm text-muted">
-              ex. VAT
-              {lead.actualPriceExVat != null && (
-                <span className="ml-2 font-semibold text-ink">
-                  · won at {formatMoney(lead.actualPriceExVat)}
-                </span>
+          {/* Splits again at xl, so the facts and the things you do about them
+              sit side by side rather than one below the other. */}
+          <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,15rem)] xl:gap-6">
+            {/* ---------------- The facts ---------------- */}
+            <div className="min-w-0">
+              <p className="font-display text-3xl font-semibold text-ink">
+                {formatQuoteRange(lead.quoteMinExVat, lead.quoteMaxExVat)}
+              </p>
+              <p className="text-sm text-muted">
+                ex. VAT
+                {lead.actualPriceExVat != null && (
+                  <span className="ml-2 font-semibold text-ink">
+                    · won at {formatMoney(lead.actualPriceExVat)}
+                  </span>
+                )}
+              </p>
+              <p className="mt-1 text-sm font-medium text-ink-soft">
+                {jobTypeLabel(lead.jobType)}
+                {lead.leadType === "manual_consultation" &&
+                  " · consultation request"}
+              </p>
+
+              {payload?.otherJobDescription && (
+                <p className="mt-2.5 rounded-lg bg-black/[0.03] px-3 py-2 text-sm text-ink-soft">
+                  “{payload.otherJobDescription}”
+                </p>
               )}
-            </p>
-            <p className="mt-1 text-sm font-medium text-ink-soft">
-              {jobTypeLabel(lead.jobType)}
-              {lead.leadType === "manual_consultation" &&
-                " · consultation request"}
-            </p>
+              {payload?.fallbackReason && (
+                <p className="mt-2.5 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                  <span className="mt-0.5 shrink-0">{Icons.alert}</span>
+                  <span>
+                    No instant quote — {payloadLabel(payload.fallbackReason)}
+                  </span>
+                </p>
+              )}
 
-            {payload?.otherJobDescription && (
-              <p className="mt-2.5 rounded-lg bg-black/[0.03] px-3 py-2 text-sm text-ink-soft">
-                “{payload.otherJobDescription}”
-              </p>
-            )}
-            {payload?.fallbackReason && (
-              <p className="mt-2.5 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                <span className="mt-0.5 shrink-0">{Icons.alert}</span>
-                <span>
-                  No instant quote — {payloadLabel(payload.fallbackReason)}
-                </span>
-              </p>
-            )}
-
-            {/* Status is the control; intent is a fact about the lead, so it
+              {/* Status is the control; intent is a fact about the lead, so it
                 reads as a quiet outlined tag rather than a second pill. */}
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              {onStatusChange ? (
-                <StatusPicker
-                  status={lead.status}
-                  onChange={(next) => onStatusChange(lead.id, next)}
-                />
-              ) : (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {onStatusChange ? (
+                  <StatusPicker
+                    status={lead.status}
+                    onChange={(next) => onStatusChange(lead.id, next)}
+                  />
+                ) : (
+                  <span
+                    className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold"
+                    style={{
+                      color: statusColor(lead.status).fg,
+                      backgroundColor: statusColor(lead.status).bg,
+                    }}
+                  >
+                    {statusLabel(lead.status)}
+                  </span>
+                )}
                 <span
-                  className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold"
+                  className="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold"
                   style={{
-                    color: statusColor(lead.status).fg,
-                    backgroundColor: statusColor(lead.status).bg,
+                    color: tone.fg,
+                    background: tone.bg,
+                    borderColor: `${tone.fg}33`,
                   }}
                 >
-                  {statusLabel(lead.status)}
+                  {intentLabel(lead.intent)}
                 </span>
+                {lead.severity ? <SeverityBadge score={lead.severity} /> : null}
+              </div>
+
+              {payload?.conditionFlagged && (
+                <p className="mt-3 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                  <span className="mt-0.5 shrink-0">{Icons.alert}</span>
+                  <span>
+                    Customer flagged the roof’s condition — worth asking about
+                    before you price the job.
+                  </span>
+                </p>
               )}
-              <span
-                className="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold"
-                style={{
-                  color: tone.fg,
-                  background: tone.bg,
-                  borderColor: `${tone.fg}33`,
-                }}
-              >
-                {intentLabel(lead.intent)}
-              </span>
-              {lead.severity ? <SeverityBadge score={lead.severity} /> : null}
+
+              {/* ---- what this lead actually knows ---- */}
+              <ul className="mt-4 space-y-2 border-t border-line pt-4">
+                {propertyLine && <Row icon={Icons.home}>{propertyLine}</Row>}
+                {materialLabel(payload?.material) !== EMPTY && (
+                  <Row icon={Icons.layers}>
+                    {materialLabel(payload?.material)}
+                  </Row>
+                )}
+                {(lead.addressFormatted || postcode) && (
+                  <Row icon={Icons.pin}>
+                    {lead.addressFormatted}
+                    {postcode && (
+                      <span className="text-ink-soft">
+                        {lead.addressFormatted ? ", " : ""}
+                        {postcode}
+                      </span>
+                    )}
+                  </Row>
+                )}
+                {lead.severity ? (
+                  <Row icon={Icons.alert}>
+                    {/* Label-less: the row's icon and the pill above already say
+                      "severity", and the caption cost a whole extra line. */}
+                    <SeverityMeter score={lead.severity} compact />
+                  </Row>
+                ) : null}
+                <Row icon={Icons.clock}>
+                  <span title={formatDateTime(lead.receivedAt)}>
+                    {formatRelativeTime(lead.receivedAt)}
+                  </span>
+                </Row>
+              </ul>
             </div>
 
-            {payload?.conditionFlagged && (
-              <p className="mt-3 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                <span className="mt-0.5 shrink-0">{Icons.alert}</span>
-                <span>
-                  Customer flagged the roof’s condition — worth asking about
-                  before you price the job.
-                </span>
-              </p>
-            )}
-
-            {/* ---- what this lead actually knows ---- */}
-            <ul className="mt-4 space-y-2 border-t border-line pt-4">
-              {propertyLine && <Row icon={Icons.home}>{propertyLine}</Row>}
-              {materialLabel(payload?.material) !== EMPTY && (
-                <Row icon={Icons.layers}>{materialLabel(payload?.material)}</Row>
-              )}
-              {(lead.addressFormatted || postcode) && (
-                <Row icon={Icons.pin}>
-                  {lead.addressFormatted}
-                  {postcode && (
-                    <span className="text-ink-soft">
-                      {lead.addressFormatted ? ", " : ""}
-                      {postcode}
-                    </span>
-                  )}
-                </Row>
-              )}
-              {lead.severity ? (
-                <Row icon={Icons.alert}>
-                  {/* Label-less: the row's icon and the pill above already say
-                      "severity", and the caption cost a whole extra line. */}
-                  <SeverityMeter score={lead.severity} compact />
-                </Row>
-              ) : null}
-              <Row icon={Icons.clock}>
-                <span title={formatDateTime(lead.receivedAt)}>
-                  {formatRelativeTime(lead.receivedAt)}
-                </span>
-              </Row>
-            </ul>
-
-            {/* ---- contact ---- */}
-            <div className="mt-4 border-t border-line pt-4">
+            {/* ---------------- What you do about it ---------------- */}
+            {/* No top rule at xl: the column gap already separates it, and a
+                second horizontal line there just adds clutter. */}
+            <div className="min-w-0 border-t border-line pt-4 xl:border-t-0 xl:pt-0">
               {canText && (
                 <a
                   href={whatsappLink(lead.contactPhone)}
@@ -475,58 +472,56 @@ export default function QuoteDetailPanel({
                     </span>
                   ))}
               </div>
-            </div>
 
-            {error && (
-              <p className="mt-4 text-sm text-red-700">
-                Couldn’t load the full detail for this lead: {error}
-              </p>
-            )}
-
-            {/* The long tail of survey figures.
-                Collapsed, and not rendered at all when the job measured
-                nothing — which is every repair. This is what used to fill the
-                panel with dashes. */}
-            {!loading && survey.length > 0 && (
-              <details className="group mt-4 border-t border-line pt-3">
-                <summary className="cursor-pointer list-none text-[11px] font-semibold uppercase tracking-[0.12em] text-muted transition-colors hover:text-ink-soft">
-                  <span className="inline-block transition-transform group-open:rotate-90">
-                    ▸
-                  </span>{" "}
-                  Full survey ({survey.length})
-                </summary>
-                <div className="mt-3 grid grid-cols-2 gap-x-5 gap-y-3">
-                  {survey.map(([label, value]) => (
-                    <Figure key={label} label={label} value={value} />
-                  ))}
-                </div>
-                <p className="mt-3 text-[11px] leading-snug text-muted">
-                  Measured by {payloadLabel(solar?.measurementMethod)} · imagery{" "}
-                  {payloadLabel(solar?.imageryQuality).toLowerCase()}
-                  {solar?.imageryDate
-                    ? `, captured ${formatDateOnly(solar.imageryDate)}`
-                    : ""}
-                  . Gutter and obstruction figures are totals — the widget does
-                  not store where the customer marked them.
+              {error && (
+                <p className="mt-4 text-sm text-red-700">
+                  Couldn’t load the full detail for this lead: {error}
                 </p>
-              </details>
-            )}
-
-            {/* Anchored to the foot of the rail so the reference and archive
-                sit on the panel's baseline instead of leaving a hole beneath
-                a rail that is shorter than the evidence column. */}
-            <div className="mt-4 flex items-center justify-between gap-3 border-t border-line pt-3 lg:mt-auto">
-              <QuoteIdCopy id={lead.id} />
-              <button
-                type="button"
-                onClick={() => onArchive(lead.id)}
-                className="btn-ghost inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-ink-soft"
-              >
-                {archivedView ? Icons.restore : Icons.archive}
-                {archivedView ? "Restore" : "Archive"}
-              </button>
+              )}
             </div>
           </div>
+        </div>
+
+        {/* The long tail of survey figures.
+            Full width below the columns, so its grid has room once opened.
+            Collapsed, and not rendered at all when the job measured nothing —
+            which is every repair. This is what used to fill the panel with
+            dashes. */}
+        {!loading && survey.length > 0 && (
+          <details className="group mt-4 border-t border-line pt-3">
+            <summary className="cursor-pointer list-none text-[11px] font-semibold uppercase tracking-[0.12em] text-muted transition-colors hover:text-ink-soft">
+              <span className="inline-block transition-transform group-open:rotate-90">
+                ▸
+              </span>{" "}
+              Full survey ({survey.length})
+            </summary>
+            <div className="mt-3 grid grid-cols-2 gap-x-5 gap-y-3 sm:grid-cols-4 xl:grid-cols-6">
+              {survey.map(([label, value]) => (
+                <Figure key={label} label={label} value={value} />
+              ))}
+            </div>
+            <p className="mt-3 text-[11px] leading-snug text-muted">
+              Measured by {payloadLabel(solar?.measurementMethod)} · imagery{" "}
+              {payloadLabel(solar?.imageryQuality).toLowerCase()}
+              {solar?.imageryDate
+                ? `, captured ${formatDateOnly(solar.imageryDate)}`
+                : ""}
+              . Gutter and obstruction figures are totals — the widget does not
+              store where the customer marked them.
+            </p>
+          </details>
+        )}
+
+        <div className="mt-4 flex items-center justify-between gap-3 border-t border-line pt-3">
+          <QuoteIdCopy id={lead.id} />
+          <button
+            type="button"
+            onClick={() => onArchive(lead.id)}
+            className="btn-ghost inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-ink-soft"
+          >
+            {archivedView ? Icons.restore : Icons.archive}
+            {archivedView ? "Restore" : "Archive"}
+          </button>
         </div>
       </div>
 
