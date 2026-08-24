@@ -71,7 +71,7 @@ export default function StreetView({
 
   if (!meta && !failed) {
     return (
-      <div className="h-full min-h-[220px] animate-pulse rounded-xl bg-black/[0.04]" />
+      <div className="h-full animate-pulse rounded-xl bg-black/[0.04]" />
     );
   }
 
@@ -92,7 +92,7 @@ export default function StreetView({
   if (unavailable) {
     const tooFar = away !== null && away > MAX_CAMERA_DISTANCE_M;
     return (
-      <div className="flex h-full min-h-[220px] items-center justify-center rounded-xl border border-line bg-black/[0.02] px-4 text-center">
+      <div className="flex h-full items-center justify-center rounded-xl border border-line bg-black/[0.02] px-4 text-center">
         <p className="text-sm text-muted">
           {tooFar
             ? `Nearest street imagery is ${Math.round(away!)}m away, too far to show this property.`
@@ -121,7 +121,7 @@ export default function StreetView({
     : null;
 
   return (
-    <div className="relative h-full min-h-[220px] overflow-hidden rounded-xl border border-line bg-[#0f1520]">
+    <div className="relative h-full overflow-hidden rounded-xl border border-line bg-[#0f1520]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={img}

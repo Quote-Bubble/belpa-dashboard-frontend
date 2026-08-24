@@ -13,6 +13,25 @@
 /** Past this the tiles get too small to tell one slipped tile from another. */
 const MAX_VISIBLE = 4;
 
+/**
+ * Columns for the number of tiles actually being drawn.
+ *
+ * A fixed four-column grid meant one photo rendered as a small square with
+ * three empty columns beside it, which read as three failed images rather than
+ * one photo. Never fewer than two, though: a single tile spanning the whole
+ * column would be larger than the property views above it and would claim an
+ * importance it has not got.
+ *
+ * Written out rather than interpolated because Tailwind scans source text for
+ * class names, and `grid-cols-${n}` is invisible to it.
+ */
+const COLUMNS: Record<number, string> = {
+  1: "grid-cols-2",
+  2: "grid-cols-2",
+  3: "grid-cols-3",
+  4: "grid-cols-4",
+};
+
 export default function MediaStrip({
   urls,
   onOpen,
@@ -24,9 +43,11 @@ export default function MediaStrip({
 
   const overflow = Math.max(0, urls.length - MAX_VISIBLE);
   const visible = overflow > 0 ? urls.slice(0, MAX_VISIBLE - 1) : urls;
+  // The "+N" tile is one of the tiles, so it counts toward the column split.
+  const tiles = visible.length + (overflow > 0 ? 1 : 0);
 
   return (
-    <ul className="grid grid-cols-4 gap-3">
+    <ul className={`grid gap-3 ${COLUMNS[tiles] ?? "grid-cols-4"}`}>
       {visible.map((url, index) => (
         <li key={url} className="min-w-0">
           <Tile

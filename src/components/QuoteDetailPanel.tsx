@@ -204,6 +204,11 @@ export default function QuoteDetailPanel({
   const photos = useSignedPhotos(photoPaths);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
+  /* Layout keys off the stored paths rather than the signed URLs, which arrive
+     a moment later — otherwise the tiles would lay out one way, then jump when
+     the signing resolved. */
+  const hasPhotos = photoPaths.length > 0;
+
   /* Viewer contents: the customer's photos, in order. The aerial is not in
      here — it is a live map that pans and zooms in the panel, so a lightbox
      would be a worse version of what is already on screen. */
@@ -265,11 +270,21 @@ export default function QuoteDetailPanel({
           {/* ---------------- Evidence ---------------- */}
           <div className="min-w-0">
             <GroupLabel>The property</GroupLabel>
-            {/* Equal tiles. The aerial needs the width as much as the frontage
-                does — Google's attribution is not optional and looked cramped
-                when this was a thumbnail. */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="aspect-[4/3]">
+            {/* Side by side when photos follow, stacked and wide when they do
+                not.
+                A full replacement carries no damage photos, so the two tiles
+                were the entire column — half the card wide, a fifth of it
+                tall, with the detail column running on for another 400px
+                beside them. Stacking uses that height instead of leaving a
+                hole in it, and the frontage is worth seeing large anyway. */}
+            <div
+              className={
+                hasPhotos ? "grid grid-cols-2 gap-3" : "grid grid-cols-1 gap-3"
+              }
+            >
+              <div
+                className={`overflow-hidden ${hasPhotos ? "aspect-[4/3]" : "aspect-[16/9]"}`}
+              >
                 {loading ? (
                   <Skeleton />
                 ) : (
@@ -279,7 +294,9 @@ export default function QuoteDetailPanel({
                   />
                 )}
               </div>
-              <div className="aspect-[4/3]">
+              <div
+                className={`overflow-hidden ${hasPhotos ? "aspect-[4/3]" : "aspect-[16/9]"}`}
+              >
                 {loading ? <Skeleton /> : <RoofMap payload={payload} />}
               </div>
             </div>
