@@ -5,43 +5,17 @@ import { APIProvider, Map, Marker, Polygon } from "@vis.gl/react-google-maps";
 
 import RoofPlan from "@/components/RoofPlan";
 import { sanitizePolygonCoords } from "@/lib/roof-plan";
-import type { LatLng, LeadPayload, SolarSegment } from "@/lib/types";
+import type { LeadPayload } from "@/lib/types";
 
 /* Same values the widget draws the roof with (DrawRoofStep.tsx's BRAND, and
    its Polygon props), so the outline the roofer sees is the one the customer
    drew rather than a lookalike in different colours. */
 const BRAND = "#2f6bff";
 const AFFECTED = "#ef4444";
-/** The scan's bounding box, when nobody traced anything. White and faint, so
- *  it never passes for a measured outline. */
-const DETECTED = "#ffffff";
 
 /** Widget's default when a lead carries no stored framing — close enough to
  *  read a single roof, and what the flow itself opens on. */
 const FALLBACK_ZOOM = 20;
-
-/** A Solar segment's bounds as a closed ring, or null if the box is not whole.
- *  Every corner has to be a real number: a partial box would render as a
- *  sliver somewhere off the coast of Africa rather than fail visibly. */
-function ringFromBounds(
-  box: NonNullable<SolarSegment["boundingBox"]> | null | undefined,
-): LatLng[] | null {
-  const { north, south, east, west } = box ?? {};
-  if (
-    typeof north !== "number" ||
-    typeof south !== "number" ||
-    typeof east !== "number" ||
-    typeof west !== "number"
-  ) {
-    return null;
-  }
-  return [
-    { lat: north, lng: west },
-    { lat: north, lng: east },
-    { lat: south, lng: east },
-    { lat: south, lng: west },
-  ];
-}
 
 /**
  * The customer's dropped pin.
@@ -119,25 +93,6 @@ export default function RoofMap({ payload }: { payload: LeadPayload | null }) {
    * looking exactly like a measurement of a roof that is not that shape. */
   const detectedOnly = payload?.solar?.measurementMethod === "solar_whole_roof";
 
-  /* So draw the planes instead of the box around them.
-   *
-   * The scan does not only report an envelope — it reports every roof plane it
-   * found, each with its own extent, pitch and azimuth, and those planes ARE
-   * the estimate: the area is their ground areas, each multiplied by its own
-   * pitch, then calibrated. The widget has stored them on every lead all
-   * along; the dashboard just never read them and fell back to the one
-   * rectangle instead.
-   *
-   * Each plane is still an axis-aligned box rather than a true outline, but a
-   * set of them follows the shape of a roof closely — hips, gables and
-   * extensions show up as separate planes — where a single rectangle around
-   * the lot never could. */
-  const planes: LatLng[][] = detectedOnly
-    ? (payload?.solar?.segments ?? [])
-        .map((segment) => ringFromBounds(segment?.boundingBox))
-        .filter((ring): ring is LatLng[] => ring !== null)
-    : [];
-
   // No min-height: this now sits in an aspect-ratio box beside the street
   // view, and a floor would make the two tiles different heights.
   return (
@@ -170,40 +125,25 @@ export default function RoofMap({ payload }: { payload: LeadPayload | null }) {
             icon={pinIcon(28)}
           />
 
-          {/* Roof planes from the scan, when nobody traced an outline. Drawn
-              in the brand colour and not apologised for: this is the measured
-              geometry the price came from, unlike the envelope it replaces.
-
-              One polygon each rather than a single multi-path polygon —
-              Google fills those by the even-odd rule, so anywhere two planes
-              overlapped would punch a hole through the roof. */}
-          {planes.map((ring, i) => (
-            <Polygon
-              key={i}
-              paths={ring}
-              geodesic
-              clickable={false}
-              fillColor={BRAND}
-              fillOpacity={0.16}
-              strokeColor={BRAND}
-              strokeOpacity={0.95}
-              strokeWeight={2}
-            />
-          ))}
-
-          {/* The customer's own outline, or — where the scan reported no
-              planes at all — the envelope, faint and white so it cannot pass
-              for a tracing of the roof. */}
-          {roofPath.length >= 3 && !(detectedOnly && planes.length > 0) && (
+          {/* Only a real, customer-traced outline is drawn.
+              Nothing is drawn for a scan-only lead. The two things available
+              to draw there — the scan's enclosing rectangle, and the roof
+              planes' own bounding boxes — were both wrong shapes: the
+              rectangle covered 1.9x the actual footprint with its corners in
+              the garden, and the planes came back axis-aligned, so on a house
+              at any angle to north they rendered as skewed boxes overlapping
+              across the ridge. A pin that says "here" beats an outline that
+              says something false about the roof. */}
+          {roofPath.length >= 3 && !detectedOnly && (
             <Polygon
               paths={roofPath}
               geodesic
               clickable={false}
-              fillColor={detectedOnly ? DETECTED : BRAND}
-              fillOpacity={detectedOnly ? 0.06 : 0.22}
-              strokeColor={detectedOnly ? DETECTED : BRAND}
-              strokeOpacity={detectedOnly ? 0.75 : 1}
-              strokeWeight={detectedOnly ? 1.5 : 3}
+              fillColor={BRAND}
+              fillOpacity={0.22}
+              strokeColor={BRAND}
+              strokeOpacity={1}
+              strokeWeight={3}
             />
           )}
 
@@ -222,24 +162,14 @@ export default function RoofMap({ payload }: { payload: LeadPayload | null }) {
         </Map>
       </APIProvider>
 
-      {/* Name what is drawn, so neither shape has to be guessed at. */}
-      {detectedOnly && planes.length > 0 && (
-        <span className="pointer-events-none absolute bottom-3 left-3 max-w-[calc(100%-1.5rem)] rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
-          {planes.length} roof {planes.length === 1 ? "plane" : "planes"} from
-          the satellite scan
-        </span>
-      )}
-      {detectedOnly && planes.length === 0 && roofPath.length >= 3 && (
-        <span className="pointer-events-none absolute bottom-3 left-3 max-w-[calc(100%-1.5rem)] rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
-          Whole building measured · not a traced outline
+      {/* Say why there is no outline, so its absence does not read as a
+          missing feature. The area itself is on the panel beside this. */}
+      {detectedOnly && (
+        <span className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+          Measured from satellite
         </span>
       )}
 
-      {roofPath.length < 3 && affectedPath.length < 3 && planes.length === 0 && (
-        <span className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
-          No roof outline was drawn
-        </span>
-      )}
       {affectedPath.length >= 3 && roofPath.length < 3 && (
         <span className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
           Affected area
