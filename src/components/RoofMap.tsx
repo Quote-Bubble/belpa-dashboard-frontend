@@ -12,6 +12,9 @@ import type { LeadPayload } from "@/lib/types";
    drew rather than a lookalike in different colours. */
 const BRAND = "#2f6bff";
 const AFFECTED = "#ef4444";
+/** The scan's bounding box, when nobody traced anything. White and faint, so
+ *  it never passes for a measured outline. */
+const DETECTED = "#ffffff";
 
 /** Widget's default when a lead carries no stored framing — close enough to
  *  read a single roof, and what the flow itself opens on. */
@@ -83,6 +86,24 @@ export default function RoofMap({ payload }: { payload: LeadPayload | null }) {
   const center = view?.center ?? coords;
   const zoom = view?.zoom ?? FALLBACK_ZOOM;
 
+  /* Did anyone actually trace this, or is it the scan's bounding box?
+   *
+   * Detached houses and bungalows skip the drawing step — the Solar scan
+   * already covers the whole building, so there is nothing for the customer to
+   * trace. But the widget still stores a polygon for them: pathFromBounds() of
+   * the scan's bounding box. Rendered in the same confident blue as a traced
+   * outline, that put a neat rectangle over a house, corners out in the garden,
+   * looking exactly like a measurement of a roof that is not that shape.
+   *
+   * The price is not affected — that comes from the per-segment ground areas,
+   * not this box — but a roofer has no way to know that by looking.
+   *
+   * The measurement method distinguishes them, and it is already stored on
+   * every lead, so this reads correctly on the twenty existing ones too:
+   * "solar_whole_roof" is the whole-building scan, "segment_bbox_overlap" is a
+   * customer-drawn outline. */
+  const detectedOnly = payload?.solar?.measurementMethod === "solar_whole_roof";
+
   // No min-height: this now sits in an aspect-ratio box beside the street
   // view, and a floor would make the two tiles different heights.
   return (
@@ -115,16 +136,20 @@ export default function RoofMap({ payload }: { payload: LeadPayload | null }) {
             icon={pinIcon(28)}
           />
 
+          {/* A traced outline is drawn confidently. A detected envelope is
+              drawn as what it is: a faint box showing roughly what the scan
+              covered, in white rather than the brand blue, so it cannot be
+              mistaken for someone's tracing of the roof. */}
           {roofPath.length >= 3 && (
             <Polygon
               paths={roofPath}
               geodesic
               clickable={false}
-              fillColor={BRAND}
-              fillOpacity={0.22}
-              strokeColor={BRAND}
-              strokeOpacity={1}
-              strokeWeight={3}
+              fillColor={detectedOnly ? DETECTED : BRAND}
+              fillOpacity={detectedOnly ? 0.06 : 0.22}
+              strokeColor={detectedOnly ? DETECTED : BRAND}
+              strokeOpacity={detectedOnly ? 0.75 : 1}
+              strokeWeight={detectedOnly ? 1.5 : 3}
             />
           )}
 
@@ -142,6 +167,16 @@ export default function RoofMap({ payload }: { payload: LeadPayload | null }) {
           )}
         </Map>
       </APIProvider>
+
+      {/* Say so in words as well as in styling. Without this the box still
+          invites the reading "this is the roof we measured", and the area on
+          the panel beside it comes from the roof planes, not from anything
+          this rectangle encloses. */}
+      {detectedOnly && roofPath.length >= 3 && (
+        <span className="pointer-events-none absolute bottom-3 left-3 max-w-[calc(100%-1.5rem)] rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+          Whole building measured · not a traced outline
+        </span>
+      )}
 
       {roofPath.length < 3 && affectedPath.length < 3 && (
         <span className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
