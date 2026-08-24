@@ -73,6 +73,25 @@ export type ConditionAnswer = "yes" | "no" | "not_sure";
 
 export type RooflineScope = "gutters_only" | "gutters_fascias";
 
+/**
+ * One roof plane from Google's Solar API, as the widget stored it.
+ *
+ * The bounding box is axis-aligned in lat/lng — it is the plane's extent, not
+ * its true outline — but a set of them follows the shape of a roof far more
+ * closely than one rectangle drawn around the whole building.
+ */
+export type SolarSegment = {
+  boundingBox?: {
+    north?: number | null;
+    south?: number | null;
+    east?: number | null;
+    west?: number | null;
+  } | null;
+  pitchDegrees?: number | null;
+  azimuthDegrees?: number | null;
+  areaMeters2?: number | null;
+};
+
 export type LeadPayload = {
   otherJobDescription?: string | null;
   coords?: LatLng | null;
@@ -84,6 +103,11 @@ export type LeadPayload = {
     measurementMethod?: string | null;
     imageryQuality?: string | null;
     imageryDate?: string | null;
+    /** One entry per roof plane the Solar API detected. This is the geometry
+     *  the estimate is actually built from — the widget has always stored it,
+     *  the dashboard simply never read it. Optional throughout: a scan can
+     *  legitimately return none, and a few older leads have an empty array. */
+    segments?: SolarSegment[] | null;
   } | null;
   /** Outline of ONE roof face — the widget keeps only the largest and discards
    *  the rest (belpa-widget-frontend/lib/quote-flow.ts:532). When the customer
