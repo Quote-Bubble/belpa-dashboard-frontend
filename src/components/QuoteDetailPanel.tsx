@@ -259,7 +259,7 @@ export default function QuoteDetailPanel({
           nothing had room. The width is not the problem to solve — the
           proportions are. Two columns, generous, capped where a line of text
           stops being comfortable to read rather than where the screen ends. */}
-      <div className="surface mx-auto max-w-6xl overflow-hidden rounded-2xl p-5 sm:p-7">
+      <div className="surface mx-auto max-w-7xl overflow-hidden rounded-2xl p-5 sm:p-7">
         {/* An even split, and two labelled groups inside it.
             Before this the three images were three sizes with no logic: a huge
             frontage, then a small aerial and a small damage photo side by side
@@ -307,13 +307,19 @@ export default function QuoteDetailPanel({
             {loading ? (
               <>
                 <GroupLabel className="mt-5">Customer photos</GroupLabel>
-                <div className="grid grid-cols-4 gap-3">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="aspect-square animate-pulse rounded-xl bg-black/[0.04]"
-                    />
-                  ))}
+                {/* Mirrors MediaStrip's shape for this count, so the row does
+                    not change size the moment the URLs resolve. */}
+                <div
+                  className={`grid gap-3 ${photoPaths.length === 1 ? "grid-cols-1" : photoPaths.length === 2 ? "grid-cols-2" : photoPaths.length === 3 ? "grid-cols-3" : "grid-cols-4"}`}
+                >
+                  {Array.from({ length: Math.min(photoPaths.length, 4) }).map(
+                    (_, i) => (
+                      <div
+                        key={i}
+                        className={`animate-pulse rounded-xl bg-black/[0.04] ${photoPaths.length === 1 ? "aspect-[16/10]" : photoPaths.length <= 3 ? "aspect-[4/3]" : "aspect-square"}`}
+                      />
+                    ),
+                  )}
                 </div>
               </>
             ) : photos.state === "ready" && photos.urls.length > 0 ? (

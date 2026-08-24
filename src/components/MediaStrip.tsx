@@ -14,22 +14,27 @@
 const MAX_VISIBLE = 4;
 
 /**
- * Columns for the number of tiles actually being drawn.
+ * Grid shape for the number of tiles actually being drawn.
  *
- * A fixed four-column grid meant one photo rendered as a small square with
- * three empty columns beside it, which read as three failed images rather than
- * one photo. Never fewer than two, though: a single tile spanning the whole
- * column would be larger than the property views above it and would claim an
- * importance it has not got.
+ * Both the columns AND the tile proportion have to follow the count. Four
+ * fixed columns left one photo as a small square with three empty slots.
+ * Flooring it at two columns fixed the size but not the shape: a half-width
+ * SQUARE is nearly as tall as the whole property row above it, with the other
+ * half of the row still empty.
  *
- * Written out rather than interpolated because Tailwind scans source text for
- * class names, and `grid-cols-${n}` is invisible to it.
+ * So a lone photo takes the full width in landscape, which fills the row and
+ * matches how the property tiles stack when there are none. Two or three sit
+ * in 4:3, the same proportion as the tiles above them. Only at four does a
+ * square make sense, because by then they are thumbnails.
+ *
+ * Written out rather than interpolated: Tailwind scans source text for class
+ * names, so `grid-cols-${n}` would never be generated.
  */
-const COLUMNS: Record<number, string> = {
-  1: "grid-cols-2",
-  2: "grid-cols-2",
-  3: "grid-cols-3",
-  4: "grid-cols-4",
+const SHAPE: Record<number, { cols: string; aspect: string }> = {
+  1: { cols: "grid-cols-1", aspect: "aspect-[16/10]" },
+  2: { cols: "grid-cols-2", aspect: "aspect-[4/3]" },
+  3: { cols: "grid-cols-3", aspect: "aspect-[4/3]" },
+  4: { cols: "grid-cols-4", aspect: "aspect-square" },
 };
 
 export default function MediaStrip({
@@ -45,13 +50,15 @@ export default function MediaStrip({
   const visible = overflow > 0 ? urls.slice(0, MAX_VISIBLE - 1) : urls;
   // The "+N" tile is one of the tiles, so it counts toward the column split.
   const tiles = visible.length + (overflow > 0 ? 1 : 0);
+  const shape = SHAPE[tiles] ?? SHAPE[4];
 
   return (
-    <ul className={`grid gap-3 ${COLUMNS[tiles] ?? "grid-cols-4"}`}>
+    <ul className={`grid gap-3 ${shape.cols}`}>
       {visible.map((url, index) => (
         <li key={url} className="min-w-0">
           <Tile
             label={`Customer photo ${index + 1}`}
+            aspect={shape.aspect}
             onClick={() => onOpen(index)}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -71,6 +78,7 @@ export default function MediaStrip({
               shows you the three you could not see. */}
           <Tile
             label={`Show ${overflow} more`}
+            aspect={shape.aspect}
             onClick={() => onOpen(MAX_VISIBLE - 1)}
           >
             <span className="flex h-full w-full items-center justify-center bg-black/[0.06] text-base font-semibold text-ink-soft">
@@ -85,10 +93,12 @@ export default function MediaStrip({
 
 function Tile({
   label,
+  aspect,
   onClick,
   children,
 }: {
   label: string;
+  aspect: string;
   onClick: () => void;
   children: React.ReactNode;
 }) {
@@ -98,7 +108,7 @@ function Tile({
       onClick={onClick}
       aria-label={label}
       title={label}
-      className="block aspect-square w-full overflow-hidden rounded-xl border border-line bg-black/[0.04] transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+      className={`block w-full overflow-hidden rounded-xl border border-line bg-black/[0.04] transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 ${aspect}`}
     >
       {children}
     </button>
