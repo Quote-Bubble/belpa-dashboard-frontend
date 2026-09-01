@@ -19,12 +19,20 @@ export type LeadIntent =
   | "quote_requested"
   | "callback_requested";
 
+/* Must match the widget's JobType and the backend's VALID_JOB_TYPES.
+   The cleaning types were missing here, so a soft wash or a gutter clear
+   displayed as "Other" on the lead — the dashboard had no name for work the
+   widget had been quoting for weeks. */
 export type JobType =
   | "full_replacement"
   | "tile_or_slate_repair"
   | "flat_roof_replacement"
   | "leak_investigation"
   | "gutters_fascias_soffits"
+  | "roof_soft_wash"
+  | "roof_biocide_treatment"
+  | "gutter_clearing"
+  | "driveway_cleaning"
   | "other";
 
 export type SeverityScore = 1 | 2 | 3 | 4 | 5;

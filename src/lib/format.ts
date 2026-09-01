@@ -66,6 +66,10 @@ const JOB_LABELS: Record<JobType, string> = {
   flat_roof_replacement: "Flat roof replacement",
   leak_investigation: "Leak investigation",
   gutters_fascias_soffits: "Gutters, fascias & soffits",
+  roof_soft_wash: "Roof soft wash",
+  roof_biocide_treatment: "Biocide treatment",
+  gutter_clearing: "Gutter clearing",
+  driveway_cleaning: "Driveway cleaning",
   other: "Other",
 };
 
