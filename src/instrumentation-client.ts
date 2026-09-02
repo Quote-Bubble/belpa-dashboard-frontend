@@ -1,5 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 
+import { DENY_URLS, IGNORE_ERRORS } from "@/lib/sentry-noise";
+
 /**
  * Browser-side error reporting. Covers server components, route handlers and server actions.
  *
@@ -19,6 +21,9 @@ if (dsn) {
     replaysSessionSampleRate: 0,
     replaysOnErrorSampleRate: 0,
     sendDefaultPii: false,
+    // Other people's browser extensions are not our incidents.
+    ignoreErrors: IGNORE_ERRORS,
+    denyUrls: DENY_URLS,
   });
 }
 
